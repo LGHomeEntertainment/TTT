@@ -217,10 +217,13 @@ function checkAnswer() {
     }
   }
   disableAll()
-  if (round < 4) {
+  if (guess[0] == answerPIN[0] && guess[1] == answerPIN[1] && guess[2] == answerPIN[2] && guess[3] == answerPIN[3]) {
+    gameOver = true;  
+    document.getElementById("resetBtn").style.display = "inline-block";
+    document.getElementById("submitBtn").style.display = "none";
+  } else if (round < 4) {
     round++;
   enableCurrentRow();
-    
   } else {
     gameOver = true;
     document.getElementById("resetBtn").style.display = "inline-block";
