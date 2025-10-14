@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>OTV</title>
+
+  <style>
+/* Container for the grid */
+#grid {
+  display: grid;
+  grid-template-columns: repeat(var(--grid-size), 1fr); /* dynamic columns */
+  gap: 2px;
+  width: fit-content;
+  margin: 20px auto;
+}
+
+/* Each cell */
+.cell {
+  width: 30px;
+  height: 30px;
+  background-color: lightgray;
+  border: 1px solid #999;
+  font-weight: bold;
+  font-size: 16px;
+  text-align: center;
+  line-height: 30px;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Revealed cell */
+.cell.revealed {
+  background-color: #e0e0e0;
+  cursor: default;
+}
+
+/* Mine cell */
+.cell.mine {
+  background-color: red;
+  color: white;
+}
+
+/* Numbered cell */
+.cell.number-1 { color: blue; }
+.cell.number-2 { color: green; }
+.cell.number-3 { color: red; }
+.cell.number-4 { color: navy; }
+.cell.number-5 { color: maroon; }
+.cell.number-6 { color: teal; }
+.cell.number-7 { color: black; }
+.cell.number-8 { color: gray; }
+
+/* Flagged cell */
+.cell.flagged {
+  background-color: orange;
+  color: white;
+}
+
+/* Optional: hover effect */
+.cell:hover:not(.revealed) {
+  background-color: #d3d3d3;
+}
+
+
+</style>
+
+</head>
+<body>
+
+<h1>Sweep Sweep</h1>
+
+
+<table>
+
+  <tr>
+    <td id="cell-row-col"><></td>
+
+  </tr>
+
+</table>
+
+<div> 
+  <p id="feedback"></p>
+</div>
+
+<div> 
+  <button id="resetBtn">Start a new game</button>
+</div>
+
+
+
+<script>
+
+let answerPIN = []; // start empty, then push
+let round = 1;
+let gameOver = false;
+
+
+
+function generatePIN() {
+  answerPIN = [];
+  for (let i = 0; i < 4; i++) {
+    let digit = Math.floor(Math.random() * 10); // inside loop so that it keeps generating new digits to push in
+    answerPIN.push(digit);
+  }
+}
+
+disableAll();
+enableCurrentRow();
+
+generatePIN(); // call on it directly to create new pin
+
+document.getElementById("submitBtn").addEventListener("click", checkAnswer);
+document.getElementById("submitBtn").addEventListener("keydown", checkAnswer);
+
+document.getElementById("resetBtn").style.display = "none";
+document.getElementById("resetBtn").addEventListener("click", resetGame);
+
+function disableAll() {
+  let cells = document.querySelectorAll("input[type='tel']");
+  cells.forEach((cell)=> {
+    cell.disabled = true;
+  });
+}
+
+function enableCurrentRow() {
+  let row = document.querySelector(`tr[data-guess="${round}"]`);
+  let rowCells = row.querySelectorAll("input");
+  rowCells.forEach((cell, index) => {
+    cell.disabled = false;
+
+// auto advance input
+cell.addEventListener('input', () => {
+if (cell.value.length == 1 && index < 3) {
+rowCells[index + 1].focus()
+}
+})
+
+// backspace
+cell.addEventListener("keydown", (e) => {
+  if (e.key == "Backspace" && index > 0 && cell.value == "") {
+    rowCells[index - 1].focus()
+}
+})
+
+// enter
+cell.addEventListener("keydown", (e) => {
+  if (e.key == "Enter" && index == 3 && cell.value.length == 1) {
+    checkAnswer()
+}
+})
+})
+
+let firstInput = document.querySelector(`tr[data-guess="${round}"] input[type='tel']`); // calculated every round, so inside the loop
+if (firstInput) {
+  firstInput.focus()
+}
+}
+
+function checkAnswer() {
+  let currentRow = document.querySelector(`tr[data-guess="${round}"]`);
+  let guess = [];
+  for (let i = 0; i < 4; i++) {
+    let cell = document.getElementById(`guess${round}-${i}`);
+    let cellValue = cell.querySelector("input");
+
+    if (cellValue.value == "") {
+      document.getElementById("feedback").textContent = "Please key in 4 digits";
+      return;
+    } else {
+      guess.push(parseInt(cellValue.value));
+    }
+  }
+  for (let i = 0; i < 4; i++) {
+    let cell = document.getElementById(`guess${round}-${i}`);
+    if (guess[i] == answerPIN[i]) {
+      // change bg color
+      cell.style.backgroundColor = "green";
+    } else if (answerPIN.includes(guess[i])) {
+      // diff colours
+      cell.style.backgroundColor = "yellow";
+    } else {
+      cell.style.backgroundColor = "gray";
+    }
+  }
+  disableAll()
+  if (guess[0] == answerPIN[0] && guess[1] == answerPIN[1] && guess[2] == answerPIN[2] && guess[3] == answerPIN[3]) {
+    gameOver = true;  
+    document.getElementById("resetBtn").style.display = "inline-block";
+    document.getElementById("submitBtn").style.display = "none";
+  } else if (round < 4) {
+    round++;
+  enableCurrentRow();
+  } else {
+    gameOver = true;
+    document.getElementById("resetBtn").style.display = "inline-block";
+    document.getElementById("submitBtn").style.display = "none";
+  }
+}
+
+function resetGame() {
+  document.getElementById("resetBtn").style.display = "none";
+  document.getElementById("feedback").textContent = "";
+  // clear cell contents too!!!
+  let cells = document.querySelectorAll("input[type='tel']");
+     cells.forEach((cell) => {
+    cell.value = "";
+  });
+  let cellColor = document.querySelectorAll("td");
+cellColor.forEach((x) => {
+x.style.backgroundColor = "transparent"; //reset colour too!!!
+})
+  generatePIN();
+  round = 1;
+  gameOver = false;
+  enableCurrentRow();
+  document.getElementById("submitBtn").style.display = "block";
+}
+
+</script>
+
+</body>
+</html>
+
+
+
+Why Starting with a Fixed Grid Is Good
+
+You can focus on gameplay logic first (mine generation, reveal, recursion).
+You avoid the complexity of dynamic sizing while you're still figuring out how everything connects.
+Once the game works, switching to dynamic sizing is just a matter of:
+
+Changing the grid size variable
+Adjusting the loops
+Updating the CSS grid layout
+
+
+
+
+🧠 What to Keep in Mind for Later
+If you plan to make it dynamic later:
+
+Use a variable like let gridSize = 10; from the start.
+When generating the grid, loop from 0 to gridSize - 1 for both rows and columns.
+Use data-row and data-col attributes on each cell so you can easily read their position later.
+
+<table id="grid">
+  <!-- JS will generate rows and cells -->
+</table>
+
+for (let row = 0; row < gridSize; row++) {
+  let tr = document.createElement("tr");
+  for (let col = 0; col < gridSize; col++) {
+    let td = document.createElement("td");
+    td.classList.add("cell");
+    td.dataset.row = row;
+    td.dataset.col = col;
+    td.id = `cell-${row}-${col}`;
+    tr.appendChild(td);
+  }
+  document.getElementById("grid").appendChild(tr);
+}
