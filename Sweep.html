@@ -91,7 +91,8 @@
 let gridSize = 10; // start with 10, easier to adjust later
 let firstClick = true;
 let gameOver = false;
-
+let board = [];
+let grid = [];
 
 // starting new game/setup
 generateGrid();
@@ -100,7 +101,7 @@ generateBoard();
 
 // visible GRID
 function generateGrid() {
-  let grid = [];
+  grid = [];
 for (let gridRow = 0; gridRow < gridSize; gridRow++) {
   let tr = document.createElement("tr");
   for (let gridCol = 0; gridCol < gridSize; gridCol++) {
@@ -118,7 +119,7 @@ for (let gridRow = 0; gridRow < gridSize; gridRow++) {
 
 // create clear logic BOARD (the invisible one BTS)
 function generateBoard() {
-let board = []
+board = []
 for (let row = 0; row < gridSize; row++) {
   rowData = []
   for (let col = 0; col < gridSize; col++) {
@@ -147,14 +148,20 @@ if (board[mineRow][mineCol].mine == true) continue;
   board[mineRow][mineCol].mine = true   // set the mine flag
   minesNumber++
 }
-}}
+}
+
+
+let cells = document.querySelectorAll("td");
+cells.forEach((cell) => {
+  cell.addEventListener("click", checkAnswer);
+});
 
 
 function checkAnswer(e) {
   
   let clickedCell = e.target;
-  let clickedRow = parseInt(cell.dataset.row);
-  let clickedCol = parseInt(cell.dataset.col);
+  let clickedRow = parseInt(clickedCell.dataset.row);
+  let clickedCol = parseInt(clickedCell.dataset.col);
 
   if (firstClick) {
     generateMines(clickedRow, clickedCol)
@@ -175,8 +182,8 @@ function resetGame() {
   document.getElementById("resetBtn").style.display = "none";
   document.getElementById("feedback").textContent = "";
 
-// (need to clear off the previous grid. then can generate from scratch)
   generateBoard();
+  document.getElementById("grid").innerHTML = ""; // need to clear off the previous grid. then generate from scratch
   generateGrid();
   gameOver = false;
   firstClick = true;
