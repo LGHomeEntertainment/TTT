@@ -5,80 +5,117 @@
   <title>OTV</title>
 
   <style>
-/* Container for the grid */
-#grid {
-  display: grid;
-  border-collapse: collapse;
-  border-spacing: 0;
-  grid-template-columns: repeat(var(--grid-size), 1fr); /* dynamic columns */
-  width: fit-content;
-  margin: 20px auto;
+body {
+  font-family: Arial, sans-serif;
+  background-color: white;
+  color: #333;
+  padding: 20px;
 }
 
-/* Each cell */
-.cell {
-  width: 30px;
-  height: 30px;
-  background-color: lightgray;
-  border: 1px solid #999;
-  padding: 0;
-  line-height: 30px;
+table {
+  border-collapse: collapse; /* removes double borders */
+  margin: 20px auto; /* centers the table */
+}
+
+td {
+  width: 60px;
+  height: 60px;
+  text-align: center;
+  vertical-align: middle;
+  font-size: 2rem;
+  border: 2px solid #333;
   cursor: pointer;
-  user-select: none;
 }
 
-/* Revealed cell */
-.cell.revealed {
-  background-color: #e0e0e0;
-  cursor: default;
+td input {
+  width: 100%;
+height: 100%;
+border: none;
+background: transparent;
+text-align: center;
+padding: 0;
+outline: none;
 }
 
-/* Mine cell */
-.cell.mine {
-  background-color: red;
+input[type="tel"] {
+background-color: transparent
+border: none
+text-align: center;
+width: 100%
+height: 100%
+}
+
+#feedback {
+  font-weight: bold;
+  margin-top: 20px;
+}
+
+button {
+  padding: 8px 12px;
+  background-color: #4CAF50;
   color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
 }
 
-/* Numbered cell */
-.cell.number-1 { color: blue; }
-.cell.number-2 { color: green; }
-.cell.number-3 { color: red; }
-.cell.number-4 { color: navy; }
-.cell.number-5 { color: maroon; }
-.cell.number-6 { color: teal; }
-.cell.number-7 { color: black; }
-.cell.number-8 { color: gray; }
-
-/* Flagged cell */
-.cell.flagged {
-  background-color: orange;
-  color: white;
+button:hover {
+  background-color: #45a049;
 }
 
-/* Optional: hover effect */
-.cell:hover:not(.revealed) {
-  background-color: #d3d3d3;
+#aiStatus {
+  font-style: italic;
+  color: #888;
+  text-align: center;
+  margin-top: 10px;
 }
-
 
 </style>
 
 </head>
 <body>
 
-<h1>Sweep Sweep</h1>
+<h1>Open the Vault</h1>
 
 
+<table>
 
-<table id="grid">
-  <!-- JS will generate rows and cells -->
+  <tr data-guess="1">
+    <td id="guess1-0"><input type="tel" maxlength="1"></td>
+    <td id="guess1-1"><input type="tel" maxlength="1"></td>
+    <td id="guess1-2"><input type="tel" maxlength="1"></td>
+    <td id="guess1-3"><input type="tel" maxlength="1"></td>
+  </tr>
+
+  <tr data-guess="2">
+    <td id="guess2-0"><input type="tel" maxlength="1"></td>
+    <td id="guess2-1"><input type="tel" maxlength="1"></td>
+    <td id="guess2-2"><input type="tel" maxlength="1"></td>
+    <td id="guess2-3"><input type="tel" maxlength="1"></td>
+  </tr>
+
+  <tr data-guess="3">
+    <td id="guess3-0"><input type="tel" maxlength="1"></td>
+    <td id="guess3-1"><input type="tel" maxlength="1"></td>
+    <td id="guess3-2"><input type="tel" maxlength="1"></td>
+    <td id="guess3-3"><input type="tel" maxlength="1"></td>
+  </tr>
+
+  <tr data-guess="4">
+    <td id="guess4-0"><input type="tel" maxlength="1"></td>
+    <td id="guess4-1"><input type="tel" maxlength="1"></td>
+    <td id="guess4-2"><input type="tel" maxlength="1"></td>
+    <td id="guess4-3"><input type="tel" maxlength="1"></td>
+  </tr>
+
 </table>
-
 
 <div> 
   <p id="feedback"></p>
 </div>
-
+<div> 
+  <button id="submitBtn">Guess!</button>
+</div>
 <div> 
   <button id="resetBtn">Start a new game</button>
 </div>
@@ -87,148 +124,133 @@
 
 <script>
 
-let gridSize = 10; // start with 10, easier to adjust later
-let totalMines = 10;
-let firstClick = true;
-let board = [];
-let grid = [];
-
-// starting new game/setup
-generateGrid();
-generateBoard();
+let answerPIN = []; // start empty, then push
+let round = 1;
+let gameOver = false;
 
 
-// visible GRID
-function generateGrid() {
-  grid = [];
-for (let gridRow = 0; gridRow < gridSize; gridRow++) {
-  let tr = document.createElement("tr");
-  for (let gridCol = 0; gridCol < gridSize; gridCol++) {
-    let td = document.createElement("td");
-    td.classList.add("cell");
-    td.dataset.row = gridRow;
-    td.dataset.col = gridCol;
-    td.id = `cell-${gridRow}-${gridCol}`;
-    tr.appendChild(td);
-  }
-  document.getElementById("grid").appendChild(tr);
-}
-}
 
-
-// create clear logic BOARD (the invisible one BTS)
-function generateBoard() {
-board = []
-for (let row = 0; row < gridSize; row++) {
-  rowData = []
-  for (let col = 0; col < gridSize; col++) {
-    rowData.push({
-      mine: false,
-      revealed: false,
-      adjacent: 0
-    })
-  }
-  board.push(rowData)
-  }
-}
-  
-// create the MINES. put within checkanswer
-function generateMines(clickedRow, clickedCol) {
-let minesNumber = 0
-let mineCol = 0
-let mineRow = 0
-
-while (minesNumber < totalMines) {
-mineCol = Math.floor(Math.random()* gridSize)
-mineRow = Math.floor(Math.random()* gridSize)
-if (mineCol == clickedCol && mineRow == clickedRow) continue;
-if (board[mineRow][mineCol].mine == true) continue;
-
-  board[mineRow][mineCol].mine = true   // set the mine flag
-  minesNumber++
-} // count adjacent
-
-let boardCol = 0
-let boardRow = 0
-
-for (boardRow = 0; boardRow 
-board[row][col].adjacent
-
-}
-
-
-let cells = document.querySelectorAll("td");
-cells.forEach((cell) => {
-  cell.addEventListener("click", checkAnswer);
-});
-
-
-function checkAnswer(e) {
-  
-  let clickedCell = e.target;
-  let clickedRow = parseInt(clickedCell.dataset.row);
-  let clickedCol = parseInt(clickedCell.dataset.col);
-
-  if (firstClick) {
-    generateMines(clickedRow, clickedCol)
-    firstClick = false
-  } else {
-    revealCell (clickedRow, clickedCol, clickedCell)   
+function generatePIN() {
+  answerPIN = [];
+  for (let i = 0; i < 4; i++) {
+    let digit = Math.floor(Math.random() * 10); // inside loop so that it keeps generating new digits to push in
+    answerPIN.push(digit);
   }
 }
 
+disableAll();
+enableCurrentRow();
 
-function revealCell(clickedRow, clickedCol, clickedCell) {
-if (board[clickedRow][clickedCol].revealed == true) {
-return
-} else if (board[clickedRow][clickedCol].mine == true) {
-  clickedCell.style.backgroundColor = "red";
-  gameOver()
-  return // need this cuz after running gameOver(), it will come back to this
-} else {
+generatePIN(); // call on it directly to create new pin
 
-  board[clickedRow][clickedCol].revealed = true
-  clickedCell.style.backgroundColor = "lightblue";
-}
-}
+document.getElementById("submitBtn").addEventListener("click", checkAnswer);
+document.getElementById("submitBtn").addEventListener("keydown", checkAnswer);
 
-
-function gameOver() {
-  for (let r = 0; r < gridSize; r++) {
-    for (let c = 0; c < gridSize; c++) {
-let cellData = board[r][c]
-let cellElement = document.getElementById(`cell-${r}-${c}`)
-
-if (cellData.mine) {
-cellData.revealed = true
-cellElement.style.backgroundColor = "red"
-} 
-cellElement.removeEventListener("click", checkAnswer)
-    }
-  }
-}
-
-
+document.getElementById("resetBtn").style.display = "none";
 document.getElementById("resetBtn").addEventListener("click", resetGame);
 
+function disableAll() {
+  let cells = document.querySelectorAll("input[type='tel']");
+  cells.forEach((cell)=> {
+    cell.disabled = true;
+  });
+}
+
+function enableCurrentRow() {
+  let row = document.querySelector(`tr[data-guess="${round}"]`);
+  let rowCells = row.querySelectorAll("input");
+  rowCells.forEach((cell, index) => {
+    cell.disabled = false;
+
+// auto advance input
+cell.addEventListener('input', () => {
+if (cell.value.length == 1 && index < 3) {
+rowCells[index + 1].focus()
+}
+})
+
+// backspace
+cell.addEventListener("keydown", (e) => {
+  if (e.key == "Backspace" && index > 0 && cell.value == "") {
+    rowCells[index - 1].focus()
+}
+})
+
+// enter
+cell.addEventListener("keydown", (e) => {
+  if (e.key == "Enter" && index == 3 && cell.value.length == 1) {
+    checkAnswer()
+}
+})
+})
+
+let firstInput = document.querySelector(`tr[data-guess="${round}"] input[type='tel']`); // calculated every round, so inside the loop
+if (firstInput) {
+  firstInput.focus()
+}
+}
+
+function checkAnswer() {
+  let currentRow = document.querySelector(`tr[data-guess="${round}"]`);
+  let guess = [];
+  for (let i = 0; i < 4; i++) {
+    let cell = document.getElementById(`guess${round}-${i}`);
+    let cellValue = cell.querySelector("input");
+
+    if (cellValue.value == "") {
+      document.getElementById("feedback").textContent = "Please key in 4 digits";
+      return;
+    } else {
+      guess.push(parseInt(cellValue.value));
+    }
+  }
+  for (let i = 0; i < 4; i++) {
+    let cell = document.getElementById(`guess${round}-${i}`);
+    if (guess[i] == answerPIN[i]) {
+      // change bg color
+      cell.style.backgroundColor = "green";
+    } else if (answerPIN.includes(guess[i])) {
+      // diff colours
+      cell.style.backgroundColor = "yellow";
+    } else {
+      cell.style.backgroundColor = "gray";
+    }
+  }
+  disableAll()
+  if (guess[0] == answerPIN[0] && guess[1] == answerPIN[1] && guess[2] == answerPIN[2] && guess[3] == answerPIN[3]) {
+    gameOver = true;  
+    document.getElementById("resetBtn").style.display = "inline-block";
+    document.getElementById("submitBtn").style.display = "none";
+  } else if (round < 4) {
+    round++;
+  enableCurrentRow();
+  } else {
+    gameOver = true;
+    document.getElementById("resetBtn").style.display = "inline-block";
+    document.getElementById("submitBtn").style.display = "none";
+  }
+}
+
 function resetGame() {
+  document.getElementById("resetBtn").style.display = "none";
   document.getElementById("feedback").textContent = "";
-
-  generateBoard();
-  
-  document.getElementById("grid").innerHTML = "";
-  generateGrid();
-
-  firstClick = true;
-
-let cells = document.querySelectorAll("td"); // reattach event listeners to all the new grid cells
-cells.forEach((cell) => {
-  cell.addEventListener("click", checkAnswer);
-});
+  // clear cell contents too!!!
+  let cells = document.querySelectorAll("input[type='tel']");
+     cells.forEach((cell) => {
+    cell.value = "";
+  });
+  let cellColor = document.querySelectorAll("td");
+cellColor.forEach((x) => {
+x.style.backgroundColor = "transparent"; //reset colour too!!!
+})
+  generatePIN();
+  round = 1;
+  gameOver = false;
+  enableCurrentRow();
+  document.getElementById("submitBtn").style.display = "block";
 }
 
 </script>
 
 </body>
 </html>
-
