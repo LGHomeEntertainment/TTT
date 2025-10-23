@@ -8,8 +8,9 @@
 /* Container for the grid */
 #grid {
   display: grid;
+  border-collapse: collapse;
+  border-spacing: 0;
   grid-template-columns: repeat(var(--grid-size), 1fr); /* dynamic columns */
-  gap: 2px;
   width: fit-content;
   margin: 20px auto;
 }
@@ -20,9 +21,7 @@
   height: 30px;
   background-color: lightgray;
   border: 1px solid #999;
-  font-weight: bold;
-  font-size: 16px;
-  text-align: center;
+  padding: 0;
   line-height: 30px;
   cursor: pointer;
   user-select: none;
@@ -89,8 +88,8 @@
 <script>
 
 let gridSize = 10; // start with 10, easier to adjust later
+let totalMines = 10;
 let firstClick = true;
-let gameOver = false;
 let board = [];
 let grid = [];
 
@@ -130,7 +129,7 @@ for (let row = 0; row < gridSize; row++) {
     })
   }
   board.push(rowData)
-}
+  }
 }
   
 // create the MINES. put within checkanswer
@@ -139,7 +138,7 @@ let minesNumber = 0
 let mineCol = 0
 let mineRow = 0
 
-while (minesNumber < 11) {
+while (minesNumber < totalMines) {
 mineCol = Math.floor(Math.random()* gridSize)
 mineRow = Math.floor(Math.random()* gridSize)
 if (mineCol == clickedCol && mineRow == clickedRow) continue;
@@ -147,7 +146,30 @@ if (board[mineRow][mineCol].mine == true) continue;
 
   board[mineRow][mineCol].mine = true   // set the mine flag
   minesNumber++
-}
+} 
+
+// count adjacent once all mines placed
+let boardCol = 0
+let boardRow = 0
+
+for (boardRow = 0; boardRow < gridSize; boardRow++) {
+  for (boardCol = 0; boardCol < gridSize; boardCol++) {
+
+ // For each cell, loop through its 8 neighbors
+ // If neighbor is in bounds and has a mine, increment adjacent count
+
+for (let dr = -1; dr <= 1; dr++) {
+ for (let dc = -1; dc <= 1; dc++) {
+if (dr == 0 && dc == 0) continue;
+
+let neighbourRow = boardRow + dr
+let neighbourCol = boardCol + dc
+if (neighbourRow < 0 || neighbourRow >= gridSize) continue;
+if (neighbourCol < 0 || neighbourCol >= gridSize) continue;
+
+if (board[neighbourRow][neighbourCol].mine == true) {
+board[boardRow][boardCol].adjacent++
+}}}}}
 }
 
 
@@ -162,34 +184,78 @@ function checkAnswer(e) {
   let clickedCell = e.target;
   let clickedRow = parseInt(clickedCell.dataset.row);
   let clickedCol = parseInt(clickedCell.dataset.col);
-clickedCell.style.backgroundColor = "lightblue";
-console.log("clicked: ", clickedRow, clickedCol) 
+
   if (firstClick) {
     generateMines(clickedRow, clickedCol)
     firstClick = false
   } else {
-    revealCell (clickedRow, clickedCol)
-    cell
-  // check for hits
-    gameOver = true;
-    document.getElementById("resetBtn").style.display = "inline-block";
-   
+    revealCell (clickedRow, clickedCol, clickedCell)   
   }
 }
 
 
+function revealCell(clickedRow, clickedCol, clickedCell) {
+if (board[clickedRow][clickedCol].revealed == true) {
+return
+} else if (board[clickedRow][clickedCol].mine == true) {
+  clickedCell.style.backgroundColor = "red";
+  gameOver()
+  return // need this cuz after running gameOver(), it will come back to this
+} else {
+
+  board[clickedRow][clickedCol].revealed = true
+if (board[clickedRow][clickedCol].adjacent > 0) {
+clickedCell.style.backgroundColor = "lightblue"; 
+clickedCell.innerHTML = `${board[clickedRow][clickedCol].adjacent}`
+} else {
+  
+ clickedCell.style.backgroundColor = "lightblue"; // the clicked cell only
+
+for (let dr = -1; dr <= 1; dr++) {
+ for (let dc = -1; dc <= 1; dc++) {
+if (dr == 0 && dc == 0) continue;
+
+let neighbourRow = clickedRow + dr
+let neighbourCol = clickedCol + dc
+if (neighbourRow < 0 || neighbourRow >= gridSize) continue;
+if (neighbourCol < 0 || neighbourCol >= gridSize) continue;
+let neighbourCell = document.getElementById(`cell-${neighbourRow}-${neighbourCol}`)
+
+revealCell(neighbourRow, neighbourCol, neighbourCell)
+
+} }}}
+}
+
+
+function gameOver() {
+  for (let r = 0; r < gridSize; r++) {
+    for (let c = 0; c < gridSize; c++) {
+let cellData = board[r][c]
+let cellElement = document.getElementById(`cell-${r}-${c}`)
+
+if (cellData.mine) {
+cellData.revealed = true
+cellElement.style.backgroundColor = "red"
+} 
+cellElement.removeEventListener("click", checkAnswer)
+    }
+  }
+}
+
+
+document.getElementById("resetBtn").addEventListener("click", resetGame);
 
 function resetGame() {
-  document.getElementById("resetBtn").style.display = "none";
   document.getElementById("feedback").textContent = "";
-
+  board = [];
   generateBoard();
-  generateGrid();
-  document.getElementById("grid").style.backgroundColor = "grey"; // need to clear off the previous grid. then generate from scratch
   
-  gameOver = false;
+  document.getElementById("grid").innerHTML = "";
+  generateGrid();
+
   firstClick = true;
-let cells = document.querySelectorAll("td");
+
+let cells = document.querySelectorAll("td"); // reattach event listeners to all the new grid cells
 cells.forEach((cell) => {
   cell.addEventListener("click", checkAnswer);
 });
