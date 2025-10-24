@@ -22,6 +22,9 @@
   background-color: lightgray;
   border: 1px solid #999;
   padding: 0;
+  font-weight: bold;
+  font-size: 16px;
+  text-align: center;
   line-height: 30px;
   cursor: pointer;
   user-select: none;
@@ -125,7 +128,8 @@ for (let row = 0; row < gridSize; row++) {
     rowData.push({
       mine: false,
       revealed: false,
-      adjacent: 0
+      adjacent: 0,
+      flagged: false
     })
   }
   board.push(rowData)
@@ -144,6 +148,17 @@ mineRow = Math.floor(Math.random()* gridSize)
 if (mineCol == clickedCol && mineRow == clickedRow) continue;
 if (board[mineRow][mineCol].mine == true) continue;
 
+for (let dr = -1; dr <= 1; dr++) { 
+for (let dc = -1; dc <= 1; dc++) {
+let nR = clickedRow + dr
+let nC = clickedCol + dc
+
+if (nR == clickedRow && nC == clickedCol) {
+safeZone = true
+}
+
+}}
+if (safeZone) continue;
   board[mineRow][mineCol].mine = true   // set the mine flag
   minesNumber++
 } 
@@ -173,12 +188,6 @@ board[boardRow][boardCol].adjacent++
 }
 
 
-let cells = document.querySelectorAll("td");
-cells.forEach((cell) => {
-  cell.addEventListener("click", checkAnswer);
-});
-
-
 function checkAnswer(e) {
   
   let clickedCell = e.target;
@@ -190,12 +199,14 @@ function checkAnswer(e) {
     firstClick = false
   } else {
     revealCell (clickedRow, clickedCol, clickedCell)   
+checkWin()
   }
+
 }
 
 
 function revealCell(clickedRow, clickedCol, clickedCell) {
-if (board[clickedRow][clickedCol].revealed == true) {
+if (board[clickedRow][clickedCol].revealed == true || board[clickedRow][clickedCol].flagged == true) {
 return
 } else if (board[clickedRow][clickedCol].mine == true) {
   clickedCell.style.backgroundColor = "red";
@@ -209,7 +220,7 @@ clickedCell.style.backgroundColor = "lightblue";
 clickedCell.innerHTML = `${board[clickedRow][clickedCol].adjacent}`
 } else {
   
- clickedCell.style.backgroundColor = "lightblue"; // the clicked cell only
+  clickedCell.style.backgroundColor = "lightblue"; // the clicked cell only
 
 for (let dr = -1; dr <= 1; dr++) {
  for (let dc = -1; dc <= 1; dc++) {
@@ -219,12 +230,33 @@ let neighbourRow = clickedRow + dr
 let neighbourCol = clickedCol + dc
 if (neighbourRow < 0 || neighbourRow >= gridSize) continue;
 if (neighbourCol < 0 || neighbourCol >= gridSize) continue;
-let neighbourCell = document.getElementById(`cell-${neighbourRow}-${neighbourCol}`)
 
-revealCell(neighbourRow, neighbourCol, neighbourCell)
+let neighbourCell = document.getElementById(`cell-${neighbourRow}-${neighbourCol}`)
+if (neighbourCell.flagged == true) continue;
+revealCell(neighbourRow, neighbourCol, neighbourCell) // CASCADE!!
 
 } }}}
 }
+
+
+function toggleFlag(e) {
+  let clickedCell = e.target;
+  e.preventDefault()
+  let clickedRow = parseInt(clickedCell.dataset.row);
+  let clickedCol = parseInt(clickedCell.dataset.col);
+  if (board[clickedRow][clickedCol].revealed == true) {
+    return
+  } else if (board[clickedRow][clickedCol].flagged) {
+board[clickedRow][clickedCol].flagged = false
+clickedCell.textContent = ""; // no flag
+clickedCell.style.backgroundColor = ""; 
+} else {
+  board[clickedRow][clickedCol].flagged = true
+clickedCell.textContent = "🚩"; // add flag
+clickedCell.style.backgroundColor = "pink"; 
+  }
+}
+
 
 
 function gameOver() {
@@ -243,7 +275,6 @@ cellElement.removeEventListener("click", checkAnswer)
 }
 
 
-document.getElementById("resetBtn").addEventListener("click", resetGame);
 
 function resetGame() {
   document.getElementById("feedback").textContent = "";
@@ -259,7 +290,39 @@ let cells = document.querySelectorAll("td"); // reattach event listeners to all 
 cells.forEach((cell) => {
   cell.addEventListener("click", checkAnswer);
 });
+cells.forEach((cell) => {
+  cell.addEventListener("contextmenu", toggleFlag); // right click
+});
 }
+
+function checkWin() {
+let revealedCount = 0
+ for (let r = 0; r < gridSize; r++) {
+    for (let c = 0; c < gridSize; c++) {
+let cellData = board[r][c]
+if (!cellData.mine && cellData.revealed == true) { // just check non mines in case.
+revealedCount++
+}
+
+if (revealedCount == gridSize * gridSize - totalMines) {
+
+if (cellData.mine == true && !cellData.revealed) {
+cellData.textContent = "🚩"; // add flag
+} 
+cellData.revealed = true
+  document.getElementById("feedback").textContent = "You win!";
+}}}
+}
+
+// all my listeners
+let cells = document.querySelectorAll("td");
+cells.forEach((cell) => {
+  cell.addEventListener("click", checkAnswer); // left click
+});
+cells.forEach((cell) => {
+  cell.addEventListener("contextmenu", toggleFlag); // right click
+});
+document.getElementById("resetBtn").addEventListener("click", resetGame);
 
 </script>
 
