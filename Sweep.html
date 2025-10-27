@@ -32,7 +32,7 @@
 
 /* Revealed cell */
 .cell.revealed {
-  background-color: #0597b0;
+  background-color: lightblue;
   cursor: default;
 }
 
@@ -350,8 +350,6 @@ function attachListeners() {
       clearTimeout(pressTimer);
     });
 
-    // normal tap still does reveal
-    cell.addEventListener("click", checkAnswer);
   });
 }
 
@@ -360,4 +358,3 @@ function attachListeners() {
 
 </body>
 </html>
-
