@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>OTV</title>
+  <title>SS</title>
 
   <style>
 /* Container for the grid */
@@ -54,7 +54,7 @@
 </head>
 <body>
 
-<h1>Sweep Sweep</h1>
+<h1>SS</h1>
 
 
 
@@ -114,7 +114,7 @@ function generateGrid() {
 }
 
 // create clear logic BOARD (the invisible one BTS)
-function generateBoard() {
+function generateBoard(gridSize) {
   board = [];
   for (let row = 0; row < gridSize; row++) {
     rowData = [];
@@ -132,7 +132,8 @@ function generateBoard() {
 }
 
 // create the MINES. put within checkanswer
-function generateMines(clickedRow, clickedCol) {
+function generateMines(clickedRow, clickedCol, newMines = totalMines) {
+  totalMines = newMines
   let minesNumber = 0;
   let mineCol = 0;
   let mineRow = 0;
@@ -277,10 +278,12 @@ function gameOver() {
   }
 }
 
-function resetGame() {
+function resetGame(newSize = gridSize, newMines = totalMines) {
+gridSize = newSize
+totalMines = newMines
   document.getElementById("feedback").textContent = "";
   board = [];
-  generateBoard();
+  generateBoard(gridSize);
 
   document.getElementById("grid").innerHTML = "";
   generateGrid();
@@ -335,6 +338,7 @@ function attachListeners() {
     cell.addEventListener("contextmenu", toggleFlag); // right click
   });
   document.getElementById("resetBtn").addEventListener("click", resetGame);
+  document.getElementById("applyBtn").addEventListener("click", customise);
 
   // phone long tap
   cells.forEach((cell) => {
@@ -360,18 +364,24 @@ function attachListeners() {
   });
 }
 
-  // changing size and mines
 function customise() {
 let inputSize = document.getElementById("gridSizeInput").value
 let inputMine = document.getElementById("mineInput").value
+
+let newSize = gridSize;
+let newMines = totalMines;
+
 if (inputSize !== "") {
-gridSize = parseInt(inputSize)
+newSize = parseInt(inputSize)
 }
 if (inputMine !== "") {
-totalMines = parseInt(inputMine)
-} 
-  resetgame()
+newMines = parseInt(inputMine)
 }
+resetGame(newSize, newMines)
+}
+
+
+
 
 </script>
 
