@@ -338,17 +338,25 @@ function attachListeners() {
 
   // phone long tap
   cells.forEach((cell) => {
-    let pressTimer;
-    cell.addEventListener("touchstart", (e) => {
-      e.preventDefault();
-      pressTimer = setTimeout(() => {
-        toggleFlag(e);
-      }, 600); // long press = 600 ms
-    });
+  let pressTimer;
+  let longPressTriggered = false;
 
-    cell.addEventListener("touchend", (e) => {
-      clearTimeout(pressTimer);
-    });
+  cell.addEventListener("touchstart", (e) => {
+    e.preventDefault();
+    longPressTriggered = false;
+    pressTimer = setTimeout(() => {
+      toggleFlag(e);
+      longPressTriggered = true;
+    }, 600); // long press
+  });
+
+  cell.addEventListener("touchend", (e) => {
+    clearTimeout(pressTimer);
+    if (!longPressTriggered) {
+      checkAnswer(e); // treat as single tap
+    }
+  });
+});
 
   });
 }
