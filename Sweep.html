@@ -83,6 +83,8 @@
 
 <script>
 
+// cleaner version
+
 let gridSize = 10; // start with 10, easier to adjust later
 let totalMines = 10;
 let firstClick = true;
@@ -92,7 +94,7 @@ let grid = [];
 // starting new game/setup
 document.addEventListener("DOMContentLoaded", function () {
   generateGrid();
-  generateBoard();
+  generateBoard(gridSize);
   attachListeners();
 });
 
@@ -124,7 +126,6 @@ function generateBoard(gridSize) {
         revealed: false,
         adjacent: 0,
         flagged: false,
-        safeZone: false,
       });
     }
     board.push(rowData);
@@ -133,7 +134,7 @@ function generateBoard(gridSize) {
 
 // create the MINES. put within checkanswer
 function generateMines(clickedRow, clickedCol, newMines = totalMines) {
-  totalMines = newMines
+  totalMines = newMines;
   let minesNumber = 0;
   let mineCol = 0;
   let mineRow = 0;
@@ -144,7 +145,7 @@ function generateMines(clickedRow, clickedCol, newMines = totalMines) {
     if (mineCol == clickedCol && mineRow == clickedRow) continue;
     if (
       board[mineRow][mineCol].mine == true ||
-      board[mineRow][mineCol].safeZone == true
+      isAdjacent(mineRow, mineCol, clickedRow, clickedCol)
     )
       continue;
 
@@ -185,18 +186,6 @@ function checkAnswer(e) {
   let clickedCol = parseInt(clickedCell.dataset.col);
 
   if (firstClick) {
-    for (let dr = -1; dr <= 1; dr++) {
-      for (let dc = -1; dc <= 1; dc++) {
-        let neighbourRow = clickedRow + dr;
-        let neighbourCol = clickedCol + dc;
-
-        // 🧱 Check that the neighbor is still within the grid
-        if (neighbourRow < 0 || neighbourRow >= gridSize) continue;
-        if (neighbourCol < 0 || neighbourCol >= gridSize) continue;
-
-        board[neighbourRow][neighbourCol].safeZone = true;
-      }
-    }
     generateMines(clickedRow, clickedCol);
     firstClick = false;
     revealCell(clickedRow, clickedCol, clickedCell);
@@ -204,6 +193,10 @@ function checkAnswer(e) {
     revealCell(clickedRow, clickedCol, clickedCell);
     checkWin();
   }
+}
+
+function isAdjacent(r, c, clickedRow, clickedCol) {
+  return Math.abs(r - clickedRow) <= 1 && Math.abs(c - clickedCol) <= 1;
 }
 
 function revealCell(clickedRow, clickedCol, clickedCell) {
@@ -279,14 +272,14 @@ function gameOver() {
 }
 
 function resetGame(newSize = gridSize, newMines = totalMines) {
-gridSize = newSize
-totalMines = newMines
+  gridSize = newSize;
+  totalMines = newMines;
   document.getElementById("feedback").textContent = "";
   board = [];
   generateBoard(gridSize);
 
   document.getElementById("grid").innerHTML = "";
-  generateGrid();
+  generateGrid(gridSize);
 
   firstClick = true;
 
@@ -338,49 +331,49 @@ function attachListeners() {
     cell.addEventListener("contextmenu", toggleFlag); // right click
   });
   document.getElementById("resetBtn").addEventListener("click", () => {
-  resetGame(gridSize, totalMines);
-});
+    resetGame(gridSize, totalMines);
+  });
   document.getElementById("applyBtn").addEventListener("click", customise);
 
   // phone long tap
   cells.forEach((cell) => {
-  let pressTimer;
-  let longPressTriggered = false;
+    let pressTimer;
+    let longPressTriggered = false;
 
-  cell.addEventListener("touchstart", (e) => {
-    e.preventDefault();
-    longPressTriggered = false;
-    pressTimer = setTimeout(() => {
-      toggleFlag(e);
-      longPressTriggered = true;
-    }, 600); // long press
-  });
+    cell.addEventListener("touchstart", (e) => {
+      e.preventDefault();
+      longPressTriggered = false;
+      pressTimer = setTimeout(() => {
+        toggleFlag(e);
+        longPressTriggered = true;
+      }, 600); // long press
+    });
 
-  cell.addEventListener("touchend", (e) => {
-    clearTimeout(pressTimer);
-    if (!longPressTriggered) {
-      checkAnswer(e); // treat as single tap
-    }
-  });
-
+    cell.addEventListener("touchend", (e) => {
+      clearTimeout(pressTimer);
+      if (!longPressTriggered) {
+        checkAnswer(e); // treat as single tap
+      }
+    });
   });
 }
 
 function customise() {
-let inputSize = document.getElementById("gridSizeInput").value
-let inputMine = document.getElementById("mineInput").value
+  let inputSize = document.getElementById("gridSizeInput").value;
+  let inputMine = document.getElementById("mineInput").value;
 
-let newSize = gridSize;
-let newMines = totalMines;
+  let newSize = gridSize;
+  let newMines = totalMines;
 
-if (inputSize !== "") {
-newSize = parseInt(inputSize)
+  if (inputSize !== "") {
+    newSize = parseInt(inputSize);
+  }
+  if (inputMine !== "") {
+    newMines = parseInt(inputMine);
+  }
+  resetGame(newSize, newMines);
 }
-if (inputMine !== "") {
-newMines = parseInt(inputMine)
-}
-resetGame(newSize, newMines)
-}
+
 
 
 
