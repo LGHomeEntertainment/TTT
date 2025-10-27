@@ -337,7 +337,9 @@ function attachListeners() {
   cells.forEach((cell) => {
     cell.addEventListener("contextmenu", toggleFlag); // right click
   });
-  document.getElementById("resetBtn").addEventListener("click", resetGame);
+  document.getElementById("resetBtn").addEventListener("click", () => {
+  resetGame(gridSize, totalMines);
+});
   document.getElementById("applyBtn").addEventListener("click", customise);
 
   // phone long tap
