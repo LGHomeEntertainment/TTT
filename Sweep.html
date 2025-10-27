@@ -360,6 +360,17 @@ function attachListeners() {
   });
 }
 
+  // changing size and mines
+function customise() {
+let inputSize = document.getElementById("gridSizeInput").value
+let inputMine = document.getElementById("mineInput").value
+if (inputSize !== "") {
+gridSize = parseInt(inputSize)
+}
+if (inputMine !== "") {
+totalMines = parseInt(inputMine)
+}
+}
 
 </script>
 
