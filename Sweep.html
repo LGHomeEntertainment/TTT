@@ -90,6 +90,7 @@ let totalMines = 10;
 let firstClick = true;
 let board = [];
 let grid = [];
+let gameOver = false;
 
 
 // ==== INITIALISATION + GENERATION ====
@@ -98,7 +99,7 @@ document.addEventListener("DOMContentLoaded", initialise);
 
 function initialise() {
   generateGrid();
-  generateBoard();
+  generateBoard(gridSize);
   attachListeners();
 }
 
@@ -123,7 +124,7 @@ function generateGrid() {
 function generateBoard(gridSize) {
   board = [];
   for (let row = 0; row < gridSize; row++) {
-    rowData = [];
+    let rowData = [];
     for (let col = 0; col < gridSize; col++) {
       rowData.push({
         mine: false,
@@ -149,22 +150,22 @@ function generateMines(clickedRow, clickedCol, newMines = totalMines) {
     if (mineCol == clickedCol && mineRow == clickedRow) continue;
     if (
       board[mineRow][mineCol].mine == true ||
-      isAdjacent(mineRow, mineCol, clickedRow, clickedCol)
+      isAdjacent(mineRow, mineCol, clickedRow, clickedCol) // if mine or if is adjacent to the cell
     )
-      continue;
+      continue; // skip!
 
     board[mineRow][mineCol].mine = true; // set the mine flag
     minesNumber++;
   }
 
   // count adjacent once all mines placed
+  // For each cell, loop through its 8 neighbors
+  // If neighbor is in bounds and has a mine, increment adjacent count
   let boardCol = 0;
   let boardRow = 0;
 
   for (boardRow = 0; boardRow < gridSize; boardRow++) {
     for (boardCol = 0; boardCol < gridSize; boardCol++) {
-      // For each cell, loop through its 8 neighbors
-      // If neighbor is in bounds and has a mine, increment adjacent count
 
       for (let dr = -1; dr <= 1; dr++) {
         for (let dc = -1; dc <= 1; dc++) {
@@ -191,19 +192,27 @@ function checkAnswer(e) {
   let clickedCell = e.target;
   let clickedRow = parseInt(clickedCell.dataset.row);
   let clickedCol = parseInt(clickedCell.dataset.col);
-
+  if (gameOver) return;
   if (firstClick) {
     generateMines(clickedRow, clickedCol);
+
+// validate board after generating mines
+let isValid = validateBoard(clickedRow, clickedCol)
+if (!isValid) {
+let attempts = 0
+ while (!isValid && attempts < 10) { // attempts is more impt in sudoku, to throw out the board entirely?
+      generateMines(clickedRow, clickedCol);
+      isValid = validateBoard(clickedRow, clickedCol);
+      attempts++;
+    }
+  }
+
     firstClick = false;
     revealCell(clickedRow, clickedCol, clickedCell);
   } else {
     revealCell(clickedRow, clickedCol, clickedCell);
     checkWin();
   }
-}
-
-function isAdjacent(r, c, clickedRow, clickedCol) {
-  return Math.abs(r - clickedRow) <= 1 && Math.abs(c - clickedCol) <= 1;
 }
 
 function revealCell(clickedRow, clickedCol, clickedCell) {
@@ -214,7 +223,7 @@ function revealCell(clickedRow, clickedCol, clickedCell) {
     return;
   } else if (board[clickedRow][clickedCol].mine == true) {
     clickedCell.classList.add("mine");
-    gameOver();
+    triggerGameOver();
     return; // need this cuz after running gameOver(), it will come back to this
   } else {
     board[clickedRow][clickedCol].revealed = true;
@@ -244,7 +253,68 @@ function revealCell(clickedRow, clickedCol, clickedCell) {
   }
 }
 
+function checkWin() {
+  let revealedCount = 0;
+  for (let r = 0; r < gridSize; r++) {
+    for (let c = 0; c < gridSize; c++) {
+      let cellData = board[r][c];
+      if (!cellData.mine && cellData.revealed == true) {
+        // just check non mines in case.
+        revealedCount++;
+      }
+    }
+  }
+
+  if (revealedCount == gridSize * gridSize - totalMines) {
+    gameOver = true;
+    for (let r = 0; r < gridSize; r++) {
+      for (let c = 0; c < gridSize; c++) {
+        let cellData = board[r][c];
+        if (cellData.mine == true && !cellData.revealed) {
+          let cellElement = document.getElementById(`cell-${r}-${c}`);
+          cellElement.textContent = "💣"; // add flag
+        }
+        cellData.revealed = true;
+        document.getElementById("feedback").textContent = "You win!";
+      }
+    }
+  }
+}
+
+function triggerGameOver() {
+  for (let r = 0; r < gridSize; r++) {
+    for (let c = 0; c < gridSize; c++) {
+      let cellData = board[r][c];
+      let cellElement = document.getElementById(`cell-${r}-${c}`);
+
+      if (cellData.mine) {
+        cellData.revealed = true;
+        cellElement.classList.add("mine");
+        cellElement.textContent = "💣"; // add flag
+      }
+    }
+  }
+}
+
+function resetGame(newSize = gridSize, newMines = totalMines) {
+  gridSize = newSize;
+  totalMines = newMines;
+  document.getElementById("feedback").textContent = "";
+  board = [];
+  generateBoard(gridSize);
+  document.getElementById("grid").innerHTML = "";
+  generateGrid(gridSize);
+  firstClick = true;
+  gameOver = false;
+  attachListeners();
+}
+
+function isAdjacent(r, c, clickedRow, clickedCol) { // check how far apart is 2 cells (for generating mines)
+  return Math.abs(r - clickedRow) <= 1 && Math.abs(c - clickedCol) <= 1;
+}
+
 function toggleFlag(e) {
+if (gameOver) return;
   let clickedCell = e.target;
   e.preventDefault();
   let clickedRow = parseInt(clickedCell.dataset.row);
@@ -259,62 +329,6 @@ function toggleFlag(e) {
     board[clickedRow][clickedCol].flagged = true;
     clickedCell.textContent = "🚩"; // add flag
     clickedCell.classList.add("flagged");
-  }
-}
-
-function gameOver() {
-  for (let r = 0; r < gridSize; r++) {
-    for (let c = 0; c < gridSize; c++) {
-      let cellData = board[r][c];
-      let cellElement = document.getElementById(`cell-${r}-${c}`);
-
-      if (cellData.mine) {
-        cellData.revealed = true;
-        cellElement.classList.add("mine");
-        cellElement.textContent = "💣"; // add flag
-      }
-      disableInputs();
-    }
-  }
-}
-
-function resetGame(newSize = gridSize, newMines = totalMines) {
-  gridSize = newSize;
-  totalMines = newMines;
-  document.getElementById("feedback").textContent = "";
-  board = [];
-  generateBoard(gridSize);
-  document.getElementById("grid").innerHTML = "";
-  generateGrid(gridSize);
-  firstClick = true;
-  attachListeners();
-}
-
-function checkWin() {
-  let revealedCount = 0;
-  for (let r = 0; r < gridSize; r++) {
-    for (let c = 0; c < gridSize; c++) {
-      let cellData = board[r][c];
-      if (!cellData.mine && cellData.revealed == true) {
-        // just check non mines in case.
-        revealedCount++;
-      }
-    }
-  }
-
-  if (revealedCount == gridSize * gridSize - totalMines) {
-    disableInputs();
-    for (let r = 0; r < gridSize; r++) {
-      for (let c = 0; c < gridSize; c++) {
-        let cellData = board[r][c];
-        if (cellData.mine == true && !cellData.revealed) {
-          let cellElement = document.getElementById(`cell-${r}-${c}`);
-          cellElement.textContent = "💣"; // add flag
-        }
-        cellData.revealed = true;
-        document.getElementById("feedback").textContent = "You win!";
-      }
-    }
   }
 }
 
@@ -379,6 +393,99 @@ function customise() {
     newMines = parseInt(inputMine);
   }
   resetGame(newSize, newMines);
+}
+
+
+// ==== BOARD VALIDATION ====
+
+function validateBoard(clickedRow, clickedCol) { // use after firstclick
+  // Step 1: Setup
+  // Create a copy of the board state (optional, for simulation)
+// test board is like board. holds data, doesn't change during the game
+
+let testBoard = cloneBoard(board) // this allows testBoard to store the cloneboard data itself
+
+  // Create a list of revealed cells starting from the first click
+// creates a 2D array (same shape as your board) where each cell starts as false, meaning not revealed
+// revealedMap is for keeping track of the player, as though he is actually playing the board, like checkAnswer(e)
+
+let revealedMap = Array(gridSize).fill().map(() => Array(gridSize).fill(false));
+
+  // Create a list of flagged cells (initially empty)
+// tracks whether a cell is flagged in your simulation
+
+let flaggedMap = Array(gridSize).fill().map(() => Array(gridSize).fill(false));
+
+
+  // Step 2: Simulate logical deduction
+  // Loop through revealed cells
+  // For each cell with a number:
+  //   - Count hidden neighbors
+  //   - Count flagged neighbors
+  //   - If adjacent == flagged count → reveal remaining hidden neighbors
+  //   - If adjacent == hidden count → flag all hidden neighbors
+
+cascadeReveal(clickedRow, clickedCol, testBoard, revealedMap) 
+
+
+  // Step 3: Track progress
+  // Keep a counter of how many non-mine cells are revealed
+  // Stop when no new cells are revealed in a loop
+
+for (let dr = -1; dr <= 1; dr++) {
+        for (let dc = -1; dc <= 1; dc++) {
+          if (dr == 0 && dc == 0) continue;
+
+          let neighbourRow = clickedRow + dr;
+          let neighbourCol = clickedCol + dc;
+
+if (revealedMap[neighbourRow][neighbourCol].adjacent > 0) {
+
+// obvious mines
+
+}
+
+  // Step 4: Evaluate
+  // If revealed count == total safe cells → return true (valid board)
+  // Else → return false (board requires guessing)
+
+  // Step 5: Retry logic (outside this function)
+  // If validateBoard() returns false, regenerate mines and try again
+  // already put in generateMines(), after first click
+}
+}
+
+function cloneBoard(board) {
+  let testBoard = [];
+  for (let row = 0; row < gridSize; row++) {
+    let rowTest = [];
+    for (let col = 0; col < gridSize; col++) {
+      rowTest.push({ ...board[row][col] });
+    }
+    testBoard.push(rowTest);
+  }
+return testBoard // only by returning, we can access it in the validate board (). it's not really global though
+}
+
+
+function cascadeReveal(clickedRow, clickedCol, testBoard, revealedMap) {
+ if (revealedMap[clickedRow][clickedCol]) return;
+revealedMap[clickedRow][clickedCol] = true;
+if (testBoard[clickedRow][clickedCol].adjacent > 0) return;
+
+// cascade to neighbours
+ for (let dr = -1; dr <= 1; dr++) {
+        for (let dc = -1; dc <= 1; dc++) {
+          if (dr == 0 && dc == 0) continue;
+
+          let neighbourRow = clickedRow + dr;
+          let neighbourCol = clickedCol + dc;
+          if (neighbourRow < 0 || neighbourRow >= gridSize || neighbourCol < 0 || neighbourCol >= gridSize) continue;
+          cascadeReveal(neighbourRow, neighbourCol, testBoard, revealedMap); // CASCADE!!
+        }
+      }
+    }
+  }
 }
 
 
