@@ -83,7 +83,7 @@
 
 <script>
 
-// cleaner version
+// ==== GLOBALs + CONSTANTS ====
 
 let gridSize = 10; // start with 10, easier to adjust later
 let totalMines = 10;
@@ -91,12 +91,16 @@ let firstClick = true;
 let board = [];
 let grid = [];
 
-// starting new game/setup
-document.addEventListener("DOMContentLoaded", function () {
+
+// ==== INITIALISATION + GENERATION ====
+
+document.addEventListener("DOMContentLoaded", initialise);
+
+function initialise() {
   generateGrid();
-  generateBoard(gridSize);
+  generateBoard();
   attachListeners();
-});
+}
 
 // visible GRID
 function generateGrid() {
@@ -179,6 +183,9 @@ function generateMines(clickedRow, clickedCol, newMines = totalMines) {
     }
   }
 }
+
+
+// ==== GAME LOGIC ====
 
 function checkAnswer(e) {
   let clickedCell = e.target;
@@ -277,12 +284,9 @@ function resetGame(newSize = gridSize, newMines = totalMines) {
   document.getElementById("feedback").textContent = "";
   board = [];
   generateBoard(gridSize);
-
   document.getElementById("grid").innerHTML = "";
   generateGrid(gridSize);
-
   firstClick = true;
-
   attachListeners();
 }
 
@@ -313,6 +317,9 @@ function checkWin() {
     }
   }
 }
+
+
+// ==== UI + INTERACTION ====
 
 function disableInputs() {
   let cells = document.querySelectorAll("td");
@@ -373,9 +380,6 @@ function customise() {
   }
   resetGame(newSize, newMines);
 }
-
-
-
 
 
 </script>
