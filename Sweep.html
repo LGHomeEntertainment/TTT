@@ -47,16 +47,13 @@
   background-color: orange;
   color: white;
 }
-
-
+    
 </style>
 
 </head>
 <body>
 
 <h1>SS</h1>
-
-
 
 <table id="grid">
   <!-- JS will generate rows and cells -->
@@ -491,18 +488,15 @@ for (let r = 0; r < gridSize; r++) {
 }
   if (revealedSafe == totalSafeCells) {
 
-  return;
-
+  return true;
+} return false;
 }}}
-
-
 
 
   // Step 5: Retry logic (outside this function)
   // If validateBoard() returns false, regenerate mines and try again
   // already put in generateMines(), after first click
-}
-}
+
 
 function cloneBoard(board) {
   let testBoard = [];
