@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Keno</title>
+
+  <style>
+/* Container for the grid */
+#grid {
+  display: grid;
+  border-collapse: collapse;
+  border-spacing: 0;
+  grid-template-columns: repeat(var(--grid-size), 1fr); /* dynamic columns */
+  width: fit-content;
+  margin: 20px auto;
+}
+
+/* Each cell */
+.cell {
+  width: 30px;
+  height: 30px;
+  background-color: lightyellow;
+  border: 1px solid #999;
+  padding: 0;
+  font-weight: bold;
+  font-size: 16px;
+  text-align: center;
+  line-height: 30px;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Missed cell */
+.cell.drawn {
+  background-color: red;
+}
+
+/* Picked cell */
+.cell.picked {
+  background-color: ;
+}
+
+/* Hit cell */
+.cell.hit {
+  background-color: green;
+}
+
+
+</style>
+
+</head>
+<body>
+
+<h1>KN</h1>
+
+
+<table>
+
+  <tr>
+    <td id="cell1">1</td>
+    <td id="cell2">2</td>
+    <td id="cell3">3</td>
+    <td id="cell4">4</td>
+    <td id="cell5">5</td>
+    <td id="cell6">6</td>
+    <td id="cell7">7</td>
+    <td id="cell8">8</td>
+    <td id="cell9">9</td>
+    <td id="cell10">10</td>
+  </tr>
+
+  <tr>
+    <td id="cell11">11</td>
+    <td id="cell12">12</td>
+    <td id="cell13">13</td>
+    <td id="cell14">14</td>
+    <td id="cell15">15</td>
+    <td id="cell16">16</td>
+    <td id="cell17">17</td>
+    <td id="cell18">18</td>
+    <td id="cell19">19</td>
+    <td id="cell20">20</td>
+  </tr>
+
+  <tr>
+<td id="cell21">21</td>
+<td id="cell22">22</td>
+<td id="cell23">23</td>
+<td id="cell24">24</td>
+<td id="cell25">25</td>
+<td id="cell26">26</td>
+<td id="cell27">27</td>
+<td id="cell28">28</td>
+<td id="cell29">29</td>
+<td id="cell30">30</td>
+  </tr>
+
+  <tr>
+<td id="cell31">31</td>
+<td id="cell32">32</td>
+<td id="cell33">33</td>
+<td id="cell34">34</td>
+<td id="cell35">35</td>
+<td id="cell36">36</td>
+<td id="cell37">37</td>
+<td id="cell38">38</td>
+<td id="cell39">39</td>
+<td id="cell40">40</td>
+  </tr>
+
+<tr>
+<td id="cell41">41</td>
+<td id="cell42">42</td>
+<td id="cell43">43</td>
+<td id="cell44">44</td>
+<td id="cell45">45</td>
+<td id="cell46">46</td>
+<td id="cell47">47</td>
+<td id="cell48">48</td>
+<td id="cell49">49</td>
+<td id="cell50">50</td>
+</tr>
+
+<tr>
+<td id="cell51">51</td>
+<td id="cell52">52</td>
+<td id="cell53">53</td>
+<td id="cell54">54</td>
+<td id="cell55">55</td>
+<td id="cell56">56</td>
+<td id="cell57">57</td>
+<td id="cell58">58</td>
+<td id="cell59">59</td>
+<td id="cell60">60</td>
+</tr>
+
+<tr>
+<td id="cell61">61</td>
+<td id="cell62">62</td>
+<td id="cell63">63</td>
+<td id="cell64">64</td>
+<td id="cell65">65</td>
+<td id="cell66">66</td>
+<td id="cell67">67</td>
+<td id="cell68">68</td>
+<td id="cell69">69</td>
+<td id="cell70">70</td>
+</tr>
+
+<tr>
+<td id="cell71">71</td>
+<td id="cell72">72</td>
+<td id="cell73">73</td>
+<td id="cell74">74</td>
+<td id="cell75">75</td>
+<td id="cell76">76</td>
+<td id="cell77">77</td>
+<td id="cell78">78</td>
+<td id="cell79">79</td>
+<td id="cell80">80</td>
+</tr>
+
+</table>
+
+
+<div> 
+  <p id="feedback"></p>
+</div>
+
+<div> 
+  <button id="playBtn">Play</button>
+</div>
+
+
+<p>Bet Amount: <span id="betDisplay">100</span></p>
+
+<button onclick="adjustBet(-100)">-</button>
+<button onclick="adjustBet(100)">+</button>
+
+<label>Rounds:
+  <input type="number" id="mineInput" value="10" min="1" max="100">
+</label>
+
+
+<script>
+
+// ==== GLOBALs + CONSTANTS ====
+
+let bet = 0
+let playerPicks = [];
+let gameOver = true;
+let totalGen = 20;
+let winningNumbers = 0
+
+
+// ==== INITIALISATION + GENERATION ====
+
+document.addEventListener("DOMContentLoaded", initialise);
+
+function initialise() {
+  generateGrid();
+  attachListeners();
+}
+
+
+
+// create the winning numbers
+function generateWinners() {
+  totalMines = newMines;
+  let minesNumber = 0;
+  let mineCol = 0;
+  let mineRow = 0;
+
+  while (minesNumber < totalMines) {
+    mineCol = Math.floor(Math.random() * gridSize);
+    mineRow = Math.floor(Math.random() * gridSize);
+    if (mineCol == clickedCol && mineRow == clickedRow) continue;
+    if (
+      board[mineRow][mineCol].mine == true ||
+      isAdjacent(mineRow, mineCol, clickedRow, clickedCol) // if mine or if is adjacent to the cell
+    )
+      continue; // skip!
+
+    board[mineRow][mineCol].mine = true; // set the mine flag
+    minesNumber++;
+  }
+
+  // count adjacent once all mines placed
+  // For each cell, loop through its 8 neighbors
+  // If neighbor is in bounds and has a mine, increment adjacent count
+  let boardCol = 0;
+  let boardRow = 0;
+
+  for (boardRow = 0; boardRow < gridSize; boardRow++) {
+    for (boardCol = 0; boardCol < gridSize; boardCol++) {
+
+      for (let dr = -1; dr <= 1; dr++) {
+        for (let dc = -1; dc <= 1; dc++) {
+          if (dr == 0 && dc == 0) continue;
+
+          let neighbourRow = boardRow + dr;
+          let neighbourCol = boardCol + dc;
+          if (neighbourRow < 0 || neighbourRow >= gridSize) continue;
+          if (neighbourCol < 0 || neighbourCol >= gridSize) continue;
+
+          if (board[neighbourRow][neighbourCol].mine == true) {
+            board[boardRow][boardCol].adjacent++;
+          }
+        }
+      }
+    }
+  }
+}
+
+
+// ==== GAME LOGIC ====
+
+
+  function toggleCell(e) {
+  let clickedCell = e.target;
+  let pickValue = parseInt(clickedCell.id.replace("cell","")
+  if (clickedCell.classList.contains("flagged")) {
+clickedCell.textContent = ""; // no circle
+    clickedCell.classList.remove("flagged");
+  } else {
+    clickedCell.textContent = "🚩"; // add flag, change to circle 
+    clickedCell.classList.add("flagged");
+
+let clickedCell = e.target
+let pickValue = parseInt(clickedCell.id.replace("cell","")
+playerPicks.push(pickValue)
+  winningNumbers++
+}
+
+function checkAnswer(e) {
+  let clickedCell = e.target;
+  let clickedRow = parseInt(clickedCell.dataset.row);
+  let clickedCol = parseInt(clickedCell.dataset.col);
+  if (gameOver) return;
+  if (firstClick) {
+    generateMines(clickedRow, clickedCol);
+
+// validate board after generating mines
+let isValid = validateBoard(clickedRow, clickedCol)
+if (!isValid) {
+let attempts = 0
+ while (!isValid && attempts < 10) { // attempts is more impt in sudoku, to throw out the board entirely?
+      generateMines(clickedRow, clickedCol);
+      isValid = validateBoard(clickedRow, clickedCol);
+      attempts++;
+    }
+  }
+
+    firstClick = false;
+    revealCell(clickedRow, clickedCol, clickedCell);
+  } else {
+    revealCell(clickedRow, clickedCol, clickedCell);
+    checkWin();
+  }
+}
+
+
+function checkWin() {
+gameRunning = true
+  let revealedCount = 0;
+  for (let r = 0; r < gridSize; r++) {
+    for (let c = 0; c < gridSize; c++) {
+      let cellData = board[r][c];
+      if (!cellData.mine && cellData.revealed == true) {
+        // just check non mines in case.
+        revealedCount++;
+      }
+    }
+  }
+
+  if (revealedCount == gridSize * gridSize - totalMines) {
+    gameOver = true;
+    for (let r = 0; r < gridSize; r++) {
+      for (let c = 0; c < gridSize; c++) {
+        let cellData = board[r][c];
+        if (cellData.mine == true && !cellData.revealed) {
+          let cellElement = document.getElementById(`cell-${r}-${c}`);
+          cellElement.textContent = "💣"; // add flag
+        }
+        cellData.revealed = true;
+        document.getElementById("feedback").textContent = "You win!";
+      }
+    }
+  }
+}
+
+
+
+
+
+
+
+// ==== UI + INTERACTION ====
+
+function disableInputs() {
+if (gameRunning) {
+  let cells = document.querySelectorAll("td");
+  cells.forEach((cell) => {
+    cell.replaceWith(cell.cloneNode(true)); // easiest way to remove all listeners
+  });
+}
+}
+
+function attachListeners() {
+  let cells = document.querySelectorAll("td");
+  cells.forEach((cell) => {
+    cell.addEventListener("click", toggleCell); // left click
+})
+// + and - for bets
+
+// + and - for rounds
+
+// play!
+document.getElementById("playBtn").addEventListener("click", generateWinners)
+}
+
+
+</script>
+
+</body>
+</html>
