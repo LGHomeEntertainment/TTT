@@ -172,14 +172,14 @@
     </div>
 
     <div>
- <button class="changeBet" id="lowerBet">-</button>      
-<p>Bet Amount: <span id="betDisplay"></span></p>
+      <button class="changeBet" id="lowerBet">-</button>
+      <p>Bet Amount: <span id="betDisplay"></span></p>
       <button class="changeBet" id="increaseBet">+</button>
     </div>
     <div>
-        <button class="changeRounds" id="fewerRounds">-</button>
-        <p>Number of Rounds: <span id="roundsDisplay"></span></p>
-        <button class="changeRounds" id="moreRounds">+</button>
+      <button class="changeRounds" id="fewerRounds">-</button>
+      <p>Number of Rounds: <span id="roundsDisplay"></span></p>
+      <button class="changeRounds" id="moreRounds">+</button>
     </div>
 
 <script>
@@ -189,15 +189,14 @@
 let playerPicks = [];
 let gameRunning = false;
 let totalGen = 20;
-let winningNumbers = 0
-let round = 1
+let winningNumbers = 0;
+let round = 1;
 let betOptions = [100, 1000, 10000, 100000, 1000000];
-let betIndex = 1
-let bet = betOptions[betIndex]
+let betIndex = 1;
+let bet = betOptions[betIndex];
 let roundOptions = [1, 5, 10, 20];
-let roundIndex = 1
-let playRounds = roundOptions[roundIndex]
-
+let roundIndex = 1;
+let playRounds = roundOptions[roundIndex];
 
 // ==== INITIALISATION + GENERATION OF STUFF ====
 
@@ -205,160 +204,153 @@ document.addEventListener("DOMContentLoaded", initialise);
 
 function initialise() {
   attachListeners();
-updateBetDisplay();
-updateRoundDisplay();
+  updateBetDisplay();
+  updateRoundDisplay();
 }
-
-
 
 // create the winning numbers
 function generateWinners() {
-gameRunning = true
+  gameRunning = true;
 
-  
   while (winningNumbers < totalGen) {
     winners = Math.floor(Math.random() * 100 + 1);
-let winningCell = "cell" + winners
-cellElement.textContent = "💣"; // add flag
-    winningNumbers++
-  }
+    let winningCell = "cell" + winners;
+    cellElement.textContent = "💣"; // add flag
+    winningNumbers++;
   }
 }
-
 
 // ==== CUSTOMISATION/SETTINGS ====
 
-  function updateBetDisplay() {
-document.getElementById("betDisplay").textContent = bet;
- 
-// Disable buttons at the ends
+function updateBetDisplay() {
+  document.getElementById("betDisplay").textContent = bet;
+
+  // Disable buttons at the ends
   document.getElementById("betDown").disabled = betIndex === 0;
   document.getElementById("betDown").style.opacity = betIndex === 0 ? 0.5 : 1;
 
-  document.getElementById("betUp").disabled = betIndex === betOptions.length - 1;
-  document.getElementById("betUp").style.opacity = betIndex === betOptions.length - 1 ? 0.5 : 1; : 1;
+  document.getElementById("betUp").disabled =
+    betIndex === betOptions.length - 1;
+  document.getElementById("betUp").style.opacity =
+    betIndex === betOptions.length - 1 ? 0.5 : 1;
 }
-
 
 function adjustBet(e) {
-let id = e.target.id // id of the button clicked
-if (id == "lowerBet" && betIndex > 0) {
-betIndex--
+  let id = e.target.id; // id of the button clicked
+  if (id == "lowerBet" && betIndex > 0) {
+    betIndex--;
+  } else if (id == "increaseBet" && betIndex < betOptions.length - 1) {
+    betIndex++;
+  }
+  bet = betOptions[betIndex];
+  updateBetDisplay();
 }
-else if (id == "increaseBet" && betIndex < betOptions.length - 1) {
-betIndex++
-}
-bet = betOptions[betIndex]
-updateBetDisplay()
-}
-  
-  function updateRoundDisplay() {
-document.getElementById("roundsDisplay").textContent = playRounds;
- 
-// Disable buttons at the ends
-  document.getElementById("fewerRounds").disabled = roundIndex === 0;
-  document.getElementById("fewerRounds").style.opacity = roundIndex === 0 ? 0.5 : 1;
 
-  document.getElementById("moreRounds").disabled = roundIndex === roundOptions.length - 1;
-  document.getElementById("moreRounds").style.opacity = roundIndex === roundOptions.length - 1 ? 0.5
+function updateRoundDisplay() {
+  document.getElementById("roundsDisplay").textContent = playRounds;
+
+  // Disable buttons at the ends
+  document.getElementById("fewerRounds").disabled = roundIndex === 0;
+  document.getElementById("fewerRounds").style.opacity =
+    roundIndex === 0 ? 0.5 : 1;
+
+  document.getElementById("moreRounds").disabled =
+    roundIndex === roundOptions.length - 1;
+  document.getElementById("moreRounds").style.opacity =
+    roundIndex === roundOptions.length - 1 ? 0.5 : 1;
 }
 
 function adjustRounds(e) {
-let id = e.target.id // id of the button clicked
-if (id == "fewerRounds" && roundIndex > 0) {
-roundIndex--
-}
-else if (id == "moreRounds" && roundIndex < roundOptions.length - 1) {
-roundIndex++
-}
-playRounds = roundOptions[roundIndex]
-updateRoundDisplay()
+  let id = e.target.id; // id of the button clicked
+  if (id == "fewerRounds" && roundIndex > 0) {
+    roundIndex--;
+  } else if (id == "moreRounds" && roundIndex < roundOptions.length - 1) {
+    roundIndex++;
+  }
+  playRounds = roundOptions[roundIndex];
+  updateRoundDisplay();
 }
 
 // ==== GAME LOGIC ====
 
-  function toggleCell(e) {
+function toggleCell(e) {
   let clickedCell = e.target;
-  let pickValue = parseInt(clickedCell.id.replace("cell","")
+  let pickValue = parseInt(clickedCell.id.replace("cell", ""));
   if (clickedCell.classList.contains("flagged")) {
-clickedCell.textContent = ""; // no circle
+    clickedCell.textContent = ""; // no circle
     clickedCell.classList.remove("flagged");
   } else {
-    clickedCell.textContent = "🚩"; // add flag, change to circle 
+    clickedCell.textContent = "🚩"; // add flag, change to circle
     clickedCell.classList.add("flagged");
 
-let clickedCell = e.target
-let pickValue = parseInt(clickedCell.id.replace("cell","")
-playerPicks.push(pickValue)
-  winningNumbers++
-}
-
-function checkWinnings() {
-gameRunning = true
-  let revealedCount = 0;
-  for (let r = 0; r < gridSize; r++) {
-    for (let c = 0; c < gridSize; c++) {
-      let cellData = board[r][c];
-      if (!cellData.mine && cellData.revealed == true) {
-        // just check non mines in case.
-        revealedCount++;
-      }
-    }
+    let clickedCell = e.target;
+    let pickValue = parseInt(clickedCell.id.replace("cell", ""));
+    playerPicks.push(pickValue);
+    winningNumbers++;
   }
 
-  if (revealedCount == gridSize * gridSize - totalMines) {
-    gameOver = true;
+  function checkWinnings() {
+    gameRunning = true;
+    let revealedCount = 0;
     for (let r = 0; r < gridSize; r++) {
       for (let c = 0; c < gridSize; c++) {
         let cellData = board[r][c];
-        if (cellData.mine == true && !cellData.revealed) {
-          let cellElement = document.getElementById(`cell-${r}-${c}`);
-          cellElement.textContent = "💣"; // add flag
+        if (!cellData.mine && cellData.revealed == true) {
+          // just check non mines in case.
+          revealedCount++;
         }
-        cellData.revealed = true;
-        document.getElementById("feedback").textContent = "You win!";
+      }
+    }
+
+    if (revealedCount == gridSize * gridSize - totalMines) {
+      gameOver = true;
+      for (let r = 0; r < gridSize; r++) {
+        for (let c = 0; c < gridSize; c++) {
+          let cellData = board[r][c];
+          if (cellData.mine == true && !cellData.revealed) {
+            let cellElement = document.getElementById(`cell-${r}-${c}`);
+            cellElement.textContent = "💣"; // add flag
+          }
+          cellData.revealed = true;
+          document.getElementById("feedback").textContent = "You win!";
+        }
       }
     }
   }
-}
 
-// need a counter for next round. for (round = 1; round < roundsToPlay; round++) {
+  // need a counter for next round. for (round = 1; round < roundsToPlay; round++) {
   // use the same picked numbers, run the generator again
-  }
-
-
-
-
+}
 
 // ==== UI + INTERACTION ====
 
 function disableInputs() {
-if (gameRunning) {
-  let cells = document.querySelectorAll("cell");
-  cells.forEach((cell) => {
-    cell.replaceWith(cell.cloneNode(true)); // easiest way to remove all listeners
-  });
-}
+  if (gameRunning) {
+    let cells = document.querySelectorAll("cell");
+    cells.forEach((cell) => {
+      cell.replaceWith(cell.cloneNode(true)); // easiest way to remove all listeners
+    });
+  }
 }
 
 function attachListeners() {
   let cells = document.querySelectorAll("td");
   cells.forEach((cell) => {
-    cell.addEventListener("click", toggleCell); 
-})
+    cell.addEventListener("click", toggleCell);
+  });
 
-let betBtns = document.querySelectorAll(".changeBet");
+  let betBtns = document.querySelectorAll(".changeBet");
   betBtns.forEach((btn) => {
-    btn.addEventListener("click", adjustBet); 
-})
+    btn.addEventListener("click", adjustBet);
+  });
 
-let roundBtns = document.querySelectorAll(".changeRounds");
+  let roundBtns = document.querySelectorAll(".changeRounds");
   roundBtns.forEach((btn) => {
-    btn.addEventListener("click", adjustRounds); 
-})
+    btn.addEventListener("click", adjustRounds);
+  });
 
-// play!
-document.getElementById("playBtn").addEventListener("click", generateWinners)
+  // play!
+  document.getElementById("playBtn").addEventListener("click", generateWinners);
 }
 
 
