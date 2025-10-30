@@ -172,94 +172,110 @@
     </div>
 
     <div>
-      <p>Bet Amount: <span id="betDisplay">100</span></p>
-
-      <button onclick="adjustBet(-10)">-</button>
-      <button onclick="adjustBet(+10)">+</button>
+ <button class="changeBet" id="lowerBet">-</button>      
+<p>Bet Amount: <span id="betDisplay"></span></p>
+      <button class="changeBet" id="increaseBet">+</button>
     </div>
     <div>
-      <label
-        >Rounds:
-        <p>Number of Rounds: <span id="roundsDisplay">5</span></p>
-        <button onclick="adjustRounds(-5)">-</button>
-        <button onclick="adjustRounds(5)">+</button>
-      </label>
+        <button class="changeRounds" id="fewerRounds">-</button>
+        <p>Number of Rounds: <span id="roundsDisplay"></span></p>
+        <button class="changeRounds" id="moreRounds">+</button>
     </div>
 
 <script>
 
 // ==== GLOBALs + CONSTANTS ====
 
-let bet = 0
 let playerPicks = [];
-let gameOver = true;
+let gameRunning = false;
 let totalGen = 20;
 let winningNumbers = 0
 let round = 1
+let betOptions = [100, 1000, 10000, 100000, 1000000];
+let betIndex = 1
+let bet = betOptions[betIndex]
+let roundOptions = [1, 5, 10, 20];
+let roundIndex = 1
+let playRounds = roundOptions[roundIndex]
 
 
-// ==== INITIALISATION + GENERATION ====
+// ==== INITIALISATION + GENERATION OF STUFF ====
 
 document.addEventListener("DOMContentLoaded", initialise);
 
 function initialise() {
-  generateGrid();
   attachListeners();
+updateBetDisplay();
+updateRoundDisplay();
 }
 
 
 
 // create the winning numbers
 function generateWinners() {
-  totalMines = newMines;
-  let minesNumber = 0;
-  let mineCol = 0;
-  let mineRow = 0;
+gameRunning = true
 
-  while (minesNumber < totalMines) {
-    mineCol = Math.floor(Math.random() * gridSize);
-    mineRow = Math.floor(Math.random() * gridSize);
-    if (mineCol == clickedCol && mineRow == clickedRow) continue;
-    if (
-      board[mineRow][mineCol].mine == true ||
-      isAdjacent(mineRow, mineCol, clickedRow, clickedCol) // if mine or if is adjacent to the cell
-    )
-      continue; // skip!
-
-    board[mineRow][mineCol].mine = true; // set the mine flag
-    minesNumber++;
+  
+  while (winningNumbers < totalGen) {
+    winners = Math.floor(Math.random() * 100 + 1);
+let winningCell = "cell" + winners
+cellElement.textContent = "💣"; // add flag
+    winningNumbers++
   }
-
-  // count adjacent once all mines placed
-  // For each cell, loop through its 8 neighbors
-  // If neighbor is in bounds and has a mine, increment adjacent count
-  let boardCol = 0;
-  let boardRow = 0;
-
-  for (boardRow = 0; boardRow < gridSize; boardRow++) {
-    for (boardCol = 0; boardCol < gridSize; boardCol++) {
-
-      for (let dr = -1; dr <= 1; dr++) {
-        for (let dc = -1; dc <= 1; dc++) {
-          if (dr == 0 && dc == 0) continue;
-
-          let neighbourRow = boardRow + dr;
-          let neighbourCol = boardCol + dc;
-          if (neighbourRow < 0 || neighbourRow >= gridSize) continue;
-          if (neighbourCol < 0 || neighbourCol >= gridSize) continue;
-
-          if (board[neighbourRow][neighbourCol].mine == true) {
-            board[boardRow][boardCol].adjacent++;
-          }
-        }
-      }
-    }
   }
 }
 
 
-// ==== GAME LOGIC ====
+// ==== CUSTOMISATION/SETTINGS ====
 
+  function updateBetDisplay() {
+document.getElementById("betDisplay").textContent = bet;
+ 
+// Disable buttons at the ends
+  document.getElementById("betDown").disabled = betIndex === 0;
+  document.getElementById("betDown").style.opacity = betIndex === 0 ? 0.5 : 1;
+
+  document.getElementById("betUp").disabled = betIndex === betOptions.length - 1;
+  document.getElementById("betUp").style.opacity = betIndex === betOptions.length - 1 ? 0.5 : 1; : 1;
+}
+
+
+function adjustBet(e) {
+let id = e.target.id // id of the button clicked
+if (id == "lowerBet" && betIndex > 0) {
+betIndex--
+}
+else if (id == "increaseBet" && betIndex < betOptions.length - 1) {
+betIndex++
+}
+bet = betOptions[betIndex]
+updateBetDisplay()
+}
+  
+  function updateRoundDisplay() {
+document.getElementById("roundsDisplay").textContent = playRounds;
+ 
+// Disable buttons at the ends
+  document.getElementById("fewerRounds").disabled = roundIndex === 0;
+  document.getElementById("fewerRounds").style.opacity = roundIndex === 0 ? 0.5 : 1;
+
+  document.getElementById("moreRounds").disabled = roundIndex === roundOptions.length - 1;
+  document.getElementById("moreRounds").style.opacity = roundIndex === roundOptions.length - 1 ? 0.5
+}
+
+function adjustRounds(e) {
+let id = e.target.id // id of the button clicked
+if (id == "fewerRounds" && roundIndex > 0) {
+roundIndex--
+}
+else if (id == "moreRounds" && roundIndex < roundOptions.length - 1) {
+roundIndex++
+}
+playRounds = roundOptions[roundIndex]
+updateRoundDisplay()
+}
+
+// ==== GAME LOGIC ====
 
   function toggleCell(e) {
   let clickedCell = e.target;
@@ -277,35 +293,7 @@ playerPicks.push(pickValue)
   winningNumbers++
 }
 
-function checkAnswer(e) {
-  let clickedCell = e.target;
-  let clickedRow = parseInt(clickedCell.dataset.row);
-  let clickedCol = parseInt(clickedCell.dataset.col);
-  if (gameOver) return;
-  if (firstClick) {
-    generateMines(clickedRow, clickedCol);
-
-// validate board after generating mines
-let isValid = validateBoard(clickedRow, clickedCol)
-if (!isValid) {
-let attempts = 0
- while (!isValid && attempts < 10) { // attempts is more impt in sudoku, to throw out the board entirely?
-      generateMines(clickedRow, clickedCol);
-      isValid = validateBoard(clickedRow, clickedCol);
-      attempts++;
-    }
-  }
-
-    firstClick = false;
-    revealCell(clickedRow, clickedCol, clickedCell);
-  } else {
-    revealCell(clickedRow, clickedCol, clickedCell);
-    checkWin();
-  }
-}
-
-
-function checkWin() {
+function checkWinnings() {
 gameRunning = true
   let revealedCount = 0;
   for (let r = 0; r < gridSize; r++) {
@@ -334,7 +322,7 @@ gameRunning = true
   }
 }
 
-// need a counter for next round. for i = 1; i < roundsToPlay; i++) {
+// need a counter for next round. for (round = 1; round < roundsToPlay; round++) {
   // use the same picked numbers, run the generator again
   }
 
@@ -356,11 +344,18 @@ if (gameRunning) {
 function attachListeners() {
   let cells = document.querySelectorAll("td");
   cells.forEach((cell) => {
-    cell.addEventListener("click", toggleCell); // left click
+    cell.addEventListener("click", toggleCell); 
 })
-// + and - for bets
 
-// + and - for rounds
+let betBtns = document.querySelectorAll(".changeBet");
+  betBtns.forEach((btn) => {
+    btn.addEventListener("click", adjustBet); 
+})
+
+let roundBtns = document.querySelectorAll(".changeRounds");
+  roundBtns.forEach((btn) => {
+    btn.addEventListener("click", adjustRounds); 
+})
 
 // play!
 document.getElementById("playBtn").addEventListener("click", generateWinners)
