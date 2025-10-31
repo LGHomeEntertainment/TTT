@@ -45,6 +45,23 @@
   background-color: green;
 }
 
+td.cell::before {
+  content: "";
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 22px;
+  height: 22px;
+  border: 2px solid blue;
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+td.cell.picked::before {
+  opacity: 1;
+}
 
 </style>
 
@@ -188,9 +205,8 @@
 
 let playerPicks = [];
 let gameRunning = false;
-let totalGen = 20;
-let winningNumbers = 0;
-let round = 1;
+let generatedNumbers = [];
+let currentRound = 1;
 let betOptions = [100, 1000, 10000, 100000, 1000000];
 let betIndex = 1;
 let bet = betOptions[betIndex];
@@ -204,78 +220,68 @@ document.addEventListener("DOMContentLoaded", initialise);
 
 function initialise() {
   attachListeners();
-  updateBetDisplay();
-  updateRoundDisplay();
 }
 
-// create the winning numbers
-function generateWinners() {
-  gameRunning = true;
+// ==== CUSTOMISATION/SETTINGS (shared function) ====
 
-  while (winningNumbers < totalGen) {
-    winners = Math.floor(Math.random() * 100 + 1);
-    let winningCell = "cell" + winners;
-    cellElement.textContent = "💣"; // add flag
-    winningNumbers++;
-  }
+function updateBetdisplay() {
+  updateSettingsDisplay("bet", betIndex, betOptions, "betDisplay", "lowerBet", "increaseBet")
 }
 
-// ==== CUSTOMISATION/SETTINGS ====
-
-function updateBetDisplay() {
-  document.getElementById("betDisplay").textContent = bet;
-
-  // Disable buttons at the ends
-  document.getElementById("betDown").disabled = betIndex === 0;
-  document.getElementById("betDown").style.opacity = betIndex === 0 ? 0.5 : 1;
-
-  document.getElementById("betUp").disabled =
-    betIndex === betOptions.length - 1;
-  document.getElementById("betUp").style.opacity =
-    betIndex === betOptions.length - 1 ? 0.5 : 1;
+function updateRounddisplay() {
+  updateSettingsDisplay("playRounds", roundIndex, roundOptions, "roundsDisplay", "fewerRounds", "moreRounds")
 }
 
 function adjustBet(e) {
-  let id = e.target.id; // id of the button clicked
-  if (id == "lowerBet" && betIndex > 0) {
-    betIndex--;
-  } else if (id == "increaseBet" && betIndex < betOptions.length - 1) {
-    betIndex++;
-  }
-  bet = betOptions[betIndex];
-  updateBetDisplay();
-}
-
-function updateRoundDisplay() {
-  document.getElementById("roundsDisplay").textContent = playRounds;
-
-  // Disable buttons at the ends
-  document.getElementById("fewerRounds").disabled = roundIndex === 0;
-  document.getElementById("fewerRounds").style.opacity =
-    roundIndex === 0 ? 0.5 : 1;
-
-  document.getElementById("moreRounds").disabled =
-    roundIndex === roundOptions.length - 1;
-  document.getElementById("moreRounds").style.opacity =
-    roundIndex === roundOptions.length - 1 ? 0.5 : 1;
+  betIndex = adjustSetting(e, "bet", betIndex, betOptions, updateBetDisplay, "lowerBet", "increaseBet");
+  bet = betOptions[betIndex]
 }
 
 function adjustRounds(e) {
-  let id = e.target.id; // id of the button clicked
-  if (id == "fewerRounds" && roundIndex > 0) {
-    roundIndex--;
-  } else if (id == "moreRounds" && roundIndex < roundOptions.length - 1) {
-    roundIndex++;
-  }
-  playRounds = roundOptions[roundIndex];
-  updateRoundDisplay();
+  roundIndex = adjustSetting(e, "playrounds", roundIndex, roundOptions, updateRoundDisplay, "fewerRounds", "moreRounds");
+  playRounds = roundOptions[roundIndex]
 }
+
+function updateSettingsDisplay(type, index, options, displayId, downId, upId) {
+  document.getElementById(displayId).textContent = options[index];
+    
+    // Disable buttons at the ends
+    let atMin = index == 0
+    let atMax = index == options.length - 1
+
+    let downBtn = document.getElementById(downId)
+    let upBtn = document.getElementById(upId)
+
+  downBtn.disabled = atMin
+  downBtn.style.opacity = atMin ? 0.5 : 1;
+
+  upBtn.disabled = atMax
+  upBtn.style.opacity = atMax ? 0.5 : 1;
+}
+
+function adjustSetting(e, type, index, options, updateDisplayFn, lowerId, upperId) {
+  let id = e.target.id
+
+  if (id == lowerId && index > 0) {
+    index--;
+  } else if (id == upperId && index = options.length - 1) {
+    index++;
+  }
+updateDisplayFn()
+return index // return index to be stored
+}
+
 
 // ==== GAME LOGIC ====
 
+// player picking numbers. numbers are circled.
 function toggleCell(e) {
   let clickedCell = e.target;
+  clickedCell.classList.toggle("picked");
+}
+
   let pickValue = parseInt(clickedCell.id.replace("cell", ""));
+if (playerPicks.length = 10) return;
   if (clickedCell.classList.contains("flagged")) {
     clickedCell.textContent = ""; // no circle
     clickedCell.classList.remove("flagged");
@@ -287,40 +293,59 @@ function toggleCell(e) {
     let pickValue = parseInt(clickedCell.id.replace("cell", ""));
     playerPicks.push(pickValue);
     winningNumbers++;
+playerPicks++
   }
 
-  function checkWinnings() {
-    gameRunning = true;
-    let revealedCount = 0;
-    for (let r = 0; r < gridSize; r++) {
-      for (let c = 0; c < gridSize; c++) {
-        let cellData = board[r][c];
-        if (!cellData.mine && cellData.revealed == true) {
-          // just check non mines in case.
-          revealedCount++;
-        }
-      }
-    }
-
-    if (revealedCount == gridSize * gridSize - totalMines) {
-      gameOver = true;
-      for (let r = 0; r < gridSize; r++) {
-        for (let c = 0; c < gridSize; c++) {
-          let cellData = board[r][c];
-          if (cellData.mine == true && !cellData.revealed) {
-            let cellElement = document.getElementById(`cell-${r}-${c}`);
-            cellElement.textContent = "💣"; // add flag
-          }
-          cellData.revealed = true;
-          document.getElementById("feedback").textContent = "You win!";
-        }
-      }
-    }
-  }
-
-  // need a counter for next round. for (round = 1; round < roundsToPlay; round++) {
-  // use the same picked numbers, run the generator again
+// comp generating winning numbers
+function generateWinners() {
+  let count = 0
+ 
+ function generateNext() {
+  if (count >= 15) return;
+  let num = Math.ceil(Math.random() * 80)
+  if (!generatedNumbers.includes(num)) {
+    generatedNumbers.push(num)
+  let cell = document.getElementById("cell" + num)
+  if (cell) cell.classList.add("drawn")
+count++
 }
+setTimeout (generateNext, 200)
+}
+generateNext() // first one to start off the chain
+}
+
+// check if player has any winning numbers --> unpicked numbers have a cross? or diff colour?
+  function comparePicks() { // and also calculate winnings
+if (generatedNumber
+
+//check against coloured cells? if <=1 it's a lose. 2 or more and it's a payout list
+        }
+      }
+    }
+
+function multipleRounds() {
+gameRunning = true
+currentRound = 1
+
+function delayRound() {
+  if (playRounds >= currentRound) {
+    gameRunning = false;
+    return;
+  }
+
+  gameRunning = true
+  generateWinners()
+  comparePicks()
+  currentRound++
+  setTimeout (delayRound, 800)
+}
+
+delayRound()
+}
+
+
+
+
 
 // ==== UI + INTERACTION ====
 
@@ -350,8 +375,10 @@ function attachListeners() {
   });
 
   // play!
-  document.getElementById("playBtn").addEventListener("click", generateWinners);
+  document.getElementById("playBtn").addEventListener("click", multipleRounds);
 }
+
+
 
 
 </script>
