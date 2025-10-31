@@ -37,7 +37,7 @@
 
 /* Picked cell */
 .cell.picked {
-  background-color: ;
+  background-color: lightblue;
 }
 
 /* Hit cell */
@@ -220,15 +220,17 @@ document.addEventListener("DOMContentLoaded", initialise);
 
 function initialise() {
   attachListeners();
+  updateBetDisplay();
+  updateRoundDisplay();
 }
 
 // ==== CUSTOMISATION/SETTINGS (shared function) ====
 
-function updateBetdisplay() {
+function updateBetDisplay() {
   updateSettingsDisplay("bet", betIndex, betOptions, "betDisplay", "lowerBet", "increaseBet")
 }
 
-function updateRounddisplay() {
+function updateRoundDisplay() {
   updateSettingsDisplay("playRounds", roundIndex, roundOptions, "roundsDisplay", "fewerRounds", "moreRounds")
 }
 
@@ -242,7 +244,7 @@ function adjustRounds(e) {
   playRounds = roundOptions[roundIndex]
 }
 
-function updateSettingsDisplay(type, index, options, displayId, downId, upId) {
+function updateSettingsDisplay(index, options, displayId, downId, upId) {
   document.getElementById(displayId).textContent = options[index];
     
     // Disable buttons at the ends
@@ -259,12 +261,12 @@ function updateSettingsDisplay(type, index, options, displayId, downId, upId) {
   upBtn.style.opacity = atMax ? 0.5 : 1;
 }
 
-function adjustSetting(e, type, index, options, updateDisplayFn, lowerId, upperId) {
+function adjustSetting(e, index, options, updateDisplayFn, lowerId, upperId) {
   let id = e.target.id
 
   if (id == lowerId && index > 0) {
     index--;
-  } else if (id == upperId && index = options.length - 1) {
+  } else if (id == upperId && index < options.length - 1) {
     index++;
   }
 updateDisplayFn()
@@ -276,25 +278,20 @@ return index // return index to be stored
 
 // player picking numbers. numbers are circled.
 function toggleCell(e) {
+if (gameRunning) return;
   let clickedCell = e.target;
-  clickedCell.classList.toggle("picked");
-}
+ let pickValue = parseInt(clickedCell.id.replace("cell", ""));
 
-  let pickValue = parseInt(clickedCell.id.replace("cell", ""));
-if (playerPicks.length = 10) return;
-  if (clickedCell.classList.contains("flagged")) {
-    clickedCell.textContent = ""; // no circle
-    clickedCell.classList.remove("flagged");
-  } else {
-    clickedCell.textContent = "🚩"; // add flag, change to circle
-    clickedCell.classList.add("flagged");
-
-    let clickedCell = e.target;
-    let pickValue = parseInt(clickedCell.id.replace("cell", ""));
-    playerPicks.push(pickValue);
-    winningNumbers++;
-playerPicks++
+// if already picked
+ if (clickedCell.classList.contains("picked")) {
+clickedCell.classList.remove("picked")
+playerPicks = playerPicks.filter(n => n !== pickValue)
+} else {
+  if (playerPicks.length >= 10) return;
+  clickedCell.classList.add("picked")
+  playerPicks.push(pickValue)
   }
+}
 
 // comp generating winning numbers
 function generateWinners() {
@@ -306,7 +303,8 @@ function generateWinners() {
   if (!generatedNumbers.includes(num)) {
     generatedNumbers.push(num)
   let cell = document.getElementById("cell" + num)
-  if (cell) cell.classList.add("drawn")
+if (cell.picked) cell.classList.add("hit")
+  if (cell) cell.classList.add("drawn") // red
 count++
 }
 setTimeout (generateNext, 200)
@@ -326,7 +324,7 @@ if (generatedNumber
 function multipleRounds() {
 gameRunning = true
 currentRound = 1
-
+// if currentround > 1 && < play rounds run resetboard!!
 function delayRound() {
   if (playRounds >= currentRound) {
     gameRunning = false;
@@ -337,14 +335,16 @@ function delayRound() {
   generateWinners()
   comparePicks()
   currentRound++
-  setTimeout (delayRound, 800)
+  setTimeout (delayRound, 1200)
 }
 
 delayRound()
 }
 
 
-
+function resetBoard() {
+// remove all drawn, hit, missed
+}
 
 
 // ==== UI + INTERACTION ====
@@ -377,8 +377,6 @@ function attachListeners() {
   // play!
   document.getElementById("playBtn").addEventListener("click", multipleRounds);
 }
-
-
 
 
 </script>
