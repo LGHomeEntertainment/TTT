@@ -181,6 +181,7 @@ td.cell.picked::before {
 
 
 <div>
+     <div id="moneyDisplay">Money: $10,000,000</div>
       <p id="feedback"></p>
     </div>
 
@@ -204,6 +205,7 @@ td.cell.picked::before {
 // ==== GLOBALs + CONSTANTS ====
 
 let playerPicks = [];
+let playerMoney = $10000000
 let gameRunning = false;
 let generatedNumbers = [];
 let currentRound = 1;
@@ -222,6 +224,7 @@ function initialise() {
   attachListeners();
   updateBetDisplay();
   updateRoundDisplay();
+  updateMoneyDisplay();
 }
 
 // ==== CUSTOMISATION/SETTINGS (shared function) ====
@@ -294,12 +297,15 @@ playerPicks = playerPicks.filter(n => n !== pickValue)
 }
 
 // comp generating winning numbers
-function generateWinners() {
+function generateWinners(onFinish) {
 generatedNumbers = [] // need this to reset for the round
   let count = 0
  
  function generateNext() {
-  if (count >= 10) return;
+  if (count >= 10) {
+    onFinish() // trigger next round only after 10 numbers are generated
+    return;
+  }
   let num = Math.ceil(Math.random() * 80)
   if (!generatedNumbers.includes(num)) {
     generatedNumbers.push(num)
@@ -316,38 +322,57 @@ generateNext() // first one to start off the chain
 // check if player has any winning numbers --> unpicked numbers have a cross? or diff colour?
   function comparePicks() { // and also calculate winnings
 let hits = document.querySelectorAll(".hit").length
-
+let feedbackText = ""
 switch (hits) {
-case 0: winnings = 0; break;
-case 1: winnings = 0; break;
 case 2: winnings = bet * 2; break;
 case 3: winnings = bet * 5; break;
 case 4: winnings = bet * 7.5; break;
 case 5: winnings = bet * 10; break;
-return hits
-        }
-      }
+case 6: winnings = bet * 20; break;
+case 7: winnings = bet * 25; break;
+case 8: winnings = bet * 30; break;
+case 9: winnings = bet * 40; break;
+case 10: winnings = bet * 50; break;
+default: 
+  winnings = 0; 
+  feedbackText = `Sorry, you matched ${hits} number${hits === 1 ? "" : "s"}, which is not enough to win.`;
+}
+if (winnings > 0) {
+feedbackText = `You won $${winnings.toLocaleString()} for matching ${hits} number${hits === 1 ? "" : "s"}!`;
+}
+ // Update feedback in HTML
+  document.getElementById("feedback").textContent = feedbackText
+playerMoney += winnings
+updateMoneyDisplay();
+} 
+      
     
-
 function multipleRounds() {
 gameRunning = true
+disableInputs()
 currentRound = 1
+if (playerMoney < bet) {
+document.getElementById("feedback").textContent = "You are broke. Bye bye.";
+return
+}
 // if currentround > 1 && < play rounds run resetboard!!
-function delayRound() {
+function playNextRound() {
+playerMoney -= bet;
   if (currentRound > playRounds) {
     gameRunning = false;
+    enableInputs()
     return;
   }
 
-  gameRunning = true
   resetBoard()
-  generateWinners()
+  generateWinners(() => {
   comparePicks()
   currentRound++
-  setTimeout (delayRound, 1200)
+  setTimeout (playNextRound, 2000) // pause between rounds
+})
 }
 
-delayRound()
+playNextRound()
 }
 
 
@@ -359,23 +384,33 @@ cell.classList.remove("hit", "drawn")
 generatedNumbers = []
 }
 
+function updateMoneyDisplay() {
+ document.getElementById("moneyDisplay").textContent = `Money: $${playerMoney.toLocaleString()}`;
+}
+
+}
+
 
 // ==== UI + INTERACTION ====
 
 function disableInputs() {
   if (gameRunning) {
-    let cells = document.querySelectorAll("cell");
-    cells.forEach((cell) => {
-      cell.replaceWith(cell.cloneNode(true)); // easiest way to remove all listeners
-    });
+document.querySelectorAll("td").forEach(cell => {
+cell.removeEventListener("click", toggleCell)
+  })
+}
+}
+
+function enableInputs() {
+  if (!gameRunning) {
+document.querySelectorAll("td").forEach(cell => {
+cell.addEventListener("click", toggleCell)
+})
   }
 }
 
 function attachListeners() {
-  let cells = document.querySelectorAll("td");
-  cells.forEach((cell) => {
-    cell.addEventListener("click", toggleCell);
-  });
+enableInputs()
 
   let betBtns = document.querySelectorAll(".changeBet");
   betBtns.forEach((btn) => {
