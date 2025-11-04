@@ -45,18 +45,24 @@
   background-color: green;
 }
 
+td.cell {
+  position: relative; /* Needed for absolute positioning of ::before */
+}
+
 td.cell::before {
   content: "";
   position: absolute;
-  top: 4px;
-  left: 4px;
+  top: 50%;
+  left: 50%;
   width: 22px;
   height: 22px;
+  transform: translate(-50%, -50%);
   border: 2px solid blue;
   border-radius: 50%;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.2s ease;
+  box-sizing: border-box;
 }
 
 td.cell.picked::before {
@@ -205,7 +211,7 @@ td.cell.picked::before {
 // ==== GLOBALs + CONSTANTS ====
 
 let playerPicks = [];
-let playerMoney = $10000000
+let playerMoney = 10000000
 let gameRunning = false;
 let generatedNumbers = [];
 let currentRound = 1;
@@ -348,22 +354,27 @@ updateMoneyDisplay();
       
     
 function multipleRounds() {
+if (playerPicks.length == 0) return;
 gameRunning = true
 disableInputs()
 currentRound = 1
-if (playerMoney < bet) {
-document.getElementById("feedback").textContent = "You are broke. Bye bye.";
-return
-}
+
+
 // if currentround > 1 && < play rounds run resetboard!!
 function playNextRound() {
-playerMoney -= bet;
-  if (currentRound > playRounds) {
+
+if (playerMoney < bet) {
+document.getElementById("feedback").textContent = "You are broke. Bye bye.";
+gameRunning = false;
+enableInputs();
+return;
+}
+if (currentRound > playRounds) {
     gameRunning = false;
     enableInputs()
     return;
   }
-
+playerMoney -= bet;
   resetBoard()
   generateWinners(() => {
   comparePicks()
@@ -371,10 +382,8 @@ playerMoney -= bet;
   setTimeout (playNextRound, 2000) // pause between rounds
 })
 }
-
 playNextRound()
 }
-
 
 function resetBoard() {
 let cells = document.querySelectorAll("td");
@@ -388,25 +397,19 @@ function updateMoneyDisplay() {
  document.getElementById("moneyDisplay").textContent = `Money: $${playerMoney.toLocaleString()}`;
 }
 
-}
-
 
 // ==== UI + INTERACTION ====
 
 function disableInputs() {
-  if (gameRunning) {
-document.querySelectorAll("td").forEach(cell => {
+document.querySelectorAll("td.cell").forEach(cell => {
 cell.removeEventListener("click", toggleCell)
   })
 }
-}
 
 function enableInputs() {
-  if (!gameRunning) {
-document.querySelectorAll("td").forEach(cell => {
+document.querySelectorAll("td.cell").forEach(cell => {
 cell.addEventListener("click", toggleCell)
 })
-  }
 }
 
 function attachListeners() {
