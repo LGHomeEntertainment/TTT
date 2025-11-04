@@ -227,20 +227,20 @@ function initialise() {
 // ==== CUSTOMISATION/SETTINGS (shared function) ====
 
 function updateBetDisplay() {
-  updateSettingsDisplay("bet", betIndex, betOptions, "betDisplay", "lowerBet", "increaseBet")
+  updateSettingsDisplay(betIndex, betOptions, "betDisplay", "lowerBet", "increaseBet")
 }
 
 function updateRoundDisplay() {
-  updateSettingsDisplay("playRounds", roundIndex, roundOptions, "roundsDisplay", "fewerRounds", "moreRounds")
+  updateSettingsDisplay(roundIndex, roundOptions, "roundsDisplay", "fewerRounds", "moreRounds")
 }
 
 function adjustBet(e) {
-  betIndex = adjustSetting(e, "bet", betIndex, betOptions, updateBetDisplay, "lowerBet", "increaseBet");
+  betIndex = adjustSetting(e, betIndex, betOptions, updateBetDisplay, "lowerBet", "increaseBet");
   bet = betOptions[betIndex]
 }
 
 function adjustRounds(e) {
-  roundIndex = adjustSetting(e, "playrounds", roundIndex, roundOptions, updateRoundDisplay, "fewerRounds", "moreRounds");
+  roundIndex = adjustSetting(e, roundIndex, roundOptions, updateRoundDisplay, "fewerRounds", "moreRounds");
   playRounds = roundOptions[roundIndex]
 }
 
@@ -295,6 +295,7 @@ playerPicks = playerPicks.filter(n => n !== pickValue)
 
 // comp generating winning numbers
 function generateWinners() {
+generatedNumbers = [] // need this to reset for the round
   let count = 0
  
  function generateNext() {
@@ -303,7 +304,7 @@ function generateWinners() {
   if (!generatedNumbers.includes(num)) {
     generatedNumbers.push(num)
   let cell = document.getElementById("cell" + num)
-if (cell.picked) cell.classList.add("hit")
+if (cell.classList.contains("picked")) cell.classList.add("hit")
   if (cell) cell.classList.add("drawn") // red
 count++
 }
@@ -316,18 +317,24 @@ generateNext() // first one to start off the chain
   function comparePicks() { // and also calculate winnings
 let hits = document.querySelectorAll(".hit").length
 
-switch (hits)
-
+switch (hits) {
+case 0: winnings = 0; break;
+case 1: winnings = 0; break;
+case 2: winnings = bet * 2; break;
+case 3: winnings = bet * 5; break;
+case 4: winnings = bet * 7.5; break;
+case 5: winnings = bet * 10; break;
+return hits
         }
       }
-    }
+    
 
 function multipleRounds() {
 gameRunning = true
 currentRound = 1
 // if currentround > 1 && < play rounds run resetboard!!
 function delayRound() {
-  if (playRounds >= currentRound) {
+  if (currentRound > playRounds) {
     gameRunning = false;
     return;
   }
@@ -345,10 +352,11 @@ delayRound()
 
 
 function resetBoard() {
-let cell = document.querySelectorAll("cell");
-cell.classList.remove(".hit")
-cell.classList.remove(".drawn")
-cell.classList.remove(".picked")
+let cells = document.querySelectorAll("td");
+cells.forEach(cell => {
+cell.classList.remove("hit", "drawn")
+})
+generatedNumbers = []
 }
 
 
