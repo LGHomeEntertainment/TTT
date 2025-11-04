@@ -298,7 +298,7 @@ function generateWinners() {
   let count = 0
  
  function generateNext() {
-  if (count >= 15) return;
+  if (count >= 10) return;
   let num = Math.ceil(Math.random() * 80)
   if (!generatedNumbers.includes(num)) {
     generatedNumbers.push(num)
@@ -314,9 +314,10 @@ generateNext() // first one to start off the chain
 
 // check if player has any winning numbers --> unpicked numbers have a cross? or diff colour?
   function comparePicks() { // and also calculate winnings
-if (generatedNumber
+let hits = document.querySelectorAll(".hit").length
 
-//check against coloured cells? if <=1 it's a lose. 2 or more and it's a payout list
+switch (hits)
+
         }
       }
     }
@@ -332,6 +333,7 @@ function delayRound() {
   }
 
   gameRunning = true
+  resetBoard()
   generateWinners()
   comparePicks()
   currentRound++
@@ -343,7 +345,10 @@ delayRound()
 
 
 function resetBoard() {
-// remove all drawn, hit, missed
+let cell = document.querySelectorAll("cell");
+cell.classList.remove(".hit")
+cell.classList.remove(".drawn")
+cell.classList.remove(".picked")
 }
 
 
