@@ -330,9 +330,10 @@ generateNext() // first one to start off the chain
 
 function comparePicks() { 
 let hits = document.querySelectorAll(".hit").length
+let hitIndex = hits - 1
 let feedbackText = ""
 let picks = playerPicks.length
-let payoutMultiplier = payoutTable[picks]?.[hits] || 0;
+let payoutMultiplier = payoutTable[picks]?.[hitIndex] || 0;
 let winnings = bet * payoutMultiplier
 
 
@@ -404,6 +405,8 @@ generatedNumbers = [];
 // ==== UI + INTERACTION ====
 
 function disableInputs() {
+document.getElementById("clearBtn").removeEventListener("click", clearPicks);
+
 document.querySelectorAll("td.cell").forEach(cell => {
 cell.removeEventListener("click", toggleCell)
   })
