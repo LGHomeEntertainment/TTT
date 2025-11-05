@@ -192,7 +192,8 @@ td.cell.picked::before {
     </div>
 
     <div>
-      <button id="playBtn">Play</button>
+      <button id="playBtn">Play!</button>
+<button id="clearBtn">Clear All</button>
     </div>
 
     <div>
@@ -216,11 +217,13 @@ let gameRunning = false;
 let generatedNumbers = [];
 let currentRound = 1;
 let betOptions = [100, 1000, 10000, 100000, 1000000];
-let betIndex = 1;
+let betIndex = 3;
 let bet = betOptions[betIndex];
 let roundOptions = [1, 5, 10, 20];
-let roundIndex = 1;
+let roundIndex = 2;
 let playRounds = roundOptions[roundIndex];
+let roundInterval = 2000
+let drawInterval = 200
 
 // ==== INITIALISATION + GENERATION OF STUFF ====
 
@@ -320,30 +323,22 @@ if (cell.classList.contains("picked")) cell.classList.add("hit")
   if (cell) cell.classList.add("drawn") // red
 count++
 }
-setTimeout (generateNext, 200)
+setTimeout (generateNext, drawInterval)
 }
 generateNext() // first one to start off the chain
 }
 
-// check if player has any winning numbers --> unpicked numbers have a cross? or diff colour?
-  function comparePicks() { // and also calculate winnings
+function comparePicks() { 
 let hits = document.querySelectorAll(".hit").length
 let feedbackText = ""
-switch (hits) {
-case 2: winnings = bet * 2; break;
-case 3: winnings = bet * 5; break;
-case 4: winnings = bet * 7.5; break;
-case 5: winnings = bet * 10; break;
-case 6: winnings = bet * 20; break;
-case 7: winnings = bet * 25; break;
-case 8: winnings = bet * 30; break;
-case 9: winnings = bet * 40; break;
-case 10: winnings = bet * 50; break;
-default: 
-  winnings = 0; 
+let picks = playerPicks.length
+let payoutMultiplier = payoutTable[picks]?.[hits] || 0;
+let winnings = bet * payoutMultiplier
+
+
+if (winnings == 0) {
   feedbackText = `Sorry, you matched ${hits} number${hits === 1 ? "" : "s"}, which is not enough to win.`;
-}
-if (winnings > 0) {
+} else if (winnings > 0) {
 feedbackText = `You won $${winnings.toLocaleString()} for matching ${hits} number${hits === 1 ? "" : "s"}!`;
 }
  // Update feedback in HTML
@@ -351,14 +346,13 @@ feedbackText = `You won $${winnings.toLocaleString()} for matching ${hits} numbe
 playerMoney += winnings
 updateMoneyDisplay();
 } 
-      
+
     
 function multipleRounds() {
 if (playerPicks.length == 0) return;
 gameRunning = true
 disableInputs()
 currentRound = 1
-
 
 // if currentround > 1 && < play rounds run resetboard!!
 function playNextRound() {
@@ -375,11 +369,12 @@ if (currentRound > playRounds) {
     return;
   }
 playerMoney -= bet;
+updateMoneyDisplay()
   resetBoard()
   generateWinners(() => {
   comparePicks()
   currentRound++
-  setTimeout (playNextRound, 2000) // pause between rounds
+  setTimeout (playNextRound, roundInterval) // pause between rounds
 })
 }
 playNextRound()
@@ -397,6 +392,14 @@ function updateMoneyDisplay() {
  document.getElementById("moneyDisplay").textContent = `Money: $${playerMoney.toLocaleString()}`;
 }
 
+function clearPicks() {
+let cells = document.querySelectorAll("td");
+cells.forEach(cell => {
+cell.classList.remove("hit", "drawn", "picked")
+})
+playerPicks = [];
+generatedNumbers = [];
+}
 
 // ==== UI + INTERACTION ====
 
@@ -413,7 +416,7 @@ cell.addEventListener("click", toggleCell)
 }
 
 function attachListeners() {
-enableInputs()
+  enableInputs();
 
   let betBtns = document.querySelectorAll(".changeBet");
   betBtns.forEach((btn) => {
@@ -427,8 +430,24 @@ enableInputs()
 
   // play!
   document.getElementById("playBtn").addEventListener("click", multipleRounds);
+
+  document.getElementById("clearBtn").addEventListener("click", clearPicks);
 }
 
+
+// ==== PAYOUT TABLE ====
+let payoutTable = {
+1: [ 8 ]
+2: [ 2, 38 ]
+3: [ 2, 7, 80 ]
+4: [ 2, 3, 10, 300 ]
+5: [ 1.5, 3, 5, 50, 2000 ]
+6: [ 1.5, 2, 4, 10, 200, 4000 ]
+7: [ 0, 3, 10, 25, 150, 1000, 5000 ]
+8: [ 0, 2, 7, 20, 200, 500, 1000, 10000 ]
+9: [ 0, 2, 5, 10, 70, 200, 1000, 10000, 50000 ]
+10: [ 0, 1.5, 3, 10, 50, 500, 5000, 10000, 50000, 100000 ]
+}
 
 </script>
 
