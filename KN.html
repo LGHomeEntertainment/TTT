@@ -69,13 +69,43 @@ td.cell.picked::before {
   opacity: 1;
 }
 
+.setting-row {
+  display: flex;
+  align-items: left;
+  justify-content: left;
+  gap: 10px; /* space between items */
+  margin: 10px 0;
+}
+
+.setting-row button {
+  font-size: 20px;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  border: none;
+  background-color: gold;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.2s;
+}
+
+.setting-row button:hover:not(:disabled) {
+  background-color: orange;
+}
+
+.setting-row span {
+  font-size: 16px;
+  font-weight: bold;
+  min-width: 160px;
+  text-align: center;
+}
+
 </style>
 
 </head>
 <body>
 
 <h1>KN</h1>
-
 
 <table>
 
@@ -185,34 +215,37 @@ td.cell.picked::before {
 
 </table>
 
+    s<div>
+      <p id="feedback"></p>
+    </div>
 
-<div>
-     <div id="moneyDisplay">Money: $10,000,000</div>
+    <div>
+      <div id="moneyDisplay">Money: $10,000,000</div>
       <p id="feedback"></p>
     </div>
 
     <div>
       <button id="playBtn">Play!</button>
-<button id="clearBtn">Clear All</button>
+      <button id="clearBtn">Clear All</button>
     </div>
 
-    <div>
+    <div class="setting-row">
       <button class="changeBet" id="lowerBet">-</button>
       <p>Bet Amount: <span id="betDisplay"></span></p>
       <button class="changeBet" id="increaseBet">+</button>
     </div>
-    <div>
+    <div class="setting-row">
       <button class="changeRounds" id="fewerRounds">-</button>
       <p>Number of Rounds: <span id="roundsDisplay"></span></p>
       <button class="changeRounds" id="moreRounds">+</button>
     </div>
 
 <script>
-
+    
 // ==== GLOBALs + CONSTANTS ====
 
 let playerPicks = [];
-let playerMoney = 10000000
+let playerMoney = 10000000;
 let gameRunning = false;
 let generatedNumbers = [];
 let currentRound = 1;
@@ -222,8 +255,14 @@ let bet = betOptions[betIndex];
 let roundOptions = [1, 5, 10, 20];
 let roundIndex = 2;
 let playRounds = roundOptions[roundIndex];
-let roundInterval = 2000
-let drawInterval = 200
+let roundInterval = 2000;
+let drawInterval = 200;
+
+// ==== SOUNDS ====
+const sfxDraw = new Audio("draw.ogg");
+const sfxHit = new Audio("hit.ogg");
+const sfxWin = new Audio("win.wav");
+const sfxLose = new Audio("lose.wav");
 
 // ==== INITIALISATION + GENERATION OF STUFF ====
 
@@ -239,183 +278,232 @@ function initialise() {
 // ==== CUSTOMISATION/SETTINGS (shared function) ====
 
 function updateBetDisplay() {
-  updateSettingsDisplay(betIndex, betOptions, "betDisplay", "lowerBet", "increaseBet")
+  updateSettingsDisplay(
+    betIndex,
+    betOptions,
+    "betDisplay",
+    "lowerBet",
+    "increaseBet"
+  );
 }
 
 function updateRoundDisplay() {
-  updateSettingsDisplay(roundIndex, roundOptions, "roundsDisplay", "fewerRounds", "moreRounds")
+  updateSettingsDisplay(
+    roundIndex,
+    roundOptions,
+    "roundsDisplay",
+    "fewerRounds",
+    "moreRounds"
+  );
 }
 
 function adjustBet(e) {
-  betIndex = adjustSetting(e, betIndex, betOptions, updateBetDisplay, "lowerBet", "increaseBet");
-  bet = betOptions[betIndex]
+  betIndex = adjustSetting(
+    e,
+    betIndex,
+    betOptions,
+    updateBetDisplay,
+    "lowerBet",
+    "increaseBet"
+  );
+  bet = betOptions[betIndex];
 }
 
 function adjustRounds(e) {
-  roundIndex = adjustSetting(e, roundIndex, roundOptions, updateRoundDisplay, "fewerRounds", "moreRounds");
-  playRounds = roundOptions[roundIndex]
+  roundIndex = adjustSetting(
+    e,
+    roundIndex,
+    roundOptions,
+    updateRoundDisplay,
+    "fewerRounds",
+    "moreRounds"
+  );
+  playRounds = roundOptions[roundIndex];
 }
 
 function updateSettingsDisplay(index, options, displayId, downId, upId) {
-  document.getElementById(displayId).textContent = options[index];
-    
-    // Disable buttons at the ends
-    let atMin = index == 0
-    let atMax = index == options.length - 1
+  let value = options[index];
+  if (displayId == "betDisplay") {
+    value = "$" + value.toLocaleString();
+  }
+  document.getElementById(displayId).textContent = value;
 
-    let downBtn = document.getElementById(downId)
-    let upBtn = document.getElementById(upId)
+  // Disable buttons at the ends
+  let atMin = index == 0;
+  let atMax = index == options.length - 1;
 
-  downBtn.disabled = atMin
+  let downBtn = document.getElementById(downId);
+  let upBtn = document.getElementById(upId);
+
+  downBtn.disabled = atMin;
   downBtn.style.opacity = atMin ? 0.5 : 1;
 
-  upBtn.disabled = atMax
+  upBtn.disabled = atMax;
   upBtn.style.opacity = atMax ? 0.5 : 1;
 }
 
 function adjustSetting(e, index, options, updateDisplayFn, lowerId, upperId) {
-  let id = e.target.id
+  let id = e.target.id;
 
   if (id == lowerId && index > 0) {
     index--;
   } else if (id == upperId && index < options.length - 1) {
     index++;
   }
-updateDisplayFn()
-return index // return index to be stored
+  updateDisplayFn();
+  return index; // return index to be stored
 }
-
 
 // ==== GAME LOGIC ====
 
 // player picking numbers. numbers are circled.
 function toggleCell(e) {
-if (gameRunning) return;
+  if (gameRunning) return;
   let clickedCell = e.target;
- let pickValue = parseInt(clickedCell.id.replace("cell", ""));
+  let pickValue = parseInt(clickedCell.id.replace("cell", ""));
 
-// if already picked
- if (clickedCell.classList.contains("picked")) {
-clickedCell.classList.remove("picked")
-playerPicks = playerPicks.filter(n => n !== pickValue)
-} else {
-  if (playerPicks.length >= 10) return;
-  clickedCell.classList.add("picked")
-  playerPicks.push(pickValue)
+  // if already picked
+  if (clickedCell.classList.contains("picked")) {
+    clickedCell.classList.remove("picked");
+    playerPicks = playerPicks.filter((n) => n !== pickValue);
+  } else {
+    if (playerPicks.length >= 10) return;
+    clickedCell.classList.add("picked");
+    playerPicks.push(pickValue);
   }
 }
 
 // comp generating winning numbers
 function generateWinners(onFinish) {
-generatedNumbers = [] // need this to reset for the round
-  let count = 0
- 
- function generateNext() {
-  if (count >= 10) {
-    onFinish() // trigger next round only after 10 numbers are generated
-    return;
+  generatedNumbers = []; // need this to reset for the round
+  let count = 0;
+
+  function generateNext() {
+    if (count >= 10) {
+      onFinish(); // trigger next round only after 10 numbers are generated
+      return;
+    }
+
+    let num = Math.ceil(Math.random() * 80);
+    if (!generatedNumbers.includes(num)) {
+      generatedNumbers.push(num);
+      let cell = document.getElementById("cell" + num);
+
+      if (cell) {
+        // diff sounds and display
+        if (cell.classList.contains("picked")) {
+          sfxHit.currentTime = 0;
+          sfxHit.play();
+          cell.classList.add("hit");
+        } else {
+          sfxDraw.currentTime = 0;
+          sfxDraw.play();
+          cell.classList.add("drawn");
+        }
+      }
+      count++;
+    }
+    setTimeout(generateNext, drawInterval);
   }
-  let num = Math.ceil(Math.random() * 80)
-  if (!generatedNumbers.includes(num)) {
-    generatedNumbers.push(num)
-  let cell = document.getElementById("cell" + num)
-if (cell.classList.contains("picked")) cell.classList.add("hit")
-  if (cell) cell.classList.add("drawn") // red
-count++
-}
-setTimeout (generateNext, drawInterval)
-}
-generateNext() // first one to start off the chain
+  generateNext(); // first one to start off the chain
 }
 
-function comparePicks() { 
-let hits = document.querySelectorAll(".hit").length
-let hitIndex = hits - 1
-let feedbackText = ""
-let picks = playerPicks.length
-let payoutMultiplier = payoutTable[picks]?.[hitIndex] || 0;
-let winnings = bet * payoutMultiplier
+function comparePicks() {
+  let hits = document.querySelectorAll(".hit").length;
+  let hitIndex = hits - 1;
+  let feedbackText = "";
+  let picks = playerPicks.length;
+  let payoutMultiplier = payoutTable[picks]?.[hitIndex] || 0;
+  let winnings = bet * payoutMultiplier;
 
-
-if (winnings == 0) {
-  feedbackText = `Sorry, you matched ${hits} number${hits === 1 ? "" : "s"}, which is not enough to win.`;
-} else if (winnings > 0) {
-feedbackText = `You won $${winnings.toLocaleString()} for matching ${hits} number${hits === 1 ? "" : "s"}!`;
+  if (winnings == 0) {
+    sfxLose.currentTime = 0;
+    sfxLose.play();
+    feedbackText = `Sorry, you matched ${hits} number${
+      hits === 1 ? "" : "s"
+    }, which is not enough to win.`;
+  } else if (winnings > 0) {
+    sfxWin.currentTime = 0;
+    sfxWin.play();
+    feedbackText = `You won $${winnings.toLocaleString()} for matching ${hits} number${
+      hits === 1 ? "" : "s"
+    }!`;
+  }
+  // Update feedback in HTML
+  document.getElementById("feedback").textContent = feedbackText;
+  playerMoney += winnings;
+  updateMoneyDisplay();
 }
- // Update feedback in HTML
-  document.getElementById("feedback").textContent = feedbackText
-playerMoney += winnings
-updateMoneyDisplay();
-} 
 
-    
 function multipleRounds() {
-if (playerPicks.length == 0) return;
-gameRunning = true
-disableInputs()
-currentRound = 1
+  if (playerPicks.length == 0) return;
+  gameRunning = true;
+  disableInputs();
+  currentRound = 1;
 
-// if currentround > 1 && < play rounds run resetboard!!
-function playNextRound() {
-
-if (playerMoney < bet) {
-document.getElementById("feedback").textContent = "You are broke. Bye bye.";
-gameRunning = false;
-enableInputs();
-return;
-}
-if (currentRound > playRounds) {
-    gameRunning = false;
-    enableInputs()
-    return;
+  // if currentround > 1 && < play rounds run resetboard!!
+  function playNextRound() {
+    if (playerMoney < bet) {
+      document.getElementById("feedback").textContent =
+        "You are broke. Bye bye.";
+      gameRunning = false;
+      enableInputs();
+      return;
+    }
+    if (currentRound > playRounds) {
+      gameRunning = false;
+      enableInputs();
+      return;
+    }
+    playerMoney -= bet;
+    updateMoneyDisplay();
+    resetBoard();
+    generateWinners(() => {
+      comparePicks();
+      currentRound++;
+      setTimeout(playNextRound, roundInterval); // pause between rounds
+    });
   }
-playerMoney -= bet;
-updateMoneyDisplay()
-  resetBoard()
-  generateWinners(() => {
-  comparePicks()
-  currentRound++
-  setTimeout (playNextRound, roundInterval) // pause between rounds
-})
-}
-playNextRound()
+  playNextRound();
 }
 
 function resetBoard() {
-let cells = document.querySelectorAll("td");
-cells.forEach(cell => {
-cell.classList.remove("hit", "drawn")
-})
-generatedNumbers = []
+  let cells = document.querySelectorAll("td");
+  cells.forEach((cell) => {
+    cell.classList.remove("hit", "drawn");
+  });
+  generatedNumbers = [];
 }
 
 function updateMoneyDisplay() {
- document.getElementById("moneyDisplay").textContent = `Money: $${playerMoney.toLocaleString()}`;
+  document.getElementById(
+    "moneyDisplay"
+  ).textContent = `Money: $${playerMoney.toLocaleString()}`;
 }
 
 function clearPicks() {
-let cells = document.querySelectorAll("td");
-cells.forEach(cell => {
-cell.classList.remove("hit", "drawn", "picked")
-})
-playerPicks = [];
-generatedNumbers = [];
+  let cells = document.querySelectorAll("td");
+  cells.forEach((cell) => {
+    cell.classList.remove("hit", "drawn", "picked");
+  });
+  playerPicks = [];
+  generatedNumbers = [];
 }
 
 // ==== UI + INTERACTION ====
 
 function disableInputs() {
-document.getElementById("clearBtn").removeEventListener("click", clearPicks);
+  document.getElementById("clearBtn").removeEventListener("click", clearPicks);
 
-document.querySelectorAll("td.cell").forEach(cell => {
-cell.removeEventListener("click", toggleCell)
-  })
+  document.querySelectorAll("td.cell").forEach((cell) => {
+    cell.removeEventListener("click", toggleCell);
+  });
 }
 
 function enableInputs() {
-document.querySelectorAll("td.cell").forEach(cell => {
-cell.addEventListener("click", toggleCell)
-})
+  document.querySelectorAll("td.cell").forEach((cell) => {
+    cell.addEventListener("click", toggleCell);
+  });
 }
 
 function attachListeners() {
@@ -437,20 +525,20 @@ function attachListeners() {
   document.getElementById("clearBtn").addEventListener("click", clearPicks);
 }
 
-
 // ==== PAYOUT TABLE ====
 let payoutTable = {
-1: [ 8 ],
-2: [ 2, 38 ],
-3: [ 2, 7, 80 ],
-4: [ 2, 3, 10, 300 ],
-5: [ 1.5, 3, 5, 50, 2000 ],
-6: [ 1.5, 2, 4, 10, 200, 4000 ],
-7: [ 0, 3, 10, 25, 150, 1000, 5000 ],
-8: [ 0, 2, 7, 20, 200, 500, 1000, 10000 ],
-9: [ 0, 2, 5, 10, 70, 200, 1000, 10000, 50000 ],
-10: [ 0, 1.5, 3, 10, 50, 500, 5000, 10000, 50000, 100000 ]
-}
+  1: [8],
+  2: [2, 38],
+  3: [2, 7, 80],
+  4: [2, 3, 10, 300],
+  5: [1.5, 3, 5, 50, 2000],
+  6: [1.5, 2, 4, 10, 200, 4000],
+  7: [0, 3, 10, 25, 150, 1000, 5000],
+  8: [0, 2, 7, 20, 200, 500, 1000, 10000],
+  9: [0, 2, 5, 10, 70, 200, 1000, 10000, 50000],
+  10: [0, 1.5, 3, 10, 50, 500, 5000, 10000, 50000, 100000],
+};
+
 
 </script>
 
