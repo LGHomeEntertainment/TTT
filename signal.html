@@ -19,7 +19,7 @@
 .cell {
   width: 30px;
   height: 30px;
-  background-color: lightgray;
+  background-color: lightskyblue;
   border: 1px solid #999;
   padding: 0;
   font-weight: bold;
@@ -30,21 +30,23 @@
   user-select: none;
 }
 
-/* Pinged cell */
-.cell.pinged {
-  background-color: lightblue;
-  cursor: default;
+.cell.empty {
+  background-color: lightgray;
+  color: green;
 }
 
-/* Signal cell */
-.cell.signal {
-  background-color: red;
-  color: white;
+.cell.yellow {
+  background-color: yellow;
+  color: black;
 }
 
-/* Flagged cell */
-.cell.flagged {
+.cell.orange{
   background-color: orange;
+  color: black;
+}
+
+.cell.red {
+  background-color: red;
   color: white;
 }
     
@@ -86,7 +88,7 @@ let gridSize = 10; // start with 10, easier to adjust later
 let totalSignals = 10;
 let firstClick = true;
 let board = [];
-// let grid = [];
+ let grid = [];
 // let gameOver = false;
 let fadeout = 2000;
 
@@ -97,7 +99,7 @@ document.addEventListener("DOMContentLoaded", initialise);
 function initialise() {
   generateGrid();
   generateBoard(gridSize);
-  attachListeners();
+//  attachListeners();
 }
 
 // visible GRID
@@ -127,10 +129,10 @@ function generateBoard(gridSize) {
         signal: false,
         pinged: false,
         adjacent: {
-	  radius1: 0,
-	  radius2: 0
-	}
-        flagged: false
+          radius1: 0,
+          radius2: 0,
+        },
+        flagged: false,
       });
     }
     board.push(rowData);
@@ -174,14 +176,15 @@ function generateSignals(clickedRow, clickedCol, newSignals = totalSignals) {
           let neighbourCol = boardCol + dc;
           if (neighbourRow < 0 || neighbourRow >= gridSize) continue;
           if (neighbourCol < 0 || neighbourCol >= gridSize) continue;
-if (board[neighbourRow][neighbourCol].signal == true) {
- if (isAdjacent(neighbourRow, neighbourCol, boardRow, boardCol)) {
-board[boardRow][boardCol].adjacent.radius1++;
-} else {
-            board[boardRow][boardCol].adjacent.radius2++;
+          if (board[neighbourRow][neighbourCol].signal == true) {
+            if (isAdjacent(neighbourRow, neighbourCol, boardRow, boardCol)) {
+              board[boardRow][boardCol].adjacent.radius1++;
+            } else {
+              board[boardRow][boardCol].adjacent.radius2++;
+            }
           }
         }
-      }}
+      }
     }
   }
 }
@@ -201,95 +204,90 @@ function handleCellClick(e) {
   if (firstClick) {
     generateSignals(clickedRow, clickedCol);
 
-    // validate board after generating signal
-    let isValid = validateBoard(clickedRow, clickedCol);
-    if (!isValid) {
-      let attempts = 0;
-      while (!isValid && attempts < 10) {
-        // attempts is more impt in sudoku, to throw out the board entirely?
-        generateSignals(clickedRow, clickedCol);
-        isValid = validateBoard(clickedRow, clickedCol);
-        attempts++;
-      }
-if (!isValid && attempts >= 10) {
-document.getElementById("feedback").textContent = "Something went wrong, please start a new game."
-}
-    }
     firstClick = false;
     getCellColour(clickedRow, clickedCol, clickedCell);
   } else {
     getCellColour(clickedRow, clickedCol, clickedCell);
-  //  checkWin();
+    //  checkWin();
   }
 }
 
 function getCellColour(clickedRow, clickedCol, clickedCell) {
-let nearbySignals = board[clickedRow][clickedCol].adjacent.radius1 + board[clickedRow][clickedCol].adjacent.radius2
+  let cellData = board[clickedRow][clickedCol];
+  let nearbySignals = cellData.adjacent.radius1 + cellData.adjacent.radius2;
   if (nearbySignals == 0) {
-clickedCell.classList.add("empty"); // only show empty as an aid (tentative)
-} else {
-clickedCell.textContent = nearbySignals;
-// choose colour
-if (clickedCell.adjacent.radius1 > 0 && clickedCell.adjacent.radius2 == 0) {
-clickedCell.classList.add("red")
-fadeCell()
-} else if (clickedCell.adjacent.radius1 == 0 && clickedCell.adjacent.radius2 > 0) {
-clickedCell.classList.add("yellow")
-fadeCell()
-} else {
-clickedCell.classList.add("orange");
-fadeCell()
+    clickedCell.classList.add("empty"); // only show empty as an aid (tentative)
+  } else {
+    clickedCell.textContent = nearbySignals;
+    // choose colour
+    if (cellData.adjacent.radius1 > 0 && cellData.adjacent.radius2 == 0) {
+      clickedCell.classList.add("red");
+      fadeCell(clickedCell, fadeout, "red", true);
+    } else if (
+      cellData.adjacent.radius1 == 0 &&
+      cellData.adjacent.radius2 > 0
+    ) {
+      clickedCell.classList.add("yellow");
+      fadeCell(clickedCell, fadeout, "yellow", true);
+    } else {
+      clickedCell.classList.add("orange");
+      fadeCell(clickedCell, fadeout, "orange", true);
+    }
+  }
+
+  function revealArea(clickedRow, clickedCol, clickedCell) {
+    for (let dr = -5; dr <= 5; dr++) {
+      for (let dc = -5; dc <= 5; dc++) {
+        if (dr == 0 && dc == 0) continue;
+
+        let neighbourRow = clickedRow + dr;
+        let neighbourCol = clickedCol + dc;
+        if (neighbourRow < 0 || neighbourRow >= gridSize) continue;
+        if (neighbourCol < 0 || neighbourCol >= gridSize) continue;
+        let cellData = board[neighbourRow][neighbourCol];
+        let cellElement = document.getElementById(
+          `cell-${neighbourRow}-${neighbourCol}`
+        );
+        let nearbySignals =
+          cellData.adjacent.radius1 + cellData.adjacent.radius2;
+
+        if (nearbySignals == 0) {
+          cellElement.classList.add("empty"); // show all empty cells within the 5 radius at the start
+          fadeCell(cellElement, 2000, ["empty"], true);
+        }
+      }
+    }
   }
 }
-
-function revealArea(clickedRow, clickedCol, clickedCell) {
-
-      for (let dr = -5; dr <= 5; dr++) {
-        for (let dc = -5; dc <= 5; dc++) {
-          if (dr == 0 && dc == 0) continue;
-
-          let neighbourRow = clickedRow + dr;
-          let neighbourCol = clickedCol + dc;
-          if (neighbourRow < 0 || neighbourRow >= gridSize) continue;
-          if (neighbourCol < 0 || neighbourCol >= gridSize) continue;
-let cellData = board[neighbourRow][neighbourCol]
-let cellElement = document.getElementById(`cell-${neighbourRow}-${neighbourCol}`);
-let nearbySignals = cellData.adjacent.radius1 + cellData.adjacent.radius2
-
-if (nearbySignals == 0) {
-cellElement.classList.add("empty"); // show all empty cells within the 5 radius at the start
-fadeCell(cellElement, 2000, ["empty"], true)
-} }}}}}
-
 
 function fadeCell(cell, delay = fadeout, removeClasses = [], clearText = true) {
   setTimeout(() => {
-    removeClasses.forEach(cls => cell.classList.remove(cls));
+    removeClasses.forEach((cls) => cell.classList.remove(cls));
     if (clearText) cell.textContent = "";
   }, delay);
 }
-  
 
 function checkWin() {
-let correctFlags = 0;
-let incorrectFlags = 0;
+  let correctFlags = 0;
+  let incorrectFlags = 0;
   for (let r = 0; r < gridSize; r++) {
     for (let c = 0; c < gridSize; c++) {
       let cellData = board[r][c];
-  if (cellData.flagged) {
-    if (cellData.signal) {
-  correctFlags++;
-} else {
-     incorrectFlags++
+      if (cellData.flagged) {
+        if (cellData.signal) {
+          correctFlags++;
+        } else {
+          incorrectFlags++;
+        }
       }
-    }}
+    }
   }
 
   if (correctFlags == totalSignals && incorrectFlags == 0) {
-  //  gameOver = true;
+    //  gameOver = true;
 
-        document.getElementById("feedback").textContent = "You win!";
-      }
+    document.getElementById("feedback").textContent = "You win!";
+  }
 }
 
 function resetGame(newSize = gridSize, newSignals = totalSignals) {
@@ -305,10 +303,8 @@ function resetGame(newSize = gridSize, newSignals = totalSignals) {
   attachListeners();
 }
 
-
-
 function toggleFlag(e) {
- // if (gameOver) return;
+  // if (gameOver) return;
   let clickedCell = e.target;
   e.preventDefault();
   let clickedRow = parseInt(clickedCell.dataset.row);
@@ -324,7 +320,7 @@ function toggleFlag(e) {
     clickedCell.textContent = "🚩"; // add flag
     clickedCell.classList.add("flagged");
   }
-checkWin()
+  checkWin();
 }
 
 // ==== UI + INTERACTION ====
@@ -391,149 +387,6 @@ function customise() {
 
 // ==== BOARD VALIDATION ====
 
-function validateBoard(clickedRow, clickedCol) {
-  // use after firstclick
-  // Step 1: Setup
-  // Create a copy of the board state (optional, for simulation)
-  // test board is like board. holds data, doesn't change during the game
-
-  let testBoard = cloneBoard(board); // this allows testBoard to store the cloneboard data itself
-
-  // Create a list of pinged cells starting from the first click
-  // creates a 2D array (same shape as your board) where each cell starts as false, meaning not pinged
-  // pingedMap is for keeping track of the player, as though he is actually playing the board, like handleCellClick(e)
-
-  let pingedMap = Array(gridSize)
-    .fill()
-    .map(() => Array(gridSize).fill(false));
-
-  // Create a list of flagged cells (initially empty)
-  // tracks whether a cell is flagged in your simulation
-
-  let flaggedMap = Array(gridSize)
-    .fill()
-    .map(() => Array(gridSize).fill(false));
-
-  // Step 2: Simulate logical deduction
-  // Loop through pinged cells
-  // For each cell with a number:
-  //   - Count hidden neighbors
-  //   - Count flagged neighbors
-  //   - If adjacent == flagged count → ping remaining hidden neighbors
-  //   - If adjacent == hidden count → flag all hidden neighbors
-
-  cascadePing(clickedRow, clickedCol, testBoard, pingedMap);
-
-  // Step 3: Track progress
-  // Keep a counter of how many non-signal cells are pinged (using flaggedMap)
-  // Stop when no new cells are pinged in a loop (change = false ==> exit)
-  let change = true;
-  while (change) {
-    change = false; // rmb to add change = true after logic, so that it continues to run as long as there are new pings
-
-    for (let row = 0; row < gridSize; row++) {
-      for (let col = 0; col < gridSize; col++) {
-        if (!pingedMap[row][col]) continue; // skip if it's not yet opened
-
-        let cell = testBoard[row][col];
-        if (cell.adjacent == 0) continue;
-
-        let hidden = [];
-        let flagged = 0;
-        for (let dr = -1; dr <= 1; dr++) {
-          for (let dc = -1; dc <= 1; dc++) {
-            if (dr == 0 && dc == 0) continue;
-            let nr = row + dr;
-            let nc = col + dc;
-            if (nr < 0 || nr >= gridSize || nc < 0 || nc >= gridSize) continue;
-
-            if (flaggedMap[nr][nc])
-              flagged++; // count how many flagged cells are in the adjacent of this cell
-            else if (!pingedMap[nr][nc]) hidden.push([nr, nc]);
-          }
-        }
-
-        if (hidden.length > 0) {
-          // hidden.length > 0 meaning there's still hidden cells
-          // Condition 1: all adjacent signal flagged ==> rest are safe
-          if (cell.adjacent == flagged) {
-            hidden.forEach(([nr, nc]) => {
-              cascadePing(nr, nc, testBoard, pingedMap);
-            });
-            change = true;
-          }
-
-          // Condition 2: all adjacent is hidden ==> adjacents are signal ==> flag them
-          if (cell.adjacent == hidden.length + flagged) {
-            // + flagged to account for those already flagged
-            hidden.forEach(([nr, nc]) => {
-              flaggedMap[nr][nc] = true;
-            });
-            change = true;
-          }
-        }
-      }
-    }
-  }
-
-  // Step 4: Evaluate
-  // If pinged count == total safe cells → return true (valid board)
-  // Else → return false (board requires guessing)
-
-  let pingedSafe = 0;
-  let totalSafeCells = gridSize * gridSize - totalSignals;
-  for (let r = 0; r < gridSize; r++) {
-    for (let c = 0; c < gridSize; c++) {
-      if (pingedMap[r][c] && testBoard[r][c].signal == false) {
-        pingedSafe++;
-      }
-    }
-  }
-  if (pingedSafe == totalSafeCells) {
-    return true;
-  } else {
-    return false;
-  }
-}
-// Step 5: Retry logic (outside this function)
-// If validateBoard() returns false, regenerate signal and try again
-// already put in generateSignals(), after first click
-
-function cloneBoard(board) {
-  let testBoard = [];
-  for (let row = 0; row < gridSize; row++) {
-    let rowTest = [];
-    for (let col = 0; col < gridSize; col++) {
-      rowTest.push({ ...board[row][col] });
-    }
-    testBoard.push(rowTest);
-  }
-  return testBoard; // only by returning, we can access it in the validate board (). it's not really global though
-}
-
-function cascadePing(clickedRow, clickedCol, testBoard, pingedMap) {
-  if (pingedMap[clickedRow][clickedCol]) return;
-  pingedMap[clickedRow][clickedCol] = true;
-  if (testBoard[clickedRow][clickedCol].adjacent > 0) return;
-
-  // cascade to neighbours
-  for (let dr = -1; dr <= 1; dr++) {
-    for (let dc = -1; dc <= 1; dc++) {
-      if (dr == 0 && dc == 0) continue;
-
-      let neighbourRow = clickedRow + dr;
-      let neighbourCol = clickedCol + dc;
-      if (
-        neighbourRow < 0 ||
-        neighbourRow >= gridSize ||
-        neighbourCol < 0 ||
-        neighbourCol >= gridSize
-      )
-        continue;
-      cascadePing(neighbourRow, neighbourCol, testBoard, pingedMap); // CASCADE!!
-    }
-  }
-}
 
 </script>
 
