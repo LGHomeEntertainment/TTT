@@ -6,12 +6,9 @@
 
   <style>
 /* Container for the grid */
+/* Container for the grid */
 #grid {
-  display: grid;
   border-collapse: collapse;
-  border-spacing: 0;
-  grid-template-columns: repeat(var(--grid-size), 1fr); /* dynamic columns */
-  width: fit-content;
   margin: 20px auto;
 }
 
@@ -40,7 +37,7 @@
   color: black;
 }
 
-.cell.orange{
+.cell.orange {
   background-color: orange;
   color: black;
 }
@@ -49,6 +46,7 @@
   background-color: red;
   color: white;
 }
+
     
 </style>
 
@@ -85,12 +83,12 @@
 // ==== GLOBALs + CONSTANTS ====
 
 let gridSize = 10; // start with 10, easier to adjust later
-let totalSignals = 10;
+let totalSignals = 4;
 let firstClick = true;
 let board = [];
- let grid = [];
+let grid = [];
 // let gameOver = false;
-let fadeout = 2000;
+let fadeout = 20000000;
 
 // ==== INITIALISATION + GENERATION ====
 
@@ -99,7 +97,7 @@ document.addEventListener("DOMContentLoaded", initialise);
 function initialise() {
   generateGrid();
   generateBoard(gridSize);
-//  attachListeners();
+  attachListeners();
 }
 
 // visible GRID
@@ -206,14 +204,16 @@ function handleCellClick(e) {
 
     firstClick = false;
     getCellColour(clickedRow, clickedCol, clickedCell);
+    revealArea(clickedRow, clickedCol, clickedCell);
   } else {
     getCellColour(clickedRow, clickedCol, clickedCell);
-    //  checkWin();
   }
 }
 
 function getCellColour(clickedRow, clickedCol, clickedCell) {
   let cellData = board[clickedRow][clickedCol];
+  cellData.pinged = true; // ← Mark as pinged!
+
   let nearbySignals = cellData.adjacent.radius1 + cellData.adjacent.radius2;
   if (nearbySignals == 0) {
     clickedCell.classList.add("empty"); // only show empty as an aid (tentative)
@@ -222,39 +222,39 @@ function getCellColour(clickedRow, clickedCol, clickedCell) {
     // choose colour
     if (cellData.adjacent.radius1 > 0 && cellData.adjacent.radius2 == 0) {
       clickedCell.classList.add("red");
-      fadeCell(clickedCell, fadeout, "red", true);
+      fadeCell(clickedCell, fadeout, ["red"], true);
     } else if (
       cellData.adjacent.radius1 == 0 &&
       cellData.adjacent.radius2 > 0
     ) {
       clickedCell.classList.add("yellow");
-      fadeCell(clickedCell, fadeout, "yellow", true);
+      fadeCell(clickedCell, fadeout, ["yellow"], true);
     } else {
       clickedCell.classList.add("orange");
-      fadeCell(clickedCell, fadeout, "orange", true);
+      fadeCell(clickedCell, fadeout, ["orange"], true);
     }
   }
+}
 
-  function revealArea(clickedRow, clickedCol, clickedCell) {
-    for (let dr = -5; dr <= 5; dr++) {
-      for (let dc = -5; dc <= 5; dc++) {
-        if (dr == 0 && dc == 0) continue;
+function revealArea(clickedRow, clickedCol, clickedCell) {
+  for (let dr = -5; dr <= 5; dr++) {
+    for (let dc = -5; dc <= 5; dc++) {
+      if (dr == 0 && dc == 0) continue;
 
-        let neighbourRow = clickedRow + dr;
-        let neighbourCol = clickedCol + dc;
-        if (neighbourRow < 0 || neighbourRow >= gridSize) continue;
-        if (neighbourCol < 0 || neighbourCol >= gridSize) continue;
-        let cellData = board[neighbourRow][neighbourCol];
+      let neighbourRow = clickedRow + dr;
+      let neighbourCol = clickedCol + dc;
+      if (neighbourRow < 0 || neighbourRow >= gridSize) continue;
+      if (neighbourCol < 0 || neighbourCol >= gridSize) continue;
+      let cellData = board[neighbourRow][neighbourCol];
+      let nearbySignals = cellData.adjacent.radius1 + cellData.adjacent.radius2;
+      if (nearbySignals == 0 && !cellData.pinged) {
+        cellData.pinged = true; // mark as revealed
+
         let cellElement = document.getElementById(
           `cell-${neighbourRow}-${neighbourCol}`
         );
-        let nearbySignals =
-          cellData.adjacent.radius1 + cellData.adjacent.radius2;
-
-        if (nearbySignals == 0) {
-          cellElement.classList.add("empty"); // show all empty cells within the 5 radius at the start
-          fadeCell(cellElement, 2000, ["empty"], true);
-        }
+        cellElement.classList.add("empty"); // show all empty cells within the 5 radius at the start
+        fadeCell(cellElement, 2000, ["empty"], true);
       }
     }
   }
@@ -298,7 +298,7 @@ function resetGame(newSize = gridSize, newSignals = totalSignals) {
   generateBoard(gridSize);
   document.getElementById("grid").innerHTML = "";
   generateGrid(gridSize);
-  // firstClick = true;
+  firstClick = true;
   // gameOver = false;
   attachListeners();
 }
@@ -386,6 +386,7 @@ function customise() {
 }
 
 // ==== BOARD VALIDATION ====
+
 
 
 </script>
