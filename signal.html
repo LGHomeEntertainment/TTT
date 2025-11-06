@@ -83,11 +83,12 @@
 // ==== GLOBALs + CONSTANTS ====
 
 let gridSize = 10; // start with 10, easier to adjust later
-let totalsignals = 10;
+let totalSignals = 10;
 // let firstClick = true;
 let board = [];
-let grid = [];
-let gameOver = false;
+// let grid = [];
+// let gameOver = false;
+let fadeout = 2000;
 
 // ==== INITIALISATION + GENERATION ====
 
@@ -127,9 +128,9 @@ function generateBoard(gridSize) {
         pinged: false,
         adjacent: {
 	  radius1: 0,
-	  radius2: 0,
+	  radius2: 0
 	}
-        flagged: false,
+        flagged: false
       });
     }
     board.push(rowData);
@@ -174,7 +175,7 @@ function generateSignals(clickedRow, clickedCol, newSignals = totalSignals) {
           if (neighbourRow < 0 || neighbourRow >= gridSize) continue;
           if (neighbourCol < 0 || neighbourCol >= gridSize) continue;
 if (board[neighbourRow][neighbourCol].signal == true) {
- if (isAdjacent(neighbourRow, neighbourCol, boardRow, boardCol) {
+ if (isAdjacent(neighbourRow, neighbourCol, boardRow, boardCol)) {
 board[boardRow][boardCol].adjacent.radius1++;
 } else {
             board[boardRow][boardCol].adjacent.radius2++;
@@ -185,13 +186,18 @@ board[boardRow][boardCol].adjacent.radius1++;
   }
 }
 
+function isAdjacent(r, c, clickedRow, clickedCol) {
+  // check how far apart is 2 cells (mainly for generating clear area around the first click)
+  return Math.abs(r - clickedRow) <= 1 && Math.abs(c - clickedCol) <= 1;
+}
+
 // ==== GAME LOGIC ====
 
-function checkAnswer(e) {
+function handleCellClick(e) {
   let clickedCell = e.target;
   let clickedRow = parseInt(clickedCell.dataset.row);
   let clickedCol = parseInt(clickedCell.dataset.col);
-  if (gameOver) return;
+  // if (gameOver) return;
   if (firstClick) {
     generateSignals(clickedRow, clickedCol);
 
@@ -209,94 +215,61 @@ if (!isValid && attempts >= 10) {
 document.getElementById("feedback").textContent = "Something went wrong, please start a new game."
 }
     }
-
     firstClick = false;
-    pingCell(clickedRow, clickedCol, clickedCell);
+    getCellColour(clickedRow, clickedCol, clickedCell);
   } else {
-    pingCell(clickedRow, clickedCol, clickedCell);
-    checkWin();
+    getCellColour(clickedRow, clickedCol, clickedCell);
+  //  checkWin();
   }
 }
 
-function pingCell(clickedRow, clickedCol, clickedCell) {
-  if (
-    board[clickedRow][clickedCol].pinged == true ||
-    board[clickedRow][clickedCol].flagged == true
-  ) {
-    return;
-  } else if (board[clickedRow][clickedCol].signal == true) {
-    clickedCell.classList.add("signal");
-    triggerGameOver();
-    return; // need this cuz after running gameOver(), it will come back to this
-  } else {
-    board[clickedRow][clickedCol].pinged = true;
-    if (board[clickedRow][clickedCol].adjacent > 0) {
-      clickedCell.classList.add("pinged");
-      clickedCell.innerHTML = `${board[clickedRow][clickedCol].adjacent}`;
-    } else {
-      clickedCell.classList.add("pinged"); // the clicked cell only
-
-      for (let dr = -1; dr <= 1; dr++) {
-        for (let dc = -1; dc <= 1; dc++) {
-          if (dr == 0 && dc == 0) continue;
-
-          let neighbourRow = clickedRow + dr;
-          let neighbourCol = clickedCol + dc;
-          if (neighbourRow < 0 || neighbourRow >= gridSize) continue;
-          if (neighbourCol < 0 || neighbourCol >= gridSize) continue;
-
-          let neighbourCell = document.getElementById(
-            `cell-${neighbourRow}-${neighbourCol}`
-          );
-          if (board[neighbourRow][neighbourCol].flagged == true) continue;
-          pingCell(neighbourRow, neighbourCol, neighbourCell);
-        }
-      }
-    }
+function getCellColour(clickedRow, clickedCol, clickedCell) {
+let nearbySignals = board[clickedRow][clickedCol].adjacent.radius1 + board[clickedRow][clickedCol].adjacent.radius2
+  if (nearbySignals == 0) {
+clickedCell.classList.add("empty"); // only show empty as an aid (tentative)
+} else {
+clickedCell.textContent = nearbySignals;
+// choose colour
+if (clickedCell.adjacent.radius1 > 0 && clickedCell.adjacent.radius2 == 0) {
+clickedCell.classList.add("innerR")
+fadeCell()
+} else if (clickedCell.adjacent.radius1 == 0 && clickedCell.adjacent.radius2 > 0) {
+clickedCell.classList.add("outerR")
+fadeCell()
+} else {
+clickedCell.classList.add("ping");
+fadeCell()
   }
 }
+
+function fadeCell(cell, delay = fadeout, removeClasses = [], clearText = true) {
+  setTimeout(() => {
+    removeClasses.forEach(cls => cell.classList.remove(cls));
+    if (clearText) cell.textContent = "";
+  }, delay);
+}
+  
 
 function checkWin() {
-  let pingedCount = 0;
+let correctFlags = 0;
+let incorrectFlags = 0;
   for (let r = 0; r < gridSize; r++) {
     for (let c = 0; c < gridSize; c++) {
       let cellData = board[r][c];
-      if (!cellData.signal && cellData.pinged == true) {
-        // just check non signal in case.
-        pingedCount++;
+  if (cellData.flagged) {
+    if (cellData.signal) {
+  correctFlags++;
+} else {
+     incorrectFlags++
       }
-    }
+    }}
   }
 
-  if (pingedCount == gridSize * gridSize - totalSignals) {
-    gameOver = true;
-    for (let r = 0; r < gridSize; r++) {
-      for (let c = 0; c < gridSize; c++) {
-        let cellData = board[r][c];
-        if (cellData.signal == true && !cellData.pinged) {
-          let cellElement = document.getElementById(`cell-${r}-${c}`);
-          cellElement.textContent = "💣"; // add flag
-        }
-        cellData.pinged = true;
+  if (correctFlags == totalSignals && incorrectFlags == 0) {
+  //  gameOver = true;
+
         document.getElementById("feedback").textContent = "You win!";
       }
-    }
-  }
-}
-
-function triggerGameOver() {
-  for (let r = 0; r < gridSize; r++) {
-    for (let c = 0; c < gridSize; c++) {
-      let cellData = board[r][c];
-      let cellElement = document.getElementById(`cell-${r}-${c}`);
-
-      if (cellData.signal) {
-        cellData.pinged = true;
-        cellElement.classList.add("signal");
-        cellElement.textContent = "💣"; // add flag
-      }
-    }
-  }
 }
 
 function resetGame(newSize = gridSize, newSignals = totalSignals) {
@@ -308,17 +281,14 @@ function resetGame(newSize = gridSize, newSignals = totalSignals) {
   document.getElementById("grid").innerHTML = "";
   generateGrid(gridSize);
   // firstClick = true;
-  gameOver = false;
+  // gameOver = false;
   attachListeners();
 }
 
-function isAdjacent(r, c, clickedRow, clickedCol) {
-  // check how far apart is 2 cells (mainly for generating clear area around the first click)
-  return Math.abs(r - clickedRow) <= 1 && Math.abs(c - clickedCol) <= 1;
-}
+
 
 function toggleFlag(e) {
-  if (gameOver) return;
+ // if (gameOver) return;
   let clickedCell = e.target;
   e.preventDefault();
   let clickedRow = parseInt(clickedCell.dataset.row);
@@ -334,6 +304,7 @@ function toggleFlag(e) {
     clickedCell.textContent = "🚩"; // add flag
     clickedCell.classList.add("flagged");
   }
+checkWin()
 }
 
 // ==== UI + INTERACTION ====
@@ -349,7 +320,7 @@ function attachListeners() {
   // all my listeners
   let cells = document.querySelectorAll("td");
   cells.forEach((cell) => {
-    cell.addEventListener("click", checkAnswer); // left click
+    cell.addEventListener("click", handleCellClick); // left click
   });
   cells.forEach((cell) => {
     cell.addEventListener("contextmenu", toggleFlag); // right click
@@ -376,7 +347,7 @@ function attachListeners() {
     cell.addEventListener("touchend", (e) => {
       clearTimeout(pressTimer);
       if (!longPressTriggered) {
-        checkAnswer(e); // treat as single tap
+        handleCellClick(e); // treat as single tap
       }
     });
   });
@@ -410,7 +381,7 @@ function validateBoard(clickedRow, clickedCol) {
 
   // Create a list of pinged cells starting from the first click
   // creates a 2D array (same shape as your board) where each cell starts as false, meaning not pinged
-  // pingedMap is for keeping track of the player, as though he is actually playing the board, like checkAnswer(e)
+  // pingedMap is for keeping track of the player, as though he is actually playing the board, like handleCellClick(e)
 
   let pingedMap = Array(gridSize)
     .fill()
