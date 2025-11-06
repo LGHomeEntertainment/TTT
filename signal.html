@@ -231,16 +231,36 @@ clickedCell.classList.add("empty"); // only show empty as an aid (tentative)
 clickedCell.textContent = nearbySignals;
 // choose colour
 if (clickedCell.adjacent.radius1 > 0 && clickedCell.adjacent.radius2 == 0) {
-clickedCell.classList.add("innerR")
+clickedCell.classList.add("red")
 fadeCell()
 } else if (clickedCell.adjacent.radius1 == 0 && clickedCell.adjacent.radius2 > 0) {
-clickedCell.classList.add("outerR")
+clickedCell.classList.add("yellow")
 fadeCell()
 } else {
-clickedCell.classList.add("ping");
+clickedCell.classList.add("orange");
 fadeCell()
   }
 }
+
+function revealArea(clickedRow, clickedCol, clickedCell) {
+
+      for (let dr = -5; dr <= 5; dr++) {
+        for (let dc = -5; dc <= 5; dc++) {
+          if (dr == 0 && dc == 0) continue;
+
+          let neighbourRow = clickedRow + dr;
+          let neighbourCol = clickedCol + dc;
+          if (neighbourRow < 0 || neighbourRow >= gridSize) continue;
+          if (neighbourCol < 0 || neighbourCol >= gridSize) continue;
+let cellData = board[neighbourRow][neighbourCol]
+let cellElement = document.getElementById(`cell-${neighbourRow}-${neighbourCol}`);
+let nearbySignals = cellData.adjacent.radius1 + cellData.adjacent.radius2
+
+if (nearbySignals == 0) {
+cellElement.classList.add("empty"); // show all empty cells within the 5 radius at the start
+fadeCell(cellElement, 2000, ["empty"], true)
+} }}}}}
+
 
 function fadeCell(cell, delay = fadeout, removeClasses = [], clearText = true) {
   setTimeout(() => {
