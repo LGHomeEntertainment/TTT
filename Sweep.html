@@ -200,6 +200,9 @@ function checkAnswer(e) {
         isValid = validateBoard(clickedRow, clickedCol);
         attempts++;
       }
+      if (!isValid && attempts >= 10) {
+        document.getElementById("feedback").textContent = "Something went wrong, please start a new game."
+      }
     }
 
     firstClick = false;
