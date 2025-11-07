@@ -87,7 +87,7 @@
 // ==== GLOBALs + CONSTANTS ====
 
 let gridSize = 10; 
-let totalSignals = 15;
+let totalSignals = 10;
 let firstClick = true;
 let board = [];
 let grid = [];
@@ -216,25 +216,31 @@ function handleCellClick(e) {
   }
 }
 
-function getStrengthColour(clickedRow, clickedCol, clickedCell) {
-let cellStrength = board[clickedRow][clickedCol].totalStrength
-let cellElement = document.getElementById(`cell-${clickedRow}-${clickedCol}`)
-if (cellStrength >= 3) return "red";
-if (cellStrength >= 1.5) return "orange";
-if (cellStrength >= 0.4) return "yellow";
-if (cellStrength > 0.1) return "lightgreen";
-return "green";
+function getStrengthColourHSL(strength) {
+  // Cap strength to avoid extreme values
+  let cappedStrength = Math.min(strength, 3);
+
+  // Map strength to hue: 120 (green) → 0 (red)
+  let hue = 120 - (cappedStrength / 3) * 120;
+
+  return `hsl(${hue}, 100%, 50%)`;
 }
-
-
 
 function getCellColour(clickedRow, clickedCol, clickedCell) {
   let cellData = board[clickedRow][clickedCol];
   let cellElement = document.getElementById(`cell-${clickedRow}-${clickedCol}`); 
-  cellElement.classList.add(getStrengthColour(clickedRow, clickedCol, clickedCell))
-  cellData.pinged = true; // ← Mark as pinged!
-console.log("clickedcell", clickedCell, "strength: ", cellData.totalStrength)
-  revealArea(clickedRow, clickedCol, clickedCell)
+
+  // Apply HSL background color
+  let hslColor = getStrengthColourHSL(cellData.totalStrength);
+  cellElement.style.backgroundColor = hslColor;
+
+  // Optional: show strength value for debugging
+  cellElement.textContent = cellData.totalStrength.toFixed(1);
+
+  cellData.pinged = true;
+  console.log("clickedcell", clickedCell, "strength: ", cellData.totalStrength);
+
+  revealArea(clickedRow, clickedCol, clickedCell);
 }
 
 function revealArea(clickedRow, clickedCol, clickedCell) {
@@ -252,8 +258,9 @@ function revealArea(clickedRow, clickedCol, clickedCell) {
         cellData.pinged = true; // mark as revealed
 
         let cellElement = document.getElementById(`cell-${neighbourRow}-${neighbourCol}`);
-        let colourClass = getStrengthColour(neighbourRow, neighbourCol, cellElement)
-        cellElement.classList.add(colourClass); // show all empty cells within the 5 radius at the start
+        let hslColor = getStrengthColourHSL(cellData.totalStrength);
+cellElement.style.backgroundColor = hslColor;
+cellElement.textContent = cellData.totalStrength.toFixed(1); // optional
   //      fadeCell(cellElement, 2000, ["empty"], true);
       }
     }
@@ -309,15 +316,13 @@ function toggleFlag(e) {
   e.preventDefault();
   let clickedRow = parseInt(clickedCell.dataset.row);
   let clickedCol = parseInt(clickedCell.dataset.col);
-  if (board[clickedRow][clickedCol].pinged == true) {
-    return;
-  } else if (board[clickedRow][clickedCol].flagged) {
+   if (board[clickedRow][clickedCol].flagged) {
     board[clickedRow][clickedCol].flagged = false;
     clickedCell.textContent = ""; // no flag
     clickedCell.classList.remove("flagged");
   } else {
     board[clickedRow][clickedCol].flagged = true;
-    clickedCell.textContent = "🚩"; // add flag
+    clickedCell.textContent = "📡"; // add flag
     clickedCell.classList.add("flagged");
   }
   checkWin();
