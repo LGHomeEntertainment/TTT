@@ -82,13 +82,13 @@
 
 // ==== GLOBALs + CONSTANTS ====
 
-let gridSize = 10; // start with 10, easier to adjust later
-let totalSignals = 4;
+let gridSize = 10; 
+let totalSignals = 15;
 let firstClick = true;
 let board = [];
 let grid = [];
 // let gameOver = false;
-let fadeout = 20000000;
+// let fadeout = 20000000;
 
 // ==== INITIALISATION + GENERATION ====
 
@@ -124,13 +124,14 @@ function generateBoard(gridSize) {
     let rowData = [];
     for (let col = 0; col < gridSize; col++) {
       rowData.push({
-        signal: false,
-        pinged: false,
+        signal: false, // actual status of the cell
+        pinged: false, // has it been revealed
         adjacent: {
           radius1: 0,
           radius2: 0,
         },
-        flagged: false,
+        flagged: false, // for flagging if it's a signal
+        totalStrength: 0
       });
     }
     board.push(rowData);
@@ -158,9 +159,10 @@ function generateSignals(clickedRow, clickedCol, newSignals = totalSignals) {
     signalNumber++;
   }
 
-  // count adjacent once all signal placed
-  // For each cell, loop through its 25 neighbors
+  // calculate strength
   // If neighbor is in bounds and has a signal, increment adjacent count
+  let strength = 0;
+  let totalStrength = 0
   let boardCol = 0;
   let boardRow = 0;
 
@@ -177,9 +179,12 @@ function generateSignals(clickedRow, clickedCol, newSignals = totalSignals) {
           if (board[neighbourRow][neighbourCol].signal == true) {
             if (isAdjacent(neighbourRow, neighbourCol, boardRow, boardCol)) {
               board[boardRow][boardCol].adjacent.radius1++;
+	      board[boardRow][boardCol].totalStrength += 0.8
             } else {
               board[boardRow][boardCol].adjacent.radius2++;
+	      board[boardRow][boardCol].totalStrength += 0.5
             }
+
           }
         }
       }
@@ -204,41 +209,31 @@ function handleCellClick(e) {
 
     firstClick = false;
     getCellColour(clickedRow, clickedCol, clickedCell);
-    revealArea(clickedRow, clickedCol, clickedCell);
+    // revealArea(clickedRow, clickedCol, clickedCell);
   } else {
     getCellColour(clickedRow, clickedCol, clickedCell);
   }
 }
 
+function getStrengthColour(clickedRow, clickedCol, clickedCell) {
+let cellStrength = board[clickedRow][clickedCol].totalStrength
+let cellElement = document.getElementById(`cell-${clickedRow}-${clickedCol}`)
+if (cellStrength >= 3) return "red";
+if (cellStrength >= 2) return "orange";
+if (cellStrength >= 1) return "yellow";
+if (cellStrength > 0) return "lightgreen";
+return "green";
+}
+
 function getCellColour(clickedRow, clickedCol, clickedCell) {
   let cellData = board[clickedRow][clickedCol];
   cellData.pinged = true; // ← Mark as pinged!
-
-  let nearbySignals = cellData.adjacent.radius1 + cellData.adjacent.radius2;
-  if (nearbySignals == 0) {
-    clickedCell.classList.add("empty"); // only show empty as an aid (tentative)
-  } else {
-    clickedCell.textContent = nearbySignals;
-    // choose colour
-    if (cellData.adjacent.radius1 > 0 && cellData.adjacent.radius2 == 0) {
-      clickedCell.classList.add("red");
-      fadeCell(clickedCell, fadeout, ["red"], true);
-    } else if (
-      cellData.adjacent.radius1 == 0 &&
-      cellData.adjacent.radius2 > 0
-    ) {
-      clickedCell.classList.add("yellow");
-      fadeCell(clickedCell, fadeout, ["yellow"], true);
-    } else {
-      clickedCell.classList.add("orange");
-      fadeCell(clickedCell, fadeout, ["orange"], true);
-    }
-  }
+  revealArea(clickedRow, clickedCol, clickedCell)
 }
 
 function revealArea(clickedRow, clickedCol, clickedCell) {
-  for (let dr = -5; dr <= 5; dr++) {
-    for (let dc = -5; dc <= 5; dc++) {
+  for (let dr = -1; dr <= 1; dr++) {
+    for (let dc = -1; dc <= 1; dc++) {
       if (dr == 0 && dc == 0) continue;
 
       let neighbourRow = clickedRow + dr;
@@ -246,26 +241,25 @@ function revealArea(clickedRow, clickedCol, clickedCell) {
       if (neighbourRow < 0 || neighbourRow >= gridSize) continue;
       if (neighbourCol < 0 || neighbourCol >= gridSize) continue;
       let cellData = board[neighbourRow][neighbourCol];
-      let nearbySignals = cellData.adjacent.radius1 + cellData.adjacent.radius2;
-      if (nearbySignals == 0 && !cellData.pinged) {
+      
+      if (!cellData.pinged) {
         cellData.pinged = true; // mark as revealed
 
-        let cellElement = document.getElementById(
-          `cell-${neighbourRow}-${neighbourCol}`
-        );
-        cellElement.classList.add("empty"); // show all empty cells within the 5 radius at the start
-        fadeCell(cellElement, 2000, ["empty"], true);
+        let cellElement = document.getElementById(`cell-${neighbourRow}-${neighbourCol}`);
+        let colourClass = getStrengthColour(neighbourRow, neighbourCol, cellElement)
+        cellElement.classList.add(colourClass); // show all empty cells within the 5 radius at the start
+  //      fadeCell(cellElement, 2000, ["empty"], true);
       }
     }
   }
 }
 
-function fadeCell(cell, delay = fadeout, removeClasses = [], clearText = true) {
-  setTimeout(() => {
-    removeClasses.forEach((cls) => cell.classList.remove(cls));
-    if (clearText) cell.textContent = "";
-  }, delay);
-}
+// function fadeCell(cell, delay = fadeout, removeClasses = [], clearText = true) {
+//  setTimeout(() => {
+//    removeClasses.forEach((cls) => cell.classList.remove(cls));
+//    if (clearText) cell.textContent = "";
+//  }, delay);
+// }
 
 function checkWin() {
   let correctFlags = 0;
