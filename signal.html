@@ -185,7 +185,7 @@ if (dr === 0 && dc === 0) continue;
 	    let dy = neighbourCol - boardCol;
  	    let distance = Math.sqrt(dx * dx + dy * dy);
 if (distance > 0) {
-board[neighbourRow][neighbourCol].totalStrength += 1 / distance
+board[boardRow][boardCol].totalStrength += 1 / distance
             }
           }
         }
@@ -233,6 +233,7 @@ function getCellColour(clickedRow, clickedCol, clickedCell) {
   let cellElement = document.getElementById(`cell-${clickedRow}-${clickedCol}`); 
   cellElement.classList.add(getStrengthColour(clickedRow, clickedCol, clickedCell))
   cellData.pinged = true; // ← Mark as pinged!
+console.log("clickedcell", clickedCell, "strength: ", cellData.totalStrength)
   revealArea(clickedRow, clickedCol, clickedCell)
 }
 
