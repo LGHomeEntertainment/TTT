@@ -27,9 +27,13 @@
   user-select: none;
 }
 
-.cell.empty {
-  background-color: lightgray;
+.cell.green {
+  background-color: green;
   color: green;
+}
+.cell.lightgreen {
+  background-color: lightgreen;
+  color: black;
 }
 
 .cell.yellow {
@@ -88,7 +92,7 @@ let firstClick = true;
 let board = [];
 let grid = [];
 // let gameOver = false;
-// let fadeout = 20000000;
+// let fadeout = 5000;
 
 // ==== INITIALISATION + GENERATION ====
 
@@ -126,10 +130,6 @@ function generateBoard(gridSize) {
       rowData.push({
         signal: false, // actual status of the cell
         pinged: false, // has it been revealed
-        adjacent: {
-          radius1: 0,
-          radius2: 0,
-        },
         flagged: false, // for flagging if it's a signal
         totalStrength: 0
       });
@@ -150,41 +150,43 @@ function generateSignals(clickedRow, clickedCol, newSignals = totalSignals) {
     signalRow = Math.floor(Math.random() * gridSize);
     if (signalCol == clickedCol && signalRow == clickedRow) continue;
     if (
-      board[signalRow][signalCol].signal == true ||
-      isAdjacent(signalRow, signalCol, clickedRow, clickedCol) // if signal or if is adjacent to the cell
+      board[signalRow][signalCol].signal == true 
+   //  || isAdjacent(signalRow, signalCol, clickedRow, clickedCol) // if signal or if is adjacent to the cell
     )
       continue; // skip!
 
     board[signalRow][signalCol].signal = true; // set the signal flag
+board[signalRow][signalCol].totalStrength += 1.2;
     signalNumber++;
   }
 
-  // calculate strength
+
+  // calculate strength FOR ALL CELLS, but only for the immediate r2 area
   // If neighbor is in bounds and has a signal, increment adjacent count
-  let strength = 0;
-  let totalStrength = 0
+  let cellStrength = 0
   let boardCol = 0;
   let boardRow = 0;
+  let maxRadius = 2;
 
   for (boardRow = 0; boardRow < gridSize; boardRow++) {
     for (boardCol = 0; boardCol < gridSize; boardCol++) {
-      for (let dr = -2; dr <= 2; dr++) {
-        for (let dc = -2; dc <= 2; dc++) {
-          if (dr == 0 && dc == 0) continue;
+      for (let dr = -maxRadius; dr <= maxRadius; dr++) {
+        for (let dc = -maxRadius; dc <= maxRadius; dc++) {
+         
+if (dr === 0 && dc === 0) continue;
+
 
           let neighbourRow = boardRow + dr;
           let neighbourCol = boardCol + dc;
           if (neighbourRow < 0 || neighbourRow >= gridSize) continue;
           if (neighbourCol < 0 || neighbourCol >= gridSize) continue;
           if (board[neighbourRow][neighbourCol].signal == true) {
-            if (isAdjacent(neighbourRow, neighbourCol, boardRow, boardCol)) {
-              board[boardRow][boardCol].adjacent.radius1++;
-	      board[boardRow][boardCol].totalStrength += 0.8
-            } else {
-              board[boardRow][boardCol].adjacent.radius2++;
-	      board[boardRow][boardCol].totalStrength += 0.5
+            let dx = neighbourRow - boardRow;
+	    let dy = neighbourCol - boardCol;
+ 	    let distance = Math.sqrt(dx * dx + dy * dy);
+if (distance > 0) {
+board[neighbourRow][neighbourCol].totalStrength += 1 / distance
             }
-
           }
         }
       }
@@ -209,7 +211,6 @@ function handleCellClick(e) {
 
     firstClick = false;
     getCellColour(clickedRow, clickedCol, clickedCell);
-    // revealArea(clickedRow, clickedCol, clickedCell);
   } else {
     getCellColour(clickedRow, clickedCol, clickedCell);
   }
@@ -219,14 +220,18 @@ function getStrengthColour(clickedRow, clickedCol, clickedCell) {
 let cellStrength = board[clickedRow][clickedCol].totalStrength
 let cellElement = document.getElementById(`cell-${clickedRow}-${clickedCol}`)
 if (cellStrength >= 3) return "red";
-if (cellStrength >= 2) return "orange";
-if (cellStrength >= 1) return "yellow";
-if (cellStrength > 0) return "lightgreen";
+if (cellStrength >= 1.5) return "orange";
+if (cellStrength >= 0.4) return "yellow";
+if (cellStrength > 0.1) return "lightgreen";
 return "green";
 }
 
+
+
 function getCellColour(clickedRow, clickedCol, clickedCell) {
   let cellData = board[clickedRow][clickedCol];
+  let cellElement = document.getElementById(`cell-${clickedRow}-${clickedCol}`); 
+  cellElement.classList.add(getStrengthColour(clickedRow, clickedCol, clickedCell))
   cellData.pinged = true; // ← Mark as pinged!
   revealArea(clickedRow, clickedCol, clickedCell)
 }
@@ -234,7 +239,7 @@ function getCellColour(clickedRow, clickedCol, clickedCell) {
 function revealArea(clickedRow, clickedCol, clickedCell) {
   for (let dr = -1; dr <= 1; dr++) {
     for (let dc = -1; dc <= 1; dc++) {
-      if (dr == 0 && dc == 0) continue;
+   //   if (dr == 0 && dc == 0) continue;
 
       let neighbourRow = clickedRow + dr;
       let neighbourCol = clickedCol + dc;
