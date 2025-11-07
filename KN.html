@@ -277,9 +277,9 @@ function initialise() {
 
 // ==== CUSTOMISATION/SETTINGS (shared function) ====
 
-function updateBetDisplay() {
+function updateBetDisplay(index = betIndex) {
   updateSettingsDisplay(
-    betIndex,
+    index,
     betOptions,
     "betDisplay",
     "lowerBet",
@@ -287,9 +287,9 @@ function updateBetDisplay() {
   );
 }
 
-function updateRoundDisplay() {
+function updateRoundDisplay(index = roundIndex) {
   updateSettingsDisplay(
-    roundIndex,
+    index,
     roundOptions,
     "roundsDisplay",
     "fewerRounds",
@@ -302,12 +302,11 @@ function adjustBet(e) {
     e,
     betIndex,
     betOptions,
-    null,
+    updateBetDisplay,
     "lowerBet",
     "increaseBet"
   );
   bet = betOptions[betIndex];
-  updateBetDisplay()
 }
 
 function adjustRounds(e) {
@@ -315,16 +314,18 @@ function adjustRounds(e) {
     e,
     roundIndex,
     roundOptions,
-    null,
+    updateRoundDisplay,
     "fewerRounds",
     "moreRounds"
   );
   playRounds = roundOptions[roundIndex];
-  updateRoundDisplay()
 }
 
 function updateSettingsDisplay(index, options, displayId, downId, upId) {
   let value = options[index];
+
+  console.log("Updating display:", displayId, "with value:", value);
+
   if (displayId == "betDisplay") {
     value = "$" + value.toLocaleString();
   }
@@ -352,7 +353,11 @@ function adjustSetting(e, index, options, updateDisplayFn, lowerId, upperId) {
   } else if (id == upperId && index < options.length - 1) {
     index++;
   }
-  updateDisplayFn();
+
+  // ✅ Now call the display function AFTER updating index
+  if (typeof updateDisplayFn === "function") {
+    updateDisplayFn(index); // optionally pass index if needed
+  }
   return index; // return index to be stored
 }
 
