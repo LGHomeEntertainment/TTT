@@ -93,6 +93,7 @@ let board = [];
 let grid = [];
 // let gameOver = false;
 // let fadeout = 5000;
+let debugMode = true;
 
 // ==== INITIALISATION + GENERATION ====
 
@@ -156,7 +157,11 @@ function generateSignals(clickedRow, clickedCol, newSignals = totalSignals) {
       continue; // skip!
 
     board[signalRow][signalCol].signal = true; // set the signal flag
-board[signalRow][signalCol].totalStrength += 1.2;
+board[signalRow][signalCol].totalStrength += 2.5;
+if (debugMode) {
+let cellElement = document.getElementById(`cell-${signalRow}-${signalCol}`); 
+cellElement.textContent = "💣";
+}
     signalNumber++;
   }
 
@@ -216,15 +221,26 @@ function handleCellClick(e) {
   }
 }
 
+
+// dynamic max strength for hsl scale
+//let maxStrength = 0;
+// After generating the board:
+//for (let row of board) {
+//  for (let cell of row) {
+//    maxStrength = Math.max(maxStrength, cell.totalStrength);
+//  }
+//}
+
+
 function getStrengthColourHSL(strength) {
-  // Cap strength to avoid extreme values
-  let cappedStrength = Math.min(strength, 3);
+  let maxStrength = 5; // or whatever your new signal value is
+  let cappedStrength = Math.min(strength, maxStrength);
 
-  // Map strength to hue: 120 (green) → 0 (red)
-  let hue = 120 - (cappedStrength / 3) * 120;
-
+  let hue = 120 - (cappedStrength / maxStrength) * 120;
   return `hsl(${hue}, 100%, 50%)`;
 }
+
+
 
 function getCellColour(clickedRow, clickedCol, clickedCell) {
   let cellData = board[clickedRow][clickedCol];
@@ -239,7 +255,6 @@ function getCellColour(clickedRow, clickedCol, clickedCell) {
 
   cellData.pinged = true;
   console.log("clickedcell", clickedCell, "strength: ", cellData.totalStrength);
-
   revealArea(clickedRow, clickedCol, clickedCell);
 }
 
