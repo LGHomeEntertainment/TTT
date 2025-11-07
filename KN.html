@@ -302,11 +302,12 @@ function adjustBet(e) {
     e,
     betIndex,
     betOptions,
-    updateBetDisplay(),
+    null,
     "lowerBet",
     "increaseBet"
   );
   bet = betOptions[betIndex];
+  updateBetDisplay()
 }
 
 function adjustRounds(e) {
@@ -314,11 +315,12 @@ function adjustRounds(e) {
     e,
     roundIndex,
     roundOptions,
-    updateRoundDisplay(),
+    null,
     "fewerRounds",
     "moreRounds"
   );
   playRounds = roundOptions[roundIndex];
+  updateRoundDisplay()
 }
 
 function updateSettingsDisplay(index, options, displayId, downId, upId) {
