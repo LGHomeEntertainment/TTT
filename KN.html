@@ -2,16 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Keno</title>
+  <title>S&P</title>
 
   <style>
 /* Container for the grid */
+/* Container for the grid */
 #grid {
-  display: grid;
   border-collapse: collapse;
-  border-spacing: 0;
-  grid-template-columns: repeat(var(--grid-size), 1fr); /* dynamic columns */
-  width: fit-content;
   margin: 20px auto;
 }
 
@@ -19,7 +16,7 @@
 .cell {
   width: 30px;
   height: 30px;
-  background-color: lightyellow;
+  background-color: lightskyblue;
   border: 1px solid #999;
   padding: 0;
   font-weight: bold;
@@ -30,521 +27,366 @@
   user-select: none;
 }
 
-/* Missed cell */
-.cell.drawn {
-  background-color: red;
-}
-
-/* Picked cell */
-.cell.picked {
-  background-color: lightblue;
-}
-
-/* Hit cell */
-.cell.hit {
+.cell.green {
   background-color: green;
+  color: green;
+}
+.cell.lightgreen {
+  background-color: lightgreen;
+  color: black;
 }
 
-td.cell {
-  position: relative; /* Needed for absolute positioning of ::before */
+.cell.yellow {
+  background-color: yellow;
+  color: black;
 }
 
-td.cell::before {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 22px;
-  height: 22px;
-  transform: translate(-50%, -50%);
-  border: 2px solid blue;
-  border-radius: 50%;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.2s ease;
-  box-sizing: border-box;
-}
-
-td.cell.picked::before {
-  opacity: 1;
-}
-
-.setting-row {
-  display: flex;
-  align-items: left;
-  justify-content: left;
-  gap: 10px; /* space between items */
-  margin: 10px 0;
-}
-
-.setting-row button {
-  font-size: 20px;
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
-  border: none;
-  background-color: gold;
-  cursor: pointer;
-  font-weight: bold;
-  transition: background-color 0.2s;
-}
-
-.setting-row button:hover:not(:disabled) {
+.cell.orange {
   background-color: orange;
+  color: black;
 }
 
-.setting-row span {
-  font-size: 16px;
-  font-weight: bold;
-  min-width: 160px;
-  text-align: center;
+.cell.red {
+  background-color: red;
+  color: white;
 }
 
+    
 </style>
 
 </head>
 <body>
 
-<h1>KN</h1>
+<h1>Signal & Ping</h1>
 
-<table>
-
-       <tr>
-        <td class=cell id="cell1">1</td>
-        <td class=cell id="cell2">2</td>
-        <td class=cell id="cell3">3</td>
-        <td class=cell id="cell4">4</td>
-        <td class=cell id="cell5">5</td>
-        <td class=cell id="cell6">6</td>
-        <td class=cell id="cell7">7</td>
-        <td class=cell id="cell8">8</td>
-        <td class=cell id="cell9">9</td>
-        <td class=cell id="cell10">10</td>
-      </tr>
-
-      <tr>
-        <td class=cell id="cell11">11</td>
-        <td class=cell id="cell12">12</td>
-        <td class=cell id="cell13">13</td>
-        <td class=cell id="cell14">14</td>
-        <td class=cell id="cell15">15</td>
-        <td class=cell id="cell16">16</td>
-        <td class=cell id="cell17">17</td>
-        <td class=cell id="cell18">18</td>
-        <td class=cell id="cell19">19</td>
-        <td class=cell id="cell20">20</td>
-      </tr>
-
-      <tr>
-        <td class=cell id="cell21">21</td>
-        <td class=cell id="cell22">22</td>
-        <td class=cell id="cell23">23</td>
-        <td class=cell id="cell24">24</td>
-        <td class=cell id="cell25">25</td>
-        <td class=cell id="cell26">26</td>
-        <td class=cell id="cell27">27</td>
-        <td class=cell id="cell28">28</td>
-        <td class=cell id="cell29">29</td>
-        <td class=cell id="cell30">30</td>
-      </tr>
-
-      <tr>
-        <td class=cell id="cell31">31</td>
-        <td class=cell id="cell32">32</td>
-        <td class=cell id="cell33">33</td>
-        <td class=cell id="cell34">34</td>
-        <td class=cell id="cell35">35</td>
-        <td class=cell id="cell36">36</td>
-        <td class=cell id="cell37">37</td>
-        <td class=cell id="cell38">38</td>
-        <td class=cell id="cell39">39</td>
-        <td class=cell id="cell40">40</td>
-      </tr>
-
-      <tr>
-        <td class=cell id="cell41">41</td>
-        <td class=cell id="cell42">42</td>
-        <td class=cell id="cell43">43</td>
-        <td class=cell id="cell44">44</td>
-        <td class=cell id="cell45">45</td>
-        <td class=cell id="cell46">46</td>
-        <td class=cell id="cell47">47</td>
-        <td class=cell id="cell48">48</td>
-        <td class=cell id="cell49">49</td>
-        <td class=cell id="cell50">50</td>
-      </tr>
-
-      <tr>
-        <td class=cell id="cell51">51</td>
-        <td class=cell id="cell52">52</td>
-        <td class=cell id="cell53">53</td>
-        <td class=cell id="cell54">54</td>
-        <td class=cell id="cell55">55</td>
-        <td class=cell id="cell56">56</td>
-        <td class=cell id="cell57">57</td>
-        <td class=cell id="cell58">58</td>
-        <td class=cell id="cell59">59</td>
-        <td class=cell id="cell60">60</td>
-      </tr>
-
-      <tr>
-        <td class=cell id="cell61">61</td>
-        <td class=cell id="cell62">62</td>
-        <td class=cell id="cell63">63</td>
-        <td class=cell id="cell64">64</td>
-        <td class=cell id="cell65">65</td>
-        <td class=cell id="cell66">66</td>
-        <td class=cell id="cell67">67</td>
-        <td class=cell id="cell68">68</td>
-        <td class=cell id="cell69">69</td>
-        <td class=cell id="cell70">70</td>
-      </tr>
-
-      <tr>
-        <td class=cell id="cell71">71</td>
-        <td class=cell id="cell72">72</td>
-        <td class=cell id="cell73">73</td>
-        <td class=cell id="cell74">74</td>
-        <td class=cell id="cell75">75</td>
-        <td class=cell id="cell76">76</td>
-        <td class=cell id="cell77">77</td>
-        <td class=cell id="cell78">78</td>
-        <td class=cell id="cell79">79</td>
-        <td class=cell id="cell80">80</td>
-      </tr>
-
+<table id="grid">
+  <!-- JS will generate rows and cells -->
 </table>
 
-    <div>
-      <p id="feedback"></p>
-    </div>
 
-    <div>
-      <div id="moneyDisplay">Money: $10,000,000</div>
-      <p id="feedback"></p>
-    </div>
+<div> 
+  <p id="feedback"></p>
+</div>
 
-    <div>
-      <button id="playBtn">Play!</button>
-      <button id="clearBtn">Clear All</button>
-    </div>
+<div> 
+  <button id="resetBtn">Start a new game</button>
+</div>
 
-    <div class="setting-row">
-      <button class="changeBet" id="lowerBet">-</button>
-      <p>Bet Amount: <span id="betDisplay"></span></p>
-      <button class="changeBet" id="increaseBet">+</button>
-    </div>
-    <div class="setting-row">
-      <button class="changeRounds" id="fewerRounds">-</button>
-      <p>Number of Rounds: <span id="roundsDisplay"></span></p>
-      <button class="changeRounds" id="moreRounds">+</button>
-    </div>
+<label>Grid size:
+<input type="number" id="gridSizeInput" value="10" min="5" max="20">
+</label>
+<label>Signals:
+  <input type="number" id="signalInput" value="10" min="1" max="100">
+</label>
+<button id="applyBtn">Apply</button>
+
+
 
 <script>
-    
+
 // ==== GLOBALs + CONSTANTS ====
 
-let playerPicks = [];
-let playerMoney = 10000000;
-let gameRunning = false;
-let generatedNumbers = [];
-let currentRound = 1;
-let betOptions = [100, 1000, 10000, 100000, 1000000];
-let betIndex = 3;
-let bet = betOptions[betIndex];
-let roundOptions = [1, 5, 10, 20];
-let roundIndex = 2;
-let playRounds = roundOptions[roundIndex];
-let roundInterval = 2000;
-let drawInterval = 200;
+let gridSize = 10; 
+let totalSignals = 15;
+let firstClick = true;
+let board = [];
+let grid = [];
+// let gameOver = false;
+// let fadeout = 5000;
 
-// ==== SOUNDS ====
-const sfxDraw = new Audio("draw.ogg");
-const sfxHit = new Audio("hit.ogg");
-const sfxWin = new Audio("win.wav");
-const sfxLose = new Audio("lose.wav");
-
-// ==== INITIALISATION + GENERATION OF STUFF ====
+// ==== INITIALISATION + GENERATION ====
 
 document.addEventListener("DOMContentLoaded", initialise);
 
 function initialise() {
+  generateGrid();
+  generateBoard(gridSize);
   attachListeners();
-  updateBetDisplay();
-  updateRoundDisplay();
-  updateMoneyDisplay();
 }
 
-// ==== CUSTOMISATION/SETTINGS (shared function) ====
-
-function updateBetDisplay(index = betIndex) {
-  updateSettingsDisplay(
-    index,
-    betOptions,
-    "betDisplay",
-    "lowerBet",
-    "increaseBet"
-  );
-}
-
-function updateRoundDisplay(index = roundIndex) {
-  updateSettingsDisplay(
-    index,
-    roundOptions,
-    "roundsDisplay",
-    "fewerRounds",
-    "moreRounds"
-  );
-}
-
-function adjustBet(e) {
-  betIndex = adjustSetting(
-    e,
-    betIndex,
-    betOptions,
-    updateBetDisplay,
-    "lowerBet",
-    "increaseBet"
-  );
-  bet = betOptions[betIndex];
-}
-
-function adjustRounds(e) {
-  roundIndex = adjustSetting(
-    e,
-    roundIndex,
-    roundOptions,
-    updateRoundDisplay,
-    "fewerRounds",
-    "moreRounds"
-  );
-  playRounds = roundOptions[roundIndex];
-}
-
-function updateSettingsDisplay(index, options, displayId, downId, upId) {
-  let value = options[index];
-
-  console.log("Updating display:", displayId, "with value:", value);
-
-  if (displayId == "betDisplay") {
-    value = "$" + value.toLocaleString();
+// visible GRID
+function generateGrid() {
+  grid = [];
+  for (let gridRow = 0; gridRow < gridSize; gridRow++) {
+    let tr = document.createElement("tr");
+    for (let gridCol = 0; gridCol < gridSize; gridCol++) {
+      let td = document.createElement("td");
+      td.classList.add("cell");
+      td.dataset.row = gridRow;
+      td.dataset.col = gridCol;
+      td.id = `cell-${gridRow}-${gridCol}`;
+      tr.appendChild(td);
+    }
+    document.getElementById("grid").appendChild(tr);
   }
-  document.getElementById(displayId).textContent = value;
-
-  // Disable buttons at the ends
-  let atMin = index == 0;
-  let atMax = index == options.length - 1;
-
-  let downBtn = document.getElementById(downId);
-  let upBtn = document.getElementById(upId);
-
-  downBtn.disabled = atMin;
-  downBtn.style.opacity = atMin ? 0.5 : 1;
-
-  upBtn.disabled = atMax;
-  upBtn.style.opacity = atMax ? 0.5 : 1;
 }
 
-function adjustSetting(e, index, options, updateDisplayFn, lowerId, upperId) {
-  let id = e.target.id;
+// create clear logic BOARD (the invisible one BTS)
+function generateBoard(gridSize) {
+  board = [];
+  for (let row = 0; row < gridSize; row++) {
+    let rowData = [];
+    for (let col = 0; col < gridSize; col++) {
+      rowData.push({
+        signal: false, // actual status of the cell
+        pinged: false, // has it been revealed
+        flagged: false, // for flagging if it's a signal
+        totalStrength: 0
+      });
+    }
+    board.push(rowData);
+  }
+}
 
-  if (id == lowerId && index > 0) {
-    index--;
-  } else if (id == upperId && index < options.length - 1) {
-    index++;
+// create the SIGNALS. put within checkanswer
+function generateSignals(clickedRow, clickedCol, newSignals = totalSignals) {
+  totalSignals = newSignals;
+  let signalNumber = 0;
+  let signalCol = 0;
+  let signalRow = 0;
+
+  while (signalNumber < totalSignals) {
+    signalCol = Math.floor(Math.random() * gridSize);
+    signalRow = Math.floor(Math.random() * gridSize);
+    if (signalCol == clickedCol && signalRow == clickedRow) continue;
+    if (
+      board[signalRow][signalCol].signal == true 
+   //  || isAdjacent(signalRow, signalCol, clickedRow, clickedCol) // if signal or if is adjacent to the cell
+    )
+      continue; // skip!
+
+    board[signalRow][signalCol].signal = true; // set the signal flag
+board[signalRow][signalCol].totalStrength += 1.2;
+    signalNumber++;
   }
 
-  // ✅ Now call the display function AFTER updating index
-  if (typeof updateDisplayFn === "function") {
-    updateDisplayFn(index); // optionally pass index if needed
+
+  // calculate strength FOR ALL CELLS, but only for the immediate r2 area
+  // If neighbor is in bounds and has a signal, increment adjacent count
+  let cellStrength = 0
+  let boardCol = 0;
+  let boardRow = 0;
+  let maxRadius = 2;
+
+  for (boardRow = 0; boardRow < gridSize; boardRow++) {
+    for (boardCol = 0; boardCol < gridSize; boardCol++) {
+      for (let dr = -maxRadius; dr <= maxRadius; dr++) {
+        for (let dc = -maxRadius; dc <= maxRadius; dc++) {
+         
+if (dr === 0 && dc === 0) continue;
+
+
+          let neighbourRow = boardRow + dr;
+          let neighbourCol = boardCol + dc;
+          if (neighbourRow < 0 || neighbourRow >= gridSize) continue;
+          if (neighbourCol < 0 || neighbourCol >= gridSize) continue;
+          if (board[neighbourRow][neighbourCol].signal == true) {
+            let dx = neighbourRow - boardRow;
+	    let dy = neighbourCol - boardCol;
+ 	    let distance = Math.sqrt(dx * dx + dy * dy);
+if (distance > 0) {
+board[boardRow][boardCol].totalStrength += 1 / distance
+            }
+          }
+        }
+      }
+    }
   }
-  return index; // return index to be stored
+}
+
+function isAdjacent(r, c, clickedRow, clickedCol) {
+  // check how far apart is 2 cells (mainly for generating clear area around the first click)
+  return Math.abs(r - clickedRow) <= 1 && Math.abs(c - clickedCol) <= 1;
 }
 
 // ==== GAME LOGIC ====
 
-// player picking numbers. numbers are circled.
-function toggleCell(e) {
-  if (gameRunning) return;
+function handleCellClick(e) {
   let clickedCell = e.target;
-  let pickValue = parseInt(clickedCell.id.replace("cell", ""));
+  let clickedRow = parseInt(clickedCell.dataset.row);
+  let clickedCol = parseInt(clickedCell.dataset.col);
+  // if (gameOver) return;
+  if (firstClick) {
+    generateSignals(clickedRow, clickedCol);
 
-  // if already picked
-  if (clickedCell.classList.contains("picked")) {
-    clickedCell.classList.remove("picked");
-    playerPicks = playerPicks.filter((n) => n !== pickValue);
+    firstClick = false;
+    getCellColour(clickedRow, clickedCol, clickedCell);
   } else {
-    if (playerPicks.length >= 10) return;
-    clickedCell.classList.add("picked");
-    playerPicks.push(pickValue);
+    getCellColour(clickedRow, clickedCol, clickedCell);
   }
 }
 
-// comp generating winning numbers
-function generateWinners(onFinish) {
-  generatedNumbers = []; // need this to reset for the round
-  let count = 0;
+function getStrengthColour(clickedRow, clickedCol, clickedCell) {
+let cellStrength = board[clickedRow][clickedCol].totalStrength
+let cellElement = document.getElementById(`cell-${clickedRow}-${clickedCol}`)
+if (cellStrength >= 3) return "red";
+if (cellStrength >= 1.5) return "orange";
+if (cellStrength >= 0.4) return "yellow";
+if (cellStrength > 0.1) return "lightgreen";
+return "green";
+}
 
-  function generateNext() {
-    if (count >= 10) {
-      onFinish(); // trigger next round only after 10 numbers are generated
-      return;
+
+
+function getCellColour(clickedRow, clickedCol, clickedCell) {
+  let cellData = board[clickedRow][clickedCol];
+  let cellElement = document.getElementById(`cell-${clickedRow}-${clickedCol}`); 
+  cellElement.classList.add(getStrengthColour(clickedRow, clickedCol, clickedCell))
+  cellData.pinged = true; // ← Mark as pinged!
+console.log("clickedcell", clickedCell, "strength: ", cellData.totalStrength)
+  revealArea(clickedRow, clickedCol, clickedCell)
+}
+
+function revealArea(clickedRow, clickedCol, clickedCell) {
+  for (let dr = -1; dr <= 1; dr++) {
+    for (let dc = -1; dc <= 1; dc++) {
+   //   if (dr == 0 && dc == 0) continue;
+
+      let neighbourRow = clickedRow + dr;
+      let neighbourCol = clickedCol + dc;
+      if (neighbourRow < 0 || neighbourRow >= gridSize) continue;
+      if (neighbourCol < 0 || neighbourCol >= gridSize) continue;
+      let cellData = board[neighbourRow][neighbourCol];
+      
+      if (!cellData.pinged) {
+        cellData.pinged = true; // mark as revealed
+
+        let cellElement = document.getElementById(`cell-${neighbourRow}-${neighbourCol}`);
+        let colourClass = getStrengthColour(neighbourRow, neighbourCol, cellElement)
+        cellElement.classList.add(colourClass); // show all empty cells within the 5 radius at the start
+  //      fadeCell(cellElement, 2000, ["empty"], true);
+      }
     }
+  }
+}
 
-    let num = Math.ceil(Math.random() * 80);
-    if (!generatedNumbers.includes(num)) {
-      generatedNumbers.push(num);
-      let cell = document.getElementById("cell" + num);
+// function fadeCell(cell, delay = fadeout, removeClasses = [], clearText = true) {
+//  setTimeout(() => {
+//    removeClasses.forEach((cls) => cell.classList.remove(cls));
+//    if (clearText) cell.textContent = "";
+//  }, delay);
+// }
 
-      if (cell) {
-        // diff sounds and display
-        if (cell.classList.contains("picked")) {
-          sfxHit.currentTime = 0;
-          sfxHit.play();
-          cell.classList.add("hit");
+function checkWin() {
+  let correctFlags = 0;
+  let incorrectFlags = 0;
+  for (let r = 0; r < gridSize; r++) {
+    for (let c = 0; c < gridSize; c++) {
+      let cellData = board[r][c];
+      if (cellData.flagged) {
+        if (cellData.signal) {
+          correctFlags++;
         } else {
-          sfxDraw.currentTime = 0;
-          sfxDraw.play();
-          cell.classList.add("drawn");
+          incorrectFlags++;
         }
       }
-      count++;
     }
-    setTimeout(generateNext, drawInterval);
   }
-  generateNext(); // first one to start off the chain
-}
 
-function comparePicks() {
-  let hits = document.querySelectorAll(".hit").length;
-  let hitIndex = hits - 1;
-  let feedbackText = "";
-  let picks = playerPicks.length;
-  let payoutMultiplier = payoutTable[picks]?.[hitIndex] || 0;
-  let winnings = bet * payoutMultiplier;
+  if (correctFlags == totalSignals && incorrectFlags == 0) {
+    //  gameOver = true;
 
-  if (winnings == 0) {
-    sfxLose.currentTime = 0;
-    sfxLose.play();
-    feedbackText = `Sorry, you matched ${hits} number${
-      hits === 1 ? "" : "s"
-    }, which is not enough to win.`;
-  } else if (winnings > 0) {
-    sfxWin.currentTime = 0;
-    sfxWin.play();
-    feedbackText = `You won $${winnings.toLocaleString()} for matching ${hits} number${
-      hits === 1 ? "" : "s"
-    }!`;
+    document.getElementById("feedback").textContent = "You win!";
   }
-  // Update feedback in HTML
-  document.getElementById("feedback").textContent = feedbackText;
-  playerMoney += winnings;
-  updateMoneyDisplay();
 }
 
-function multipleRounds() {
-  if (playerPicks.length == 0) return;
-  gameRunning = true;
-  disableInputs();
-  currentRound = 1;
+function resetGame(newSize = gridSize, newSignals = totalSignals) {
+  gridSize = newSize;
+  totalSignals = newSignals;
+  document.getElementById("feedback").textContent = "";
+  board = [];
+  generateBoard(gridSize);
+  document.getElementById("grid").innerHTML = "";
+  generateGrid(gridSize);
+  firstClick = true;
+  // gameOver = false;
+  attachListeners();
+}
 
-  // if currentround > 1 && < play rounds run resetboard!!
-  function playNextRound() {
-    if (playerMoney < bet) {
-      document.getElementById("feedback").textContent =
-        "You are broke. Bye bye.";
-      gameRunning = false;
-      enableInputs();
-      return;
-    }
-    if (currentRound > playRounds) {
-      gameRunning = false;
-      enableInputs();
-      return;
-    }
-    playerMoney -= bet;
-    updateMoneyDisplay();
-    resetBoard();
-    generateWinners(() => {
-      comparePicks();
-      currentRound++;
-      setTimeout(playNextRound, roundInterval); // pause between rounds
-    });
+function toggleFlag(e) {
+  // if (gameOver) return;
+  let clickedCell = e.target;
+  e.preventDefault();
+  let clickedRow = parseInt(clickedCell.dataset.row);
+  let clickedCol = parseInt(clickedCell.dataset.col);
+  if (board[clickedRow][clickedCol].pinged == true) {
+    return;
+  } else if (board[clickedRow][clickedCol].flagged) {
+    board[clickedRow][clickedCol].flagged = false;
+    clickedCell.textContent = ""; // no flag
+    clickedCell.classList.remove("flagged");
+  } else {
+    board[clickedRow][clickedCol].flagged = true;
+    clickedCell.textContent = "🚩"; // add flag
+    clickedCell.classList.add("flagged");
   }
-  playNextRound();
-}
-
-function resetBoard() {
-  let cells = document.querySelectorAll("td");
-  cells.forEach((cell) => {
-    cell.classList.remove("hit", "drawn");
-  });
-  generatedNumbers = [];
-}
-
-function updateMoneyDisplay() {
-  document.getElementById(
-    "moneyDisplay"
-  ).textContent = `Money: $${playerMoney.toLocaleString()}`;
-}
-
-function clearPicks() {
-  let cells = document.querySelectorAll("td");
-  cells.forEach((cell) => {
-    cell.classList.remove("hit", "drawn", "picked");
-  });
-  playerPicks = [];
-  generatedNumbers = [];
+  checkWin();
 }
 
 // ==== UI + INTERACTION ====
 
 function disableInputs() {
-  document.getElementById("clearBtn").removeEventListener("click", clearPicks);
-
-  document.querySelectorAll("td.cell").forEach((cell) => {
-    cell.removeEventListener("click", toggleCell);
-  });
-}
-
-function enableInputs() {
-  document.querySelectorAll("td.cell").forEach((cell) => {
-    cell.addEventListener("click", toggleCell);
+  let cells = document.querySelectorAll("td");
+  cells.forEach((cell) => {
+    cell.replaceWith(cell.cloneNode(true)); // easiest way to remove all listeners
   });
 }
 
 function attachListeners() {
-  enableInputs();
-
-  let betBtns = document.querySelectorAll(".changeBet");
-  betBtns.forEach((btn) => {
-    btn.addEventListener("click", adjustBet);
+  // all my listeners
+  let cells = document.querySelectorAll("td");
+  cells.forEach((cell) => {
+    cell.addEventListener("click", handleCellClick); // left click
   });
-
-  let roundBtns = document.querySelectorAll(".changeRounds");
-  roundBtns.forEach((btn) => {
-    btn.addEventListener("click", adjustRounds);
+  cells.forEach((cell) => {
+    cell.addEventListener("contextmenu", toggleFlag); // right click
   });
+  document.getElementById("resetBtn").addEventListener("click", () => {
+    resetGame(gridSize, totalSignals);
+  });
+  document.getElementById("applyBtn").addEventListener("click", customise);
 
-  // play!
-  document.getElementById("playBtn").addEventListener("click", multipleRounds);
+  // phone long tap
+  cells.forEach((cell) => {
+    let pressTimer;
+    let longPressTriggered = false;
 
-  document.getElementById("clearBtn").addEventListener("click", clearPicks);
+    cell.addEventListener("touchstart", (e) => {
+      e.preventDefault();
+      longPressTriggered = false;
+      pressTimer = setTimeout(() => {
+        toggleFlag(e);
+        longPressTriggered = true;
+      }, 600); // long press
+    });
+
+    cell.addEventListener("touchend", (e) => {
+      clearTimeout(pressTimer);
+      if (!longPressTriggered) {
+        handleCellClick(e); // treat as single tap
+      }
+    });
+  });
 }
 
-// ==== PAYOUT TABLE ====
-let payoutTable = {
-  1: [8],
-  2: [2, 38],
-  3: [2, 7, 80],
-  4: [2, 3, 10, 300],
-  5: [1.5, 3, 5, 50, 2000],
-  6: [1.5, 2, 4, 10, 200, 4000],
-  7: [0, 3, 10, 25, 150, 1000, 5000],
-  8: [0, 2, 7, 20, 200, 500, 1000, 10000],
-  9: [0, 2, 5, 10, 70, 200, 1000, 10000, 50000],
-  10: [0, 1.5, 3, 10, 50, 500, 5000, 10000, 50000, 100000],
-};
+function customise() {
+  let inputSize = document.getElementById("gridSizeInput").value;
+  let inputSignal = document.getElementById("signalInput").value;
+
+  let newSize = gridSize;
+  let newSignals = totalSignals;
+
+  if (inputSize !== "") {
+    newSize = parseInt(inputSize);
+  }
+  if (inputSignal !== "") {
+    newSignals = parseInt(inputSignal);
+  }
+  resetGame(newSize, newSignals);
+}
+
+// ==== BOARD VALIDATION ====
+
 
 
 </script>
