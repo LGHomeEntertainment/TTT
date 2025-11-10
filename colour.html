@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>S&P</title>
+  <title>B&W</title>
 
   <style>
 /* Container for the grid */
@@ -16,7 +16,8 @@
 .cell {
   width: 30px;
   height: 30px;
-  background-color: lightskyblue;
+  background-color: grey;
+  color: black;
   border: 1px solid #999;
   padding: 0;
   font-weight: bold;
@@ -27,9 +28,9 @@
   user-select: none;
 }
 
-.cell.empty {
-  background-color: lightgray;
-  color: green;
+.cell.blue {
+  background-color: blue;
+  color: white;
 }
 
 .cell.yellow {
@@ -42,7 +43,7 @@
   color: black;
 }
 
-.cell.red {
+.cell.error {
   background-color: red;
   color: white;
 }
@@ -53,7 +54,7 @@
 </head>
 <body>
 
-<h1>Signal & Ping</h1>
+<h1>Colour</h1>
 
 <table id="grid">
   <!-- JS will generate rows and cells -->
@@ -71,9 +72,7 @@
 <label>Grid size:
 <input type="number" id="gridSizeInput" value="10" min="5" max="20">
 </label>
-<label>Signals:
-  <input type="number" id="signalInput" value="10" min="1" max="100">
-</label>
+
 <button id="applyBtn">Apply</button>
 
 
@@ -83,12 +82,13 @@
 // ==== GLOBALs + CONSTANTS ====
 
 let gridSize = 10; // start with 10, easier to adjust later
-let totalSignals = 4;
-let firstClick = true;
+let blackCell = Math.floor(Math.random() * 11) + 40
+// let firstClick = true;
 let board = [];
 let grid = [];
-// let gameOver = false;
-let fadeout = 20000000;
+let gameOver = false;
+let errorCells = [];
+
 
 // ==== INITIALISATION + GENERATION ====
 
@@ -97,6 +97,7 @@ document.addEventListener("DOMContentLoaded", initialise);
 function initialise() {
   generateGrid();
   generateBoard(gridSize);
+  generateCells();
   attachListeners();
 }
 
@@ -124,62 +125,51 @@ function generateBoard(gridSize) {
     let rowData = [];
     for (let col = 0; col < gridSize; col++) {
       rowData.push({
-        signal: false,
-        pinged: false,
-        adjacent: {
-          radius1: 0,
-          radius2: 0,
-        },
-        flagged: false,
+        colour: "grey", // original state
+        state: "hidden", // can become "flagged" / "error"
+        adjacent: 0,
+        isBlack: false, // determines if cell is black or white
       });
     }
     board.push(rowData);
   }
 }
 
-// create the SIGNALS. put within checkanswer
-function generateSignals(clickedRow, clickedCol, newSignals = totalSignals) {
-  totalSignals = newSignals;
-  let signalNumber = 0;
-  let signalCol = 0;
-  let signalRow = 0;
+// create the blackcells. put within checkanswer
+function generateCells(clickedRow, clickedCol) {
 
-  while (signalNumber < totalSignals) {
-    signalCol = Math.floor(Math.random() * gridSize);
-    signalRow = Math.floor(Math.random() * gridSize);
-    if (signalCol == clickedCol && signalRow == clickedRow) continue;
-    if (
-      board[signalRow][signalCol].signal == true ||
-      isAdjacent(signalRow, signalCol, clickedRow, clickedCol) // if signal or if is adjacent to the cell
-    )
-      continue; // skip!
+  let blackNumber = 0;
+  let col = 0;
+  let row = 0;
 
-    board[signalRow][signalCol].signal = true; // set the signal flag
-    signalNumber++;
+  while (blackNumber < blackCell) {
+    col = Math.floor(Math.random() * gridSize);
+    row = Math.floor(Math.random() * gridSize);
+    if (board[row][col].isBlack == true) continue;
+
+    board[row][col].isBlack = true; // set the signal flag
+    blackNumber++;
   }
 
   // count adjacent once all signal placed
-  // For each cell, loop through its 25 neighbors
+  // For each cell, loop through its neighbors
   // If neighbor is in bounds and has a signal, increment adjacent count
   let boardCol = 0;
   let boardRow = 0;
 
   for (boardRow = 0; boardRow < gridSize; boardRow++) {
     for (boardCol = 0; boardCol < gridSize; boardCol++) {
-      for (let dr = -2; dr <= 2; dr++) {
-        for (let dc = -2; dc <= 2; dc++) {
-          if (dr == 0 && dc == 0) continue;
+      for (let dr = -1; dr <= 1; dr++) {
+        for (let dc = -1; dc <= 1; dc++) {
 
           let neighbourRow = boardRow + dr;
           let neighbourCol = boardCol + dc;
           if (neighbourRow < 0 || neighbourRow >= gridSize) continue;
           if (neighbourCol < 0 || neighbourCol >= gridSize) continue;
-          if (board[neighbourRow][neighbourCol].signal == true) {
+          if (board[neighbourRow][neighbourCol].isBlack == true) {
             if (isAdjacent(neighbourRow, neighbourCol, boardRow, boardCol)) {
-              board[boardRow][boardCol].adjacent.radius1++;
-            } else {
-              board[boardRow][boardCol].adjacent.radius2++;
-            }
+              board[boardRow][boardCol].adjacent++;
+            } 
           }
         }
       }
@@ -194,87 +184,44 @@ function isAdjacent(r, c, clickedRow, clickedCol) {
 
 // ==== GAME LOGIC ====
 
-function handleCellClick(e) {
+function handleCellClick(e) { // left click turns it white, even from black
   let clickedCell = e.target;
   let clickedRow = parseInt(clickedCell.dataset.row);
   let clickedCol = parseInt(clickedCell.dataset.col);
-  // if (gameOver) return;
-  if (firstClick) {
-    generateSignals(clickedRow, clickedCol);
-
-    firstClick = false;
-    getCellColour(clickedRow, clickedCol, clickedCell);
-    revealArea(clickedRow, clickedCol, clickedCell);
-  } else {
-    getCellColour(clickedRow, clickedCol, clickedCell);
-  }
+ let boardData = board[clickedRow][clickedCol]
+  if (gameOver) return;
+if (boardData.state == "hidden" || boardData.color == "black") {
+boardData.state = "revealed"
+boardData.color = "white"
+clickedCell.classList.remove("grey", "black")
+clickedCell.classList.add("white")
+redTextError();
+checkWin();
+} else if (boardData.state == "revealed" && boardData.color == "white") {
+boardData.state = "hidden"
+boardData.color = "grey"
+clickedCell.classList.remove("white")
+clickedCell.classList.add("grey")
+redTextError();
 }
 
-function getCellColour(clickedRow, clickedCol, clickedCell) {
-  let cellData = board[clickedRow][clickedCol];
-  cellData.pinged = true; // ← Mark as pinged!
 
-  let nearbySignals = cellData.adjacent.radius1 + cellData.adjacent.radius2;
-  if (nearbySignals == 0) {
-    clickedCell.classList.add("empty"); // only show empty as an aid (tentative)
-  } else {
-    clickedCell.textContent = nearbySignals;
-    // choose colour
-    if (cellData.adjacent.radius1 > 0 && cellData.adjacent.radius2 == 0) {
-      clickedCell.classList.add("red");
-      fadeCell(clickedCell, fadeout, ["red"], true);
-    } else if (
-      cellData.adjacent.radius1 == 0 &&
-      cellData.adjacent.radius2 > 0
-    ) {
-      clickedCell.classList.add("yellow");
-      fadeCell(clickedCell, fadeout, ["yellow"], true);
-    } else {
-      clickedCell.classList.add("orange");
-      fadeCell(clickedCell, fadeout, ["orange"], true);
-    }
-  }
-}
+function // to check if the cell is correct
 
-function revealArea(clickedRow, clickedCol, clickedCell) {
-  for (let dr = -5; dr <= 5; dr++) {
-    for (let dc = -5; dc <= 5; dc++) {
-      if (dr == 0 && dc == 0) continue;
 
-      let neighbourRow = clickedRow + dr;
-      let neighbourCol = clickedCol + dc;
-      if (neighbourRow < 0 || neighbourRow >= gridSize) continue;
-      if (neighbourCol < 0 || neighbourCol >= gridSize) continue;
-      let cellData = board[neighbourRow][neighbourCol];
-      let nearbySignals = cellData.adjacent.radius1 + cellData.adjacent.radius2;
-      if (nearbySignals == 0 && !cellData.pinged) {
-        cellData.pinged = true; // mark as revealed
+function redTextError() { // for red text when number does not match
 
-        let cellElement = document.getElementById(
-          `cell-${neighbourRow}-${neighbourCol}`
-        );
-        cellElement.classList.add("empty"); // show all empty cells within the 5 radius at the start
-        fadeCell(cellElement, 2000, ["empty"], true);
-      }
-    }
-  }
-}
-
-function fadeCell(cell, delay = fadeout, removeClasses = [], clearText = true) {
-  setTimeout(() => {
-    removeClasses.forEach((cls) => cell.classList.remove(cls));
-    if (clearText) cell.textContent = "";
-  }, delay);
 }
 
 function checkWin() {
+if (errorCells.length > 0) return;
   let correctFlags = 0;
   let incorrectFlags = 0;
   for (let r = 0; r < gridSize; r++) {
     for (let c = 0; c < gridSize; c++) {
       let cellData = board[r][c];
       if (cellData.flagged) {
-        if (cellData.signal) {
+        if (cellData.isBlack) {
           correctFlags++;
         } else {
           incorrectFlags++;
@@ -283,10 +230,10 @@ function checkWin() {
     }
   }
 
-  if (correctFlags == totalSignals && incorrectFlags == 0) {
-    //  gameOver = true;
+  if (correctFlags == blackCell && incorrectFlags == 0) {
+    gameOver = true;
 
-    document.getElementById("feedback").textContent = "You win!";
+    document.getElementById("feedback").textContent = "You win! Good job.";
   }
 }
 
@@ -298,13 +245,14 @@ function resetGame(newSize = gridSize, newSignals = totalSignals) {
   generateBoard(gridSize);
   document.getElementById("grid").innerHTML = "";
   generateGrid(gridSize);
-  firstClick = true;
-  // gameOver = false;
+  generateCells();
+  gameOver = false;
+  errorCells = [];
   attachListeners();
 }
 
-function toggleFlag(e) {
-  // if (gameOver) return;
+function toggleBlack(e) { // right click turns it black
+  if (gameOver) return;
   let clickedCell = e.target;
   e.preventDefault();
   let clickedRow = parseInt(clickedCell.dataset.row);
@@ -313,12 +261,10 @@ function toggleFlag(e) {
     return;
   } else if (board[clickedRow][clickedCol].flagged) {
     board[clickedRow][clickedCol].flagged = false;
-    clickedCell.textContent = ""; // no flag
     clickedCell.classList.remove("flagged");
   } else {
     board[clickedRow][clickedCol].flagged = true;
-    clickedCell.textContent = "🚩"; // add flag
-    clickedCell.classList.add("flagged");
+    clickedCell.classList.add("black");
   }
   checkWin();
 }
@@ -339,10 +285,10 @@ function attachListeners() {
     cell.addEventListener("click", handleCellClick); // left click
   });
   cells.forEach((cell) => {
-    cell.addEventListener("contextmenu", toggleFlag); // right click
+    cell.addEventListener("contextmenu", toggleBlack); // right click
   });
   document.getElementById("resetBtn").addEventListener("click", () => {
-    resetGame(gridSize, totalSignals);
+    resetGame(gridSize);
   });
   document.getElementById("applyBtn").addEventListener("click", customise);
 
@@ -371,18 +317,11 @@ function attachListeners() {
 
 function customise() {
   let inputSize = document.getElementById("gridSizeInput").value;
-  let inputSignal = document.getElementById("signalInput").value;
-
   let newSize = gridSize;
-  let newSignals = totalSignals;
-
   if (inputSize !== "") {
     newSize = parseInt(inputSize);
   }
-  if (inputSignal !== "") {
-    newSignals = parseInt(inputSignal);
-  }
-  resetGame(newSize, newSignals);
+  resetGame(newSize);
 }
 
 // ==== BOARD VALIDATION ====
