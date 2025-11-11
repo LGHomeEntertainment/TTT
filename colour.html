@@ -1,93 +1,91 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>B&W</title>
+  <head>
+    <meta charset="UTF-8" />
+    <title>B&W</title>
 
-  <style>
-/* Container for the grid */
-/* Container for the grid */
-#grid {
-  border-collapse: collapse;
-  margin: 20px auto;
-}
+    <style>
+      /* Container for the grid */
+      #grid {
+        border-collapse: collapse;
+        margin: 20px auto;
+      }
+      
+      /* Each cell */
+      .cell {
+        width: 30px;
+        height: 30px;
+        background-color: grey;
+        color: black;
+        border: 1px solid #999;
+        padding: 0;
+        font-weight: bold;
+        font-size: 16px;
+        text-align: center;
+        line-height: 30px;
+        cursor: pointer;
+        user-select: none;
+      }
+      
+      .cell.black {
+        background-color: black;
+        color: white;
+      }
+      
+      .cell.grey {
+        background-color: grey;
+        color: black;
+      }
+      
+      .cell.white {
+        background-color: white;
+        color: black;
+      }
+      
+      .cell.error {
+        color: red;
+      }
+    </style>
 
-/* Each cell */
-.cell {
-  width: 30px;
-  height: 30px;
-  background-color: grey;
-  color: black;
-  border: 1px solid #999;
-  padding: 0;
-  font-weight: bold;
-  font-size: 16px;
-  text-align: center;
-  line-height: 30px;
-  cursor: pointer;
-  user-select: none;
-}
+  </head>
+  <body>
+    <h1>Colour</h1>
 
-.cell.black {
-  background-color: black;
-  color: white;
-}
+    <table id="grid">
+      <!-- JS will generate rows and cells -->
+    </table>
 
-.cell.grey {
-  background-color: grey;
-  color: black;
-}
+    <div>
+      <p id="feedback"></p>
+    </div>
 
-.cell.white {
-  background-color: white;
-  color: black;
-}
+    <div>
+      <button id="resetBtn">Start a new game</button>
+    </div>
 
-.cell.error {
-  color: red;
-}
+    <label
+      >Grid size:
+      <input type="number" id="gridSizeInput" value="10" min="5" max="20" />
+    </label>
 
-    
-</style>
+    <button id="applyBtn">Apply</button>
 
-</head>
-<body>
+    // ==== NAMING RULES ====
+// cellElement → DOM cell (what the player sees)
+// boardData   → logical cell (what the game knows)
+// Keep them separate!
 
-<h1>Colour</h1>
-
-<table id="grid">
-  <!-- JS will generate rows and cells -->
-</table>
-
-
-<div> 
-  <p id="feedback"></p>
-</div>
-
-<div> 
-  <button id="resetBtn">Start a new game</button>
-</div>
-
-<label>Grid size:
-<input type="number" id="gridSizeInput" value="10" min="5" max="20">
-</label>
-
-<button id="applyBtn">Apply</button>
-
-
-
-<script>
+// ==== GLOBALs + CONSTANTS ====
 
 // ==== GLOBALs + CONSTANTS ====
 
 let gridSize = 10; // start with 10, easier to adjust later
-let blackCell = Math.floor(Math.random() * 11) + 40
+let blackCell = Math.floor(Math.random() * 11) + 40;
 // let firstClick = true;
 let board = [];
 let grid = [];
 let gameOver = false;
 let errorCells = new Set(); // if error, errorCells.add("1,5") .delete .has .... use string.
-
 
 // ==== INITIALISATION + GENERATION ====
 
@@ -128,7 +126,7 @@ function generateBoard(gridSize) {
         state: "hidden", // can become "flagged" / "error"
         adjacent: 0, // use this for the number shown on the cell
         isBlack: false, // determines if cell is black or white
-        displayed: true
+        displayed: true,
       });
     }
     board.push(rowData);
@@ -137,7 +135,6 @@ function generateBoard(gridSize) {
 
 // create the blackcells. put within checkanswer
 function generateCells(clickedRow, clickedCol) {
-
   let blackNumber = 0;
   let col = 0;
   let row = 0;
@@ -161,22 +158,25 @@ function generateCells(clickedRow, clickedCol) {
     for (boardCol = 0; boardCol < gridSize; boardCol++) {
       for (let dr = -1; dr <= 1; dr++) {
         for (let dc = -1; dc <= 1; dc++) {
-
           let neighbourRow = boardRow + dr;
           let neighbourCol = boardCol + dc;
-          
+
           if (neighbourRow < 0 || neighbourRow >= gridSize) continue;
           if (neighbourCol < 0 || neighbourCol >= gridSize) continue;
-          
+
           if (board[neighbourRow][neighbourCol].isBlack == true) {
             if (isAdjacent(neighbourRow, neighbourCol, boardRow, boardCol)) {
               board[boardRow][boardCol].adjacent++;
-          
-if (board[boardRow][boardCol].displayed) { 
-let cellElement = document.getElementById(`cell-${boardRow}-${boardCol}`)
-cellElement.textContent = board[boardRow][boardCol].adjacent
-          }}
-        }}
+
+              if (board[boardRow][boardCol].displayed) {
+                let cellElement = document.getElementById(
+                  `cell-${boardRow}-${boardCol}`
+                );
+                cellElement.textContent = board[boardRow][boardCol].adjacent;
+              }
+            }
+          }
+        }
       }
     }
   }
@@ -187,45 +187,52 @@ function isAdjacent(r, c, clickedRow, clickedCol) {
   return Math.abs(r - clickedRow) <= 1 && Math.abs(c - clickedCol) <= 1;
 }
 
-
 // ==== GAME LOGIC ====
 
-function redText(clickedRow, clickedCol, clickedCell) { // for red text when number does not match
-if (!board[clickedRow][clickedCol].displayed) return; // no number, ignore
+function redText(clickedRow, clickedCol, clickedCell) {
+  // for red text when number does not match
+  if (!board[clickedRow][clickedCol].displayed) return; // no number, ignore
 
-//check for error, add classlist error to make css take the error text colour. or remove when no error
-let boardData = board[clickedRow][clickedCol]
-let blackCount = 0;
-let whiteCount = 0;
-let cellCount = 0;
-for (let r = clickedRow - 2; r <= clickedRow + 2; r++) {
+  //check for error, add classlist error to make css take the error text colour. or remove when no error
+  let boardData = board[clickedRow][clickedCol];
+  let blackCount = 0;
+  let whiteCount = 0;
+  let cellCount = 0;
+  for (let r = clickedRow - 2; r <= clickedRow + 2; r++) {
     for (let c = clickedCol - 2; c <= clickedCol + 2; c++) {
-if (r < 0 || r >= gridSize || c < 0 || c >= gridSize) continue;
-cellCount++ // use this to calculate how many cells in the area, to account for the side/corner cells
-let cellData = board[r][c]
-if (!cellData.displayed) continue;
-if (cellData.colour == "black") { 
-blackCount++
-} else if (board[r][c].colour == "white") {
-whiteCount++
+      if (r < 0 || r >= gridSize || c < 0 || c >= gridSize) continue;
+      cellCount++; // use this to calculate how many cells in the area, to account for the side/corner cells
+      let cellData = board[r][c];
+      if (!cellData.displayed) continue;
+      if (cellData.colour == "black") {
+        blackCount++;
+      } else if (board[r][c].colour == "white") {
+        whiteCount++;
+      }
+      // if number is 3, shows 3 black cells. so error = when black > number or when white > 9 - number. if grey still exists, doesnt matter
+      let cellElement = document.getElementById(`cell-${r}-${c}`);
+      let coords = `${r},${c}`;
+      if (
+        blackCount > boardData.adjacent ||
+        whiteCount > cellCount - boardData.adjacent
+      ) {
+        clickedCell.classList.add("error");
+        errorCells.add(errorCells);
+        console.log(coords);
+      } else if (
+        blackCount <= boardData.adjacent &&
+        whiteCount <= cellCount - boardData.adjacent
+      ) {
+        clickedCell.classList.remove("error");
+        errorCells.delete(coords);
+        console.log(errorCells);
+      }
+    }
+  }
 }
-// if number is 3, shows 3 black cells. so error = when black > number or when white > 9 - number. if grey still exists, doesnt matter
-let cellElement = document.getElementById(`cell-${r}-${c}`);
-let coords = `${r},${c}`
-if (blackCount > boardData.adjacent || whiteCount > cellCount - boardData.adjacent) {
-clickedCell.classList.add("error")
-errorCells.add(errorCells)
-console.log(coords)
-} else if (blackCount <= boardData.adjacent && whiteCount <= cellCount - boardData.adjacent) {
-clickedCell.classList.remove("error")
-errorCells.delete(coords)
-console.log(errorCells)
-}}}}
-
-
 
 function checkWin() {
-if (errorCells.size > 0) return;
+  if (errorCells.size > 0) return;
   let correctFlags = 0;
   let incorrectFlags = 0;
   for (let r = 0; r < gridSize; r++) {
@@ -248,7 +255,6 @@ if (errorCells.size > 0) return;
   }
 }
 
-
 function resetGame(newSize = gridSize) {
   gridSize = newSize;
   document.getElementById("feedback").textContent = "";
@@ -262,55 +268,59 @@ function resetGame(newSize = gridSize) {
   attachListeners();
 }
 
-
-
 // ==== UI + INTERACTION ====
 
-function handleCellClick(e) { // left click turns it white, even from black
+function handleCellClick(e) {
+  // left click turns it white, even from black
   let clickedCell = e.target;
   let clickedRow = parseInt(clickedCell.dataset.row);
   let clickedCol = parseInt(clickedCell.dataset.col);
-  let boardData = board[clickedRow][clickedCol]
+  let boardData = board[clickedRow][clickedCol];
   if (gameOver) return;
-if (boardData.state == "hidden" || boardData.colour == "black") {
-boardData.state = "revealed"
-boardData.colour = "white"
-clickedCell.classList.remove("grey", "black")
-clickedCell.classList.add("white")
-redText(clickedRow, clickedCol, clickedCell)
-checkWin();
-console.log("clicked cell:", `${clickedRow},${clickedCol}`, boardData.adjacent)
-} else if (boardData.state == "revealed" && boardData.colour == "white") {
-boardData.state = "hidden"
-boardData.colour = "grey"
-clickedCell.classList.remove("white")
-clickedCell.classList.add("grey")
-redText(clickedRow, clickedCol, clickedCell)
-}
+  if (boardData.state == "hidden" || boardData.colour == "black") {
+    boardData.state = "revealed";
+    boardData.colour = "white";
+    clickedCell.classList.remove("grey", "black");
+    clickedCell.classList.add("white");
+    redText(clickedRow, clickedCol, clickedCell);
+    checkWin();
+    console.log(
+      "clicked cell:",
+      `${clickedRow},${clickedCol}`,
+      boardData.adjacent
+    );
+  } else if (boardData.state == "revealed" && boardData.colour == "white") {
+    boardData.state = "hidden";
+    boardData.colour = "grey";
+    clickedCell.classList.remove("white");
+    clickedCell.classList.add("grey");
+    redText(clickedRow, clickedCol, clickedCell);
+  }
 }
 
-function toggleBlack(e) { // right click turns it black
+function toggleBlack(e) {
+  // right click turns it black
   if (gameOver) return;
   let clickedCell = e.target;
   e.preventDefault();
   let clickedRow = parseInt(clickedCell.dataset.row);
   let clickedCol = parseInt(clickedCell.dataset.col);
- let boardData = board[clickedRow][clickedCol]
+  let boardData = board[clickedRow][clickedCol];
 
-if (boardData.state == "hidden" || boardData.colour == "white") {
-boardData.state = "revealed"
-boardData.colour = "black"
-clickedCell.classList.remove("grey", "white")
-clickedCell.classList.add("black")
-redText(clickedRow, clickedCol, clickedCell)
-checkWin();
-} else if (boardData.state == "revealed" && boardData.colour == "black") {
-boardData.state = "hidden"
-boardData.colour = "grey"
-clickedCell.classList.remove("black")
-clickedCell.classList.add("grey")
-redText(clickedRow, clickedCol, clickedCell)
-}
+  if (boardData.state == "hidden" || boardData.colour == "white") {
+    boardData.state = "revealed";
+    boardData.colour = "black";
+    clickedCell.classList.remove("grey", "white");
+    clickedCell.classList.add("black");
+    redText(clickedRow, clickedCol, clickedCell);
+    checkWin();
+  } else if (boardData.state == "revealed" && boardData.colour == "black") {
+    boardData.state = "hidden";
+    boardData.colour = "grey";
+    clickedCell.classList.remove("black");
+    clickedCell.classList.add("grey");
+    redText(clickedRow, clickedCol, clickedCell);
+  }
 }
 
 function disableInputs() {
@@ -366,13 +376,7 @@ function customise() {
   resetGame(newSize);
 }
 
-// ==== BOARD VALIDATION ====
 
-// let solutionCount = 0;
-
-// check for solution. when complete, check for another solution. if only 1 == unique, if 2, undo the hide, and return
-
-</script>
-
-</body>
+    
+  </body>
 </html>
