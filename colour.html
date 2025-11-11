@@ -126,9 +126,8 @@ function generateBoard(gridSize) {
       rowData.push({
         colour: "grey", // original state
         state: "hidden", // can become "flagged" / "error"
-        adjacent: 0,
+        adjacent: 0, // use this for the number shown on the cell
         isBlack: false, // determines if cell is black or white
-        number: 0, // the number shown on the cell. not all will show
         displayed: true
       });
     }
@@ -165,14 +164,19 @@ function generateCells(clickedRow, clickedCol) {
 
           let neighbourRow = boardRow + dr;
           let neighbourCol = boardCol + dc;
+          
           if (neighbourRow < 0 || neighbourRow >= gridSize) continue;
           if (neighbourCol < 0 || neighbourCol >= gridSize) continue;
+          
           if (board[neighbourRow][neighbourCol].isBlack == true) {
             if (isAdjacent(neighbourRow, neighbourCol, boardRow, boardCol)) {
               board[boardRow][boardCol].adjacent++;
-            } 
-          }
-        }
+          
+if (board[boardRow][boardCol].displayed) { 
+let cellElement = document.getElementById(`cell-${boardRow}-${boardCol}`)
+cellElement.textContent = board[boardRow][boardCol].adjacent
+          }}
+        }}
       }
     }
   }
@@ -193,26 +197,30 @@ if (!board[clickedRow][clickedCol].displayed) return; // no number, ignore
 let boardData = board[clickedRow][clickedCol]
 let blackCount = 0;
 let whiteCount = 0;
+let cellCount = 0;
 for (let r = clickedRow - 2; r <= clickedRow + 2; r++) {
     for (let c = clickedCol - 2; c <= clickedCol + 2; c++) {
 if (r < 0 || r >= gridSize || c < 0 || c >= gridSize) continue;
+cellCount++ // use this to calculate how many cells in the area, to account for the side/corner cells
 let cellData = board[r][c]
 if (!cellData.displayed) continue;
 if (cellData.colour == "black") { 
 blackCount++
 } else if (board[r][c].colour == "white") {
 whiteCount++
-}}}
+}
 // if number is 3, shows 3 black cells. so error = when black > number or when white > 9 - number. if grey still exists, doesnt matter
 let cellElement = document.getElementById(`cell-${r}-${c}`);
 let coords = `${r},${c}`
-if (blackCount > boardData.number || whiteCount > 9 - boardData.number) {
+if (blackCount > boardData.adjacent || whiteCount > cellCount - boardData.adjacent) {
 clickedCell.classList.add("error")
-errorCells.add(coords)
-} else if (blackCount <= boardData.number && whiteCount <= 9 - boardData.number) {
+errorCells.add(errorCells)
+console.log(coords)
+} else if (blackCount <= boardData.adjacent && whiteCount <= cellCount - boardData.adjacent) {
 clickedCell.classList.remove("error")
 errorCells.delete(coords)
-}}
+console.log(errorCells)
+}}}}
 
 
 
@@ -241,9 +249,8 @@ if (errorCells.size > 0) return;
 }
 
 
-function resetGame(newSize = gridSize, newSignals = totalSignals) {
+function resetGame(newSize = gridSize) {
   gridSize = newSize;
-  totalSignals = newSignals;
   document.getElementById("feedback").textContent = "";
   board = [];
   generateBoard(gridSize);
@@ -272,6 +279,7 @@ clickedCell.classList.remove("grey", "black")
 clickedCell.classList.add("white")
 redText(clickedRow, clickedCol, clickedCell)
 checkWin();
+console.log("clicked cell:", `${clickedRow},${clickedCol}`, boardData.adjacent)
 } else if (boardData.state == "revealed" && boardData.colour == "white") {
 boardData.state = "hidden"
 boardData.colour = "grey"
