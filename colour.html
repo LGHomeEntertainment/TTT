@@ -28,24 +28,23 @@
   user-select: none;
 }
 
-.cell.blue {
-  background-color: blue;
+.cell.black {
+  background-color: black;
   color: white;
 }
 
-.cell.yellow {
-  background-color: yellow;
+.cell.grey {
+  background-color: grey;
   color: black;
 }
 
-.cell.orange {
-  background-color: orange;
+.cell.white {
+  background-color: white;
   color: black;
 }
 
 .cell.error {
-  background-color: red;
-  color: white;
+  color: red;
 }
 
     
@@ -87,7 +86,7 @@ let blackCell = Math.floor(Math.random() * 11) + 40
 let board = [];
 let grid = [];
 let gameOver = false;
-let errorCells = [];
+let errorCells = new Set(); // if error, errorCells.add("1,5") .delete .has .... use string.
 
 
 // ==== INITIALISATION + GENERATION ====
@@ -129,6 +128,8 @@ function generateBoard(gridSize) {
         state: "hidden", // can become "flagged" / "error"
         adjacent: 0,
         isBlack: false, // determines if cell is black or white
+        number: 0, // the number shown on the cell. not all will show
+        displayed: true
       });
     }
     board.push(rowData);
@@ -195,26 +196,60 @@ boardData.state = "revealed"
 boardData.color = "white"
 clickedCell.classList.remove("grey", "black")
 clickedCell.classList.add("white")
-redTextError();
+checkNeighbour(clickedRow, clickedCol, clickedCell)
 checkWin();
 } else if (boardData.state == "revealed" && boardData.color == "white") {
 boardData.state = "hidden"
 boardData.color = "grey"
 clickedCell.classList.remove("white")
 clickedCell.classList.add("grey")
-redTextError();
+checkNeighbour(clickedRow, clickedCol, clickedCell)
 }
 
 
-function // to check if the cell is correct
+function checkNeighbour(clickedRow, clickedCol, clickedCell) { // on click/toggle, check 9 cells + neighbours (total 25) for errors/clear errors
+let boardData = board[clickedRow][clickedCol]
+for (let r = clickedRow - 2; r <= clickedRow + 2; r++) {
+    for (let c = clickedCol - 2; c <= clickedCol + 2; c++) {
+if (r < 0 || r >= gridSize || c < 0 || c >= gridSize) continue;
+let neighbourCell = document.getElementById(`cell-${r}-${c}`);
+if 
 
-
-function redTextError() { // for red text when number does not match
+redText(clickedRow, clickedCol, neighbourCell);
 
 }
+
+
+
+function redText(clickedRow, clickedCol, neighbourCell) { // for red text when number does not match
+if (!board[clickedRow][clickedCol].display) return; // no number, ignore
+
+//check for error, add classlist error to make css take the error text colour. or remove when no error
+let boardData = board[clickedRow][clickedCol]
+let blackCount = 0;
+let whiteCount = 0;
+for (let r = clickedRow - 1; r <= clickedRow + 1; r++) {
+    for (let c = clickedCol - 1; c <= clickedCol + 1; c++) {
+if (r < 0 || r >= gridSize || c < 0 || c >= gridSize) continue;
+if (board[r][c].colour == "black") { 
+blackCount++
+} else if (board[r][c].colour == "white") {
+whiteCount++
+}}}
+// if number is 3, shows 3 black cells. so error = when black > number or when white > 9 - number. if grey still exists, doesnt matter
+let coords = `${r},${c}`
+if (blackCount > boardData.number || whiteCount > 9 - boardData.number) {
+clickedCell.classList.add("error")
+errorCells.add(coords)
+} else if (blackCount <= boardData.number && whiteCount <= 9 - boardData.number)
+clickedCell.classList.remove("error")
+errorCells.delete(coords)
+}
+
+
 
 function checkWin() {
-if (errorCells.length > 0) return;
+if (errorCells.size > 0) return;
   let correctFlags = 0;
   let incorrectFlags = 0;
   for (let r = 0; r < gridSize; r++) {
@@ -254,19 +289,24 @@ function resetGame(newSize = gridSize, newSignals = totalSignals) {
 function toggleBlack(e) { // right click turns it black
   if (gameOver) return;
   let clickedCell = e.target;
-  e.preventDefault();
+  e.preventDefault();let clickedCell = e.target;
   let clickedRow = parseInt(clickedCell.dataset.row);
   let clickedCol = parseInt(clickedCell.dataset.col);
-  if (board[clickedRow][clickedCol].pinged == true) {
-    return;
-  } else if (board[clickedRow][clickedCol].flagged) {
-    board[clickedRow][clickedCol].flagged = false;
-    clickedCell.classList.remove("flagged");
-  } else {
-    board[clickedRow][clickedCol].flagged = true;
-    clickedCell.classList.add("black");
-  }
-  checkWin();
+ let boardData = board[clickedRow][clickedCol]
+
+if (boardData.state == "hidden" || boardData.color == "white") {
+boardData.state = "revealed"
+boardData.color = "black"
+clickedCell.classList.remove("grey", "white")
+clickedCell.classList.add("black")
+redTextError();
+checkWin();
+} else if (boardData.state == "revealed" && boardData.color == "black") {
+boardData.state = "hidden"
+boardData.color = "grey"
+clickedCell.classList.remove("black")
+clickedCell.classList.add("grey")
+redTextError();
 }
 
 // ==== UI + INTERACTION ====
@@ -326,7 +366,9 @@ function customise() {
 
 // ==== BOARD VALIDATION ====
 
+// let solutionCount = 0;
 
+// check for solution. when complete, check for another solution. if only 1 == unique, if 2, undo the hide, and return
 
 </script>
 
