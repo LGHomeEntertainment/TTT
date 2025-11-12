@@ -191,50 +191,7 @@ function isAdjacent(r, c, clickedRow, clickedCol) {
 
 // ==== GAME LOGIC ====
 
-function redText(clickedRow, clickedCol, clickedCell) {
-  // for red text when number does not match
-  if (!board[clickedRow][clickedCol].displayed) return; // no number, ignore
 
-  //check for error, add classlist error to make css take the error text colour. or remove when no error
-  let boardData = board[clickedRow][clickedCol];
-  let blackCount = 0;
-  let whiteCount = 0;
-  let cellCount = 0;
-  for (let r = clickedRow - 2; r <= clickedRow + 2; r++) {
-    for (let c = clickedCol - 2; c <= clickedCol + 2; c++) {
-      if (r < 0 || r >= gridSize || c < 0 || c >= gridSize) continue;
-      cellCount++; // use this to calculate how many cells in the area, to account for the side/corner cells
-      let cellData = board[r][c];
-      if (!cellData.displayed) continue;
-      if (cellData.colour == "black") {
-        blackCount++;
-      } else if (board[r][c].colour == "white") {
-        whiteCount++;
-      } }}
-
-for (let r = clickedRow - 1; r <= clickedRow + 1; r++) {
-    for (let c = clickedCol - 1; c <= clickedCol + 1; c++) {
-      if (r < 0 || r >= gridSize || c < 0 || c >= gridSize) continue;
-for (let nr = r - 1; nr <= r + 1; nr++) {
-    for (let nc = c - 1; nc <= c + 1; nc++) {
-      if (nr < 0 || nr >= gridSize || nc < 0 || nc >= gridSize) continue;
-let neighbourData = board[nr][nc]
-	let isError = blackCount > neighbourData.adjacent ||
-                      whiteCount > cellCount - neighbourData.adjacent
-      // if number is 3, shows 3 black cells. so error = when black > number or when white > 9 - number. if grey still exists, doesnt matter
-      let cellElement = document.getElementById(`cell-${nr}-${nc}`);
-      let coords = `${nr},${nc}`;
-      if (isError) {
-        cellElement.classList.add("error");
-        errorCells.add(coords);
-      } else if (!isError) {
-        cellElement.classList.remove("error");
-        errorCells.delete(coords);
-      }
-        console.log(errorCells);
-    }}}
-  }
-}
 
 function countImmediate(clickedRow, clickedCol) {
  let boardData = board[clickedRow][clickedCol];
@@ -248,25 +205,31 @@ for (let r = clickedRow - 1; r <= clickedRow + 1; r++) {
 let nData = board[r][c]
 if (nData.colour == "black") { blackCount++ }
 else if (nData.colour == "white") { whiteCount++ }
-return { blackCount, whiteCount, cellCount }
-}
 }}
+return { blackCount, whiteCount, cellCount }}
 
 function checkImmediate(clickedRow, clickedCol) {
- countImmediate(clickedRow, clickedCol)
+let { blackCount, whiteCount, cellCount } = countImmediate(clickedRow, clickedCol)
 let boardData = board[clickedRow][clickedCol];
-let isError = blackCount > nData.adjacent ||
-              whiteCount > cellCount - nData.adjacent
-
-}
+if (!boardData.displayed) return;
+let isError = blackCount > boardData.adjacent ||
+              whiteCount > cellCount - boardData.adjacent
+let cellElement = document.getElementById(`cell-${clickedRow}-${clickedCol}`);
+let coords = `${clickedRow},${clickedCol}`;
+if (isError) {
+	cellElement.classList.add("error");
+        errorCells.add(coords);
+      } else if (!isError) {
+        cellElement.classList.remove("error");
+        errorCells.delete(coords);
+}}
 
 function updateArea(clickedRow, clickedCol) { // not accurate. 
 for (let r = clickedRow - 2; r <= clickedRow + 2; r++) {
     for (let c = clickedCol - 2; c <= clickedCol + 2; c++) {
       if (r < 0 || r >= gridSize || c < 0 || c >= gridSize) continue;
 checkImmediate(r, c)
-redtext()
-}
+}}}
 
 
 function checkWin() {
@@ -320,7 +283,7 @@ function handleCellClick(e) {
     boardData.colour = "white";
     clickedCell.classList.remove("grey", "black");
     clickedCell.classList.add("white");
-    redText(clickedRow, clickedCol, clickedCell);
+   checkImmediate(clickedRow, clickedCol);
     checkWin();
     console.log(
       "clicked cell:",
@@ -332,7 +295,7 @@ function handleCellClick(e) {
     boardData.colour = "grey";
     clickedCell.classList.remove("white");
     clickedCell.classList.add("grey");
-    redText(clickedRow, clickedCol, clickedCell);
+ checkImmediate(clickedRow, clickedCol);
   }
 }
 
@@ -350,14 +313,14 @@ function toggleBlack(e) {
     boardData.colour = "black";
     clickedCell.classList.remove("grey", "white");
     clickedCell.classList.add("black");
-    redText(clickedRow, clickedCol, clickedCell);
+  checkImmediate(clickedRow, clickedCol);
     checkWin();
   } else if (boardData.state == "revealed" && boardData.colour == "black") {
     boardData.state = "hidden";
     boardData.colour = "grey";
     clickedCell.classList.remove("black");
     clickedCell.classList.add("grey");
-    redText(clickedRow, clickedCol, clickedCell);
+checkImmediate(clickedRow, clickedCol);
   }
 }
 
