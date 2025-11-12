@@ -188,6 +188,7 @@ function checkAnchor() {
   let boardRow = 0;
   let anchorCount = 0;
   let minAnchor = blackCell * 0.05
+let maxAnchor = blackCell * 0.5
   for (boardRow = 0; boardRow < gridSize; boardRow++) {
     for (boardCol = 0; boardCol < gridSize; boardCol++) {
 let boardData = board[boardRow][boardCol]
@@ -201,13 +202,8 @@ if ((boardRow == 0 || boardRow == gridSize - 1) && (boardCol == 0 || boardCol ==
 if (boardData.adjacent == 4) { anchorCount++ }
 }
 }}
-if (anchorCount < minAnchor) {
-for (boardRow = 0; boardRow < gridSize; boardRow++) {
-    for (boardCol = 0; boardCol < gridSize; boardCol++) {
-let boardData = board[boardRow][boardCol]
-boardData.adjacent = 0
-}}
-generateCells()
+if (anchorCount < minAnchor || anchorCount > maxAnchor) {
+resetGame()
 }
 }
 
