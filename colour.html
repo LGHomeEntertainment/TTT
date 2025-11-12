@@ -211,26 +211,63 @@ function redText(clickedRow, clickedCol, clickedCell) {
       } else if (board[r][c].colour == "white") {
         whiteCount++;
       } }}
-let isError = blackCount > boardData.adjacent ||
-        whiteCount > cellCount - boardData.adjacent
-for (let r = clickedRow - 2; r <= clickedRow + 2; r++) {
-    for (let c = clickedCol - 2; c <= clickedCol + 2; c++) {
+
+for (let r = clickedRow - 1; r <= clickedRow + 1; r++) {
+    for (let c = clickedCol - 1; c <= clickedCol + 1; c++) {
       if (r < 0 || r >= gridSize || c < 0 || c >= gridSize) continue;
+for (let nr = r - 1; nr <= r + 1; nr++) {
+    for (let nc = c - 1; nc <= c + 1; nc++) {
+      if (nr < 0 || nr >= gridSize || nc < 0 || nc >= gridSize) continue;
+let neighbourData = board[nr][nc]
+	let isError = blackCount > neighbourData.adjacent ||
+                      whiteCount > cellCount - neighbourData.adjacent
       // if number is 3, shows 3 black cells. so error = when black > number or when white > 9 - number. if grey still exists, doesnt matter
-      let cellElement = document.getElementById(`cell-${r}-${c}`);
-      let coords = `${r},${c}`;
+      let cellElement = document.getElementById(`cell-${nr}-${nc}`);
+      let coords = `${nr},${nc}`;
       if (isError) {
         cellElement.classList.add("error");
         errorCells.add(coords);
-        console.log(errorCells);
       } else if (!isError) {
         cellElement.classList.remove("error");
         errorCells.delete(coords);
-        console.log(errorCells);
       }
-    }
+        console.log(errorCells);
+    }}}
   }
 }
+
+function countImmediate(clickedRow, clickedCol) {
+ let boardData = board[clickedRow][clickedCol];
+  let blackCount = 0;
+  let whiteCount = 0;
+  let cellCount = 0;
+for (let r = clickedRow - 1; r <= clickedRow + 1; r++) {
+    for (let c = clickedCol - 1; c <= clickedCol + 1; c++) {
+      if (r < 0 || r >= gridSize || c < 0 || c >= gridSize) continue;
+  cellCount++;
+let nData = board[r][c]
+if (nData.colour == "black") { blackCount++ }
+else if (nData.colour == "white") { whiteCount++ }
+return { blackCount, whiteCount, cellCount }
+}
+}}
+
+function checkImmediate(clickedRow, clickedCol) {
+ countImmediate(clickedRow, clickedCol)
+let boardData = board[clickedRow][clickedCol];
+let isError = blackCount > nData.adjacent ||
+              whiteCount > cellCount - nData.adjacent
+
+}
+
+function updateArea(clickedRow, clickedCol) { // not accurate. 
+for (let r = clickedRow - 2; r <= clickedRow + 2; r++) {
+    for (let c = clickedCol - 2; c <= clickedCol + 2; c++) {
+      if (r < 0 || r >= gridSize || c < 0 || c >= gridSize) continue;
+checkImmediate(r, c)
+redtext()
+}
+
 
 function checkWin() {
   if (errorCells.size > 0) return;
