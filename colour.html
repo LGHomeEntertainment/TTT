@@ -168,23 +168,47 @@ function generateCells() {
           if (board[neighbourRow][neighbourCol].isBlack == true) {
             if (isAdjacent(neighbourRow, neighbourCol, boardRow, boardCol)) {
               board[boardRow][boardCol].adjacent++;
-
+}}}
               if (board[boardRow][boardCol].displayed) {
                 let cellElement = document.getElementById(
                   `cell-${boardRow}-${boardCol}`
                 );
-                if (board[boardRow][boardCol].adjacent == 0) {
-cellElement.textContent = "0" 
-cellElement.style.color = "red"
-} else {
-cellElement.textContent = String(board[boardRow][boardCol].adjacent);
-              }
-            }
-          }
+              
+	cellElement.textContent = String(board[boardRow][boardCol].adjacent);
+
         }
-      }}
+      }
     }
   }
+checkAnchor()
+}
+
+function checkAnchor() {
+  let boardCol = 0;
+  let boardRow = 0;
+  let anchorCount = 0;
+  let minAnchor = blackCell * 0.05
+  for (boardRow = 0; boardRow < gridSize; boardRow++) {
+    for (boardCol = 0; boardCol < gridSize; boardCol++) {
+let boardData = board[boardRow][boardCol]
+if (boardData.adjacent == 0 || boardData.adjacent == 9) { 
+anchorCount++
+}
+if (boardRow == 0 || boardRow == gridSize - 1 || boardCol == 0 || boardCol == gridSize - 1) {
+if (boardData.adjacent == 6) { anchorCount++ }
+}
+if ((boardRow == 0 || boardRow == gridSize - 1) && (boardCol == 0 || boardCol == gridSize - 1)) {
+if (boardData.adjacent == 4) { anchorCount++ }
+}
+}}
+if (anchorCount < minAnchor) {
+for (boardRow = 0; boardRow < gridSize; boardRow++) {
+    for (boardCol = 0; boardCol < gridSize; boardCol++) {
+let boardData = board[boardRow][boardCol]
+boardData.adjacent = 0
+}}
+generateCells()
+}
 }
 
 function isAdjacent(r, c, clickedRow, clickedCol) {
