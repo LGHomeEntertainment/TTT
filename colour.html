@@ -136,7 +136,7 @@ function generateBoard(gridSize) {
 }
 
 // create the blackcells. put within checkanswer
-function generateCells(clickedRow, clickedCol) {
+function generateCells() {
   let blackNumber = 0;
   let col = 0;
   let row = 0;
@@ -228,30 +228,29 @@ function updateArea(clickedRow, clickedCol) { // not accurate.
 for (let r = clickedRow - 2; r <= clickedRow + 2; r++) {
     for (let c = clickedCol - 2; c <= clickedCol + 2; c++) {
       if (r < 0 || r >= gridSize || c < 0 || c >= gridSize) continue;
+if (!board[r] || !board[r][c]) continue; // just in case it checks outside 
 checkImmediate(r, c)
 }}}
 
 
 function checkWin() {
   if (errorCells.size > 0) return;
-  let correctFlags = 0;
-  let incorrectFlags = 0;
+  let correctTile = 0;
+  let incorrectTile = 0;
   for (let r = 0; r < gridSize; r++) {
     for (let c = 0; c < gridSize; c++) {
       let cellData = board[r][c];
-      if (cellData.flagged) {
-        if (cellData.isBlack) {
-          correctFlags++;
-        } else {
-          incorrectFlags++;
-        }
+    if (cellData.state == "hidden") return;  
+        if (cellData.isBlack && cellData.colour == "black") {
+          correctTile++;
+        } else if (cellData.isBlack && cellData.colour != "black") {
+          incorrectTile++;
       }
     }
   }
-
-  if (correctFlags == blackCell && incorrectFlags == 0) {
+  if (correctTile == blackCell && incorrectTile == 0) {
     gameOver = true;
-
+    triggerGameOver();
     document.getElementById("feedback").textContent = "You win! Good job.";
   }
 }
@@ -265,42 +264,37 @@ function resetGame(newSize = gridSize) {
   generateGrid(gridSize);
   generateCells();
   gameOver = false;
-  errorCells = [];
+  errorCells = new Set();
   attachListeners();
 }
 
 // ==== UI + INTERACTION ====
 
 function handleCellClick(e) {
-  // left click turns it white, even from black
+  // left click turns it BLACK, even from white
   let clickedCell = e.target;
   let clickedRow = parseInt(clickedCell.dataset.row);
   let clickedCol = parseInt(clickedCell.dataset.col);
   let boardData = board[clickedRow][clickedCol];
   if (gameOver) return;
-  if (boardData.state == "hidden" || boardData.colour == "black") {
+  if (boardData.state == "hidden" || boardData.colour == "white") {
     boardData.state = "revealed";
-    boardData.colour = "white";
-    clickedCell.classList.remove("grey", "black");
-    clickedCell.classList.add("white");
+    boardData.colour = "black";
+    clickedCell.classList.remove("grey", "white");
+    clickedCell.classList.add("black");
    updateArea(clickedRow, clickedCol);
     checkWin();
-    console.log(
-      "clicked cell:",
-      `${clickedRow},${clickedCol}`,
-      boardData.adjacent
-    );
-  } else if (boardData.state == "revealed" && boardData.colour == "white") {
+  } else if (boardData.state == "revealed" && boardData.colour == "black") {
     boardData.state = "hidden";
     boardData.colour = "grey";
-    clickedCell.classList.remove("white");
+    clickedCell.classList.remove("black");
     clickedCell.classList.add("grey");
  updateArea(clickedRow, clickedCol);
   }
 }
 
-function toggleBlack(e) {
-  // right click turns it black
+function toggleWhite(e) {
+  // right click turns it WHITE
   if (gameOver) return;
   let clickedCell = e.target;
   e.preventDefault();
@@ -308,23 +302,23 @@ function toggleBlack(e) {
   let clickedCol = parseInt(clickedCell.dataset.col);
   let boardData = board[clickedRow][clickedCol];
 
-  if (boardData.state == "hidden" || boardData.colour == "white") {
+  if (boardData.state == "hidden" || boardData.colour == "black") {
     boardData.state = "revealed";
-    boardData.colour = "black";
-    clickedCell.classList.remove("grey", "white");
-    clickedCell.classList.add("black");
+    boardData.colour = "white";
+    clickedCell.classList.remove("grey", "black");
+    clickedCell.classList.add("white");
   updateArea(clickedRow, clickedCol);
     checkWin();
-  } else if (boardData.state == "revealed" && boardData.colour == "black") {
+  } else if (boardData.state == "revealed" && boardData.colour == "white") {
     boardData.state = "hidden";
     boardData.colour = "grey";
-    clickedCell.classList.remove("black");
+    clickedCell.classList.remove("white");
     clickedCell.classList.add("grey");
 updateArea(clickedRow, clickedCol);
   }
 }
 
-function disableInputs() {
+function triggerGameOver() { // disableInputs
   let cells = document.querySelectorAll("td");
   cells.forEach((cell) => {
     cell.replaceWith(cell.cloneNode(true)); // easiest way to remove all listeners
@@ -338,7 +332,7 @@ function attachListeners() {
     cell.addEventListener("click", handleCellClick); // left click
   });
   cells.forEach((cell) => {
-    cell.addEventListener("contextmenu", toggleBlack); // right click
+    cell.addEventListener("contextmenu", toggleWhite); // right click
   });
   document.getElementById("resetBtn").addEventListener("click", () => {
     resetGame(gridSize);
@@ -354,7 +348,7 @@ function attachListeners() {
       e.preventDefault();
       longPressTriggered = false;
       pressTimer = setTimeout(() => {
-        toggleFlag(e);
+        toggleWhite(e);
         longPressTriggered = true;
       }, 600); // long press
     });
