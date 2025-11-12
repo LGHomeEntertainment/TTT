@@ -77,7 +77,6 @@
 // boardData   → logical cell (what the game knows)
 // Keep them separate!
 
-// ==== GLOBALs + CONSTANTS ====
 
 // ==== GLOBALs + CONSTANTS ====
 
@@ -174,12 +173,16 @@ function generateCells() {
                 let cellElement = document.getElementById(
                   `cell-${boardRow}-${boardCol}`
                 );
-                cellElement.textContent = board[boardRow][boardCol].adjacent;
+                if (board[boardRow][boardCol].adjacent == 0) {
+cellElement.textContent = "0" 
+cellElement.style.color = "red"
+} else {
+cellElement.textContent = String(board[boardRow][boardCol].adjacent);
               }
             }
           }
         }
-      }
+      }}
     }
   }
 }
@@ -189,9 +192,8 @@ function isAdjacent(r, c, clickedRow, clickedCol) {
   return Math.abs(r - clickedRow) <= 1 && Math.abs(c - clickedCol) <= 1;
 }
 
+
 // ==== GAME LOGIC ====
-
-
 
 function countImmediate(clickedRow, clickedCol) {
  let boardData = board[clickedRow][clickedCol];
@@ -231,7 +233,6 @@ for (let r = clickedRow - 2; r <= clickedRow + 2; r++) {
 if (!board[r] || !board[r][c]) continue; // just in case it checks outside 
 checkImmediate(r, c)
 }}}
-
 
 function checkWin() {
   if (errorCells.size > 0) return;
