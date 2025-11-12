@@ -283,7 +283,7 @@ function handleCellClick(e) {
     boardData.colour = "white";
     clickedCell.classList.remove("grey", "black");
     clickedCell.classList.add("white");
-   checkImmediate(clickedRow, clickedCol);
+   updateArea(clickedRow, clickedCol);
     checkWin();
     console.log(
       "clicked cell:",
@@ -295,7 +295,7 @@ function handleCellClick(e) {
     boardData.colour = "grey";
     clickedCell.classList.remove("white");
     clickedCell.classList.add("grey");
- checkImmediate(clickedRow, clickedCol);
+ updateArea(clickedRow, clickedCol);
   }
 }
 
@@ -313,14 +313,14 @@ function toggleBlack(e) {
     boardData.colour = "black";
     clickedCell.classList.remove("grey", "white");
     clickedCell.classList.add("black");
-  checkImmediate(clickedRow, clickedCol);
+  updateArea(clickedRow, clickedCol);
     checkWin();
   } else if (boardData.state == "revealed" && boardData.colour == "black") {
     boardData.state = "hidden";
     boardData.colour = "grey";
     clickedCell.classList.remove("black");
     clickedCell.classList.add("grey");
-checkImmediate(clickedRow, clickedCol);
+updateArea(clickedRow, clickedCol);
   }
 }
 
