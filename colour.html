@@ -95,10 +95,8 @@ let anchorCount = 0;
 document.addEventListener("DOMContentLoaded", initialise);
 
 function initialise() {
-//  generateBoard(gridSize);
   generateValidBoard();
-  
- generateGrid();
+  generateGrid();
   attachListeners();
 }
 
@@ -117,6 +115,7 @@ function generateGrid() {
     }
     document.getElementById("grid").appendChild(tr);
   }
+ addVisualNumbers()
 }
 
 // create clear logic BOARD (the invisible one BTS)
@@ -154,9 +153,7 @@ function generateCells() {
     blackNumber++;
   }
 
-  // count adjacent once all signal placed
-  // For each cell, loop through its neighbors
-  // If neighbor is in bounds and has a signal, increment adjacent count
+  // count adjacency
   let boardCol = 0;
   let boardRow = 0;
 
@@ -174,26 +171,41 @@ function generateCells() {
             if (isAdjacent(neighbourRow, neighbourCol, boardRow, boardCol)) {
               board[boardRow][boardCol].adjacent++;
 }}}
-              if (board[boardRow][boardCol].displayed) {
-                let cellElement = document.getElementById(
-                  `cell-${boardRow}-${boardCol}`
-                );
-              
-	cellElement.textContent = String(board[boardRow][boardCol].adjacent);
-
-        }
+             
       }
     }}}
 
+function addVisualNumbers() {
+  let boardCol = 0;
+  let boardRow = 0;
+  for (boardRow = 0; boardRow < gridSize; boardRow++) {
+    for (boardCol = 0; boardCol < gridSize; boardCol++) {
+ if (board[boardRow][boardCol].displayed) {
+               let cellElement = document.getElementById(`cell-${boardRow}-${boardCol}`);
+	cellElement.textContent = String(board[boardRow][boardCol].adjacent);
+}
+       }}}
+
+
+function checkAnchorSpread(minPerSector = 1) {
+let sectorCount = {}
+ for (let r = 0; r < gridSize; r++) {
+        for (let c = 0; c < gridSize; c++) {
+if (board[r][c].isAnchor) {
+let id = board[r][c].sectorID
+sectorCount[id] = (sectorCount[id] || 0) + 1;
+}
+}}
+return Object.values(sectorCount).every(count => count >= minPerSector);
+}
 
 function generateValidBoard() {
   let attempts = 0;
-  let maxAttempts = 10;
+  let maxAttempts = 100;
   do {
 
     generateBoard(gridSize); // empty board
     generateCells(); // fill logic
- 
     attempts++;
     if (attempts > maxAttempts) {
       console.error("Too many retries, stopping.");
@@ -204,7 +216,7 @@ function generateValidBoard() {
 
 function checkAnchor() {
 let anchors = calcAnchorCount(board, gridSize)
-return validAnchorCount(anchors, gridSize)
+return validAnchorCount(anchors, gridSize) && checkAnchorSpread();
 }
 
 
@@ -213,7 +225,10 @@ let anchorCount = 0;
 for (row = 0; row < gridSize; row++) {
     for (col= 0; col < gridSize; col++) {
 let boardData = board[row][col]
-if (boardData.adjacent == 0 || boardData.adjacent == 9) { anchorCount++ }
+if (boardData.adjacent == 0 || boardData.adjacent == 9) { 
+anchorCount++;
+boardData.isAnchor = true;
+}
 if (row == 0 || row == gridSize - 1 || col == 0 || col == gridSize - 1) {
 if (boardData.adjacent == 6) { anchorCount += .8 }
 }
@@ -226,7 +241,7 @@ return anchorCount;
 
 function validAnchorCount(anchorCount, gridSize) { // just for determining min/max. no calcs
 let minAnchor = gridSize * gridSize * 0.08
-let maxAnchor = gridSize * gridSize * 0.12
+let maxAnchor = gridSize * gridSize * 0.5
 return anchorCount > minAnchor && anchorCount < maxAnchor
 }
 
