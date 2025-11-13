@@ -95,13 +95,12 @@ let anchorCount = 0;
 document.addEventListener("DOMContentLoaded", initialise);
 
 function initialise() {
-  generateBoard(gridSize);
-  generateBoardUntilValid();
+//  generateBoard(gridSize);
+  generateValidBoard();
   
-if (checkAnchor()) { // make sure board is happy then add in visuals and listeners as final product
-// generateGrid();
-//  attachListeners();
-}}
+ generateGrid();
+  attachListeners();
+}
 
 // visible GRID
 function generateGrid() {
@@ -184,27 +183,23 @@ function generateCells() {
 
         }
       }
-    }
-  }
-}
+    }}}
 
 
-
-
-function generateBoardUntilValid() {
+function generateValidBoard() {
   let attempts = 0;
+  let maxAttempts = 10;
   do {
-    board = [];
+
     generateBoard(gridSize); // empty board
     generateCells(); // fill logic
-   generateGrid();
+ 
     attempts++;
-    if (attempts > 10) {
+    if (attempts > maxAttempts) {
       console.error("Too many retries, stopping.");
       break;
     }
   } while (!checkAnchor());
-attachListeners();
 }
 
 function checkAnchor() {
