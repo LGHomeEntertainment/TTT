@@ -1,0 +1,24 @@
+// this is original from Colour
+function checkAnchor() {
+  let boardCol = 0;
+  let boardRow = 0;
+  let anchorCount = 0;
+  let minAnchor = gridSize * gridSize * 0.08
+let maxAnchor = gridSize * gridSize * 0.12
+  for (boardRow = 0; boardRow < gridSize; boardRow++) {
+    for (boardCol = 0; boardCol < gridSize; boardCol++) {
+let boardData = board[boardRow][boardCol]
+if (boardData.adjacent == 0 || boardData.adjacent == 9) { 
+anchorCount++
+}
+if (boardRow == 0 || boardRow == gridSize - 1 || boardCol == 0 || boardCol == gridSize - 1) {
+if (boardData.adjacent == 6) { anchorCount += .8 }
+}
+if ((boardRow == 0 || boardRow == gridSize - 1) && (boardCol == 0 || boardCol == gridSize - 1)) {
+if (boardData.adjacent == 4) { anchorCount += 0.8 }
+} else if (boardData.adjacent == 8 or boardData.adjacent == 1) { anchorCount += 0.5 }
+}}
+if (anchorCount < minAnchor || anchorCount > maxAnchor) {
+resetGame()
+}
+}
