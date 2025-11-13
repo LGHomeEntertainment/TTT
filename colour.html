@@ -86,18 +86,22 @@ let blackCell = Math.floor(Math.random() * 11) + 40;
 let board = [];
 let grid = [];
 let gameOver = false;
+let sectorSize = Math.max(3, Math.floor(gridSize / 3)) // dynamic sector size
 let errorCells = new Set(); // if error, errorCells.add("1,5") .delete .has .... use string.
+let anchorCount = 0;
 
 // ==== INITIALISATION + GENERATION ====
 
 document.addEventListener("DOMContentLoaded", initialise);
 
 function initialise() {
-  generateGrid();
   generateBoard(gridSize);
-  generateCells();
-  attachListeners();
-}
+  generateBoardUntilValid();
+  
+if (checkAnchor()) { // make sure board is happy then add in visuals and listeners as final product
+// generateGrid();
+//  attachListeners();
+}}
 
 // visible GRID
 function generateGrid() {
@@ -128,6 +132,8 @@ function generateBoard(gridSize) {
         adjacent: 0, // use this for the number shown on the cell
         isBlack: false, // determines if cell is black or white
         displayed: true,
+        isAnchor: false,
+        sectorID: Math.floor(row / sectorSize) + "-" + Math.floor(col / sectorSize)
       });
     }
     board.push(rowData);
@@ -180,32 +186,56 @@ function generateCells() {
       }
     }
   }
-checkAnchor()
+}
+
+
+
+
+function generateBoardUntilValid() {
+  let attempts = 0;
+  do {
+    board = [];
+    generateBoard(gridSize); // empty board
+    generateCells(); // fill logic
+   generateGrid();
+    attempts++;
+    if (attempts > 10) {
+      console.error("Too many retries, stopping.");
+      break;
+    }
+  } while (!checkAnchor());
+attachListeners();
 }
 
 function checkAnchor() {
-  let boardCol = 0;
-  let boardRow = 0;
-  let anchorCount = 0;
-  let minAnchor = blackCell * 0.05
-let maxAnchor = blackCell * 0.5
-  for (boardRow = 0; boardRow < gridSize; boardRow++) {
-    for (boardCol = 0; boardCol < gridSize; boardCol++) {
-let boardData = board[boardRow][boardCol]
-if (boardData.adjacent == 0 || boardData.adjacent == 9) { 
-anchorCount++
+let anchors = calcAnchorCount(board, gridSize)
+return validAnchorCount(anchors, gridSize)
 }
-if (boardRow == 0 || boardRow == gridSize - 1 || boardCol == 0 || boardCol == gridSize - 1) {
-if (boardData.adjacent == 6) { anchorCount++ }
+
+
+function calcAnchorCount(board, gridSize) {
+let anchorCount = 0;
+for (row = 0; row < gridSize; row++) {
+    for (col= 0; col < gridSize; col++) {
+let boardData = board[row][col]
+if (boardData.adjacent == 0 || boardData.adjacent == 9) { anchorCount++ }
+if (row == 0 || row == gridSize - 1 || col == 0 || col == gridSize - 1) {
+if (boardData.adjacent == 6) { anchorCount += .8 }
 }
-if ((boardRow == 0 || boardRow == gridSize - 1) && (boardCol == 0 || boardCol == gridSize - 1)) {
-if (boardData.adjacent == 4) { anchorCount++ }
-}
+if ((row == 0 || row == gridSize - 1) && (col == 0 || col == gridSize - 1)) {
+if (boardData.adjacent == 4) { anchorCount += 0.6 }
+} else if (boardData.adjacent == 8 || boardData.adjacent == 1) { anchorCount += 0.2 }
 }}
-if (anchorCount < minAnchor || anchorCount > maxAnchor) {
-resetGame()
+return anchorCount;
 }
+
+function validAnchorCount(anchorCount, gridSize) { // just for determining min/max. no calcs
+let minAnchor = gridSize * gridSize * 0.08
+let maxAnchor = gridSize * gridSize * 0.12
+return anchorCount > minAnchor && anchorCount < maxAnchor
 }
+
+
 
 function isAdjacent(r, c, clickedRow, clickedCol) {
   // check how far apart is 2 cells (mainly for generating clear area around the first click)
@@ -399,6 +429,8 @@ function customise() {
 // let solutionCount = 0;
 
 // check for solution. when complete, check for another solution. if only 1 == unique, if 2, undo the hide, and return
+
+
 
 </script>
 
