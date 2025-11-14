@@ -96,6 +96,7 @@ document.addEventListener("DOMContentLoaded", initialise);
 
 function initialise() {
   generateValidBoard();
+//  removeClues();
   generateGrid();
   attachListeners();
 }
@@ -125,12 +126,12 @@ function generateBoard(gridSize) {
     let rowData = [];
     for (let col = 0; col < gridSize; col++) {
       rowData.push({
-        colour: "grey", // original state
-        state: "hidden", // can become "flagged" / "error"
+        colour: "grey", // "grey", "black", "white"
+        state: "neutral", // "neutral" / "flagged" / "error"
         adjacent: 0, // use this for the number shown on the cell
         isBlack: false, // determines if cell is black or white
-        displayed: true,
-        isAnchor: false,
+        displayed: true, // number is showing or not
+        isAnchor: false, // points to start deductions from
         sectorID: Math.floor(row / sectorSize) + "-" + Math.floor(col / sectorSize)
       });
     }
@@ -180,11 +181,12 @@ function addVisualNumbers() {
   let boardRow = 0;
   for (boardRow = 0; boardRow < gridSize; boardRow++) {
     for (boardCol = 0; boardCol < gridSize; boardCol++) {
+let cellElement = document.getElementById(`cell-${boardRow}-${boardCol}`);
  if (board[boardRow][boardCol].displayed) {
-               let cellElement = document.getElementById(`cell-${boardRow}-${boardCol}`);
 	cellElement.textContent = String(board[boardRow][boardCol].adjacent);
-}
-       }}}
+} else {
+cellElement.textContent = "";
+       }}}}
 
 
 function checkAnchorSpread(minPerSector = Math.max(1, Math.floor(gridSize / 10))) {
@@ -228,20 +230,31 @@ let boardData = board[row][col]
 if (boardData.adjacent == 0 || boardData.adjacent == 9) { 
 anchorCount++;
 boardData.isAnchor = true;
+boardData.displayed = true;
 }
 if (row == 0 || row == gridSize - 1 || col == 0 || col == gridSize - 1) {
-if (boardData.adjacent == 6) { anchorCount += .8 }
+if (boardData.adjacent == 6) { 
+anchorCount += 0.8 
+boardData.isAnchor = true;
+boardData.displayed = true;}
 }
 if ((row == 0 || row == gridSize - 1) && (col == 0 || col == gridSize - 1)) {
-if (boardData.adjacent == 4) { anchorCount += 0.6 }
-} else if (boardData.adjacent == 8 || boardData.adjacent == 1) { anchorCount += 0.2 }
-}}
+if (boardData.adjacent == 4) { 
+anchorCount += 0.6
+boardData.isAnchor = true;
+boardData.displayed = true;
+ }
+} else if (boardData.adjacent == 8 || boardData.adjacent == 1) { 
+anchorCount += 0.2;
+boardData.isAnchor = true;
+boardData.displayed = true;
+}}}
 return anchorCount;
 }
 
 function validAnchorCount(anchorCount, gridSize) { // just for determining min/max. no calcs
 let minAnchor = gridSize * gridSize * 0.08
-// let maxAnchor = gridSize * gridSize * 0.5
+// let maxAnchor = gridSize * gridSize * 0.5 // removed cuz criteria too tight
 return anchorCount > minAnchor // && anchorCount < maxAnchor
 }
 
@@ -249,7 +262,7 @@ function randomiseAnchorVisibility() {
 for (row = 0; row < gridSize; row++) {
     for (col = 0; col < gridSize; col++) {
 if (board[row][col].isAnchor) {
-board[row][col].displayed = Math.random() <= 0.75
+board[row][col].displayed = Math.random() < 0.75
 }}}}
 
 function isAdjacent(r, c, clickedRow, clickedCol) {
@@ -306,7 +319,7 @@ function checkWin() {
   for (let r = 0; r < gridSize; r++) {
     for (let c = 0; c < gridSize; c++) {
       let cellData = board[r][c];
-    if (cellData.state == "hidden") return;  
+    if (cellData.state == "neutral") return;  
         if (cellData.isBlack && cellData.colour == "black") {
           correctTile++;
         } else if (cellData.isBlack && cellData.colour != "black") {
@@ -343,7 +356,7 @@ function handleCellClick(e) {
   let clickedCol = parseInt(clickedCell.dataset.col);
   let boardData = board[clickedRow][clickedCol];
   if (gameOver) return;
-  if (boardData.state == "hidden" || boardData.colour == "white") {
+  if (boardData.state == "neutral" || boardData.colour == "white") {
     boardData.state = "revealed";
     boardData.colour = "black";
     clickedCell.classList.remove("grey", "white");
@@ -351,7 +364,7 @@ function handleCellClick(e) {
    updateArea(clickedRow, clickedCol);
     checkWin();
   } else if (boardData.state == "revealed" && boardData.colour == "black") {
-    boardData.state = "hidden";
+    boardData.state = "neutral";
     boardData.colour = "grey";
     clickedCell.classList.remove("black");
     clickedCell.classList.add("grey");
@@ -368,7 +381,7 @@ function toggleWhite(e) {
   let clickedCol = parseInt(clickedCell.dataset.col);
   let boardData = board[clickedRow][clickedCol];
 
-  if (boardData.state == "hidden" || boardData.colour == "black") {
+  if (boardData.state == "neutral" || boardData.colour == "black") {
     boardData.state = "revealed";
     boardData.colour = "white";
     clickedCell.classList.remove("grey", "black");
@@ -376,7 +389,7 @@ function toggleWhite(e) {
   updateArea(clickedRow, clickedCol);
     checkWin();
   } else if (boardData.state == "revealed" && boardData.colour == "white") {
-    boardData.state = "hidden";
+    boardData.state = "neutral";
     boardData.colour = "grey";
     clickedCell.classList.remove("white");
     clickedCell.classList.add("grey");
@@ -440,11 +453,77 @@ function customise() {
 
 
 // ==== BOARD VALIDATION ====
+// Part 1: ensure board is playable with all numbers shown (settled with anchorcount + spread check)
+// Part 2: hide numbers while ensuring board is still solvable
 
-// let solutionCount = 0;
 
-// check for solution. when complete, check for another solution. if only 1 == unique, if 2, undo the hide, and return
+// function removeClues() {
+// let testBoard = cloneBoard(board) 
+// call isSolvable(testBoard) 
+//}
 
+//function isSolvable(testBoard):
+    // Implement solving logic:
+    // 1. For each cell, toggle black/white based on constraints.
+    // 2. Validate that all numbers match black cells in their 3x3 area.
+    // 3. If multiple solutions exist → return false.
+    // 4. If exactly one solution exists → return true.
+
+
+// for (let row = 0; row < gridSize; row++) {
+//    for (let col = 0; col < gridSize; col++) {
+// if (testboard[row][col].adjacent == 9) {
+// for (let nr = row - 1; nr <= row + 1; nr++) { 
+//   for (let nc = col - 1; nc <= col + 1; nc++) {
+// testboard[nr][nc].colour = "black"
+
+
+// function applyClue(testBoard, row, col) {
+// let cell = testBoard[row][col]
+// let clue = cell.adjacent
+// let colour = null;
+
+// if (clue == 9) colour = "black";
+// if (clue == 0) colour = "white";
+// else return;
+
+// for (let nr = row - 1; nr <= row + 1; nr++) { 
+//   for (let nc = col - 1; nc <= col + 1; nc++) {
+// check boarder/length
+// .colour = colour
+
+
+//function reduceClues(board):
+//    visibleCells = getAllDisplayedCells(board)
+    
+//    while visibleCells.length > targetClues:
+//        randomCell = pickRandomCell(visibleCells)
+        
+        // Hide this clue
+//        board[randomCell.row][randomCell.col].displayed = false
+        
+        // Clone board for testing
+//        testBoard = cloneBoard(board)
+        
+//        if isSolvable(testBoard):
+            // Keep it hidden
+//            remove randomCell from visibleCells
+//        else:
+            // Revert visibility
+//            board[randomCell.row][randomCell.col].displayed = true
+
+
+//function getAllDisplayedCells(board):
+//    cells = []
+//    for each row in board:
+//        for each cell in row:
+//            if cell.displayed == true:
+//                add cell to cells
+//    return cells
+
+//function pickRandomCell(cells):
+//    index = random integer between 0 and cells.length - 1
+//    return cells[index]
 
 
 </script>
