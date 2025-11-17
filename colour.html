@@ -265,9 +265,21 @@ if (board[row][col].isAnchor) {
 board[row][col].displayed = Math.random() < 0.75
 }}}}
 
+
+// ==== HELPER FUNCTIONS ====
+
 function isAdjacent(r, c, clickedRow, clickedCol) {
   // check how far apart is 2 cells (mainly for generating clear area around the first click)
   return Math.abs(r - clickedRow) <= 1 && Math.abs(c - clickedCol) <= 1;
+}
+
+function maxValidCells(row, col, size) { // impt for cells at sides
+if ((row == 0 || row == size - 1) && (col == 0 || col == size - 1)) {
+return 4 // corner
+}
+else if (row == 0 || col == 0 || row == size - 1 || col = size - 1) {
+return 6 // border
+} else { return 9 }
 }
 
 
@@ -346,6 +358,7 @@ function resetGame(newSize = gridSize) {
   errorCells = new Set();
   attachListeners();
 }
+
 
 // ==== UI + INTERACTION ====
 
@@ -452,9 +465,10 @@ function customise() {
 
 
 
-// ==== BOARD VALIDATION ====
-// Part 1: ensure board is playable with all numbers shown (settled with anchorcount + spread check)
-// Part 2: hide numbers while ensuring board is still solvable
+
+// // ==== BOARD VALIDATION ====
+// // Part 1: ensure board is playable with all numbers shown (settled with anchorcount + spread check)
+// // Part 2: hide numbers while ensuring board is still solvable
 
 
 // function removeClues() {
@@ -462,38 +476,47 @@ function customise() {
 // call isSolvable(testBoard) 
 //}
 
-//function isSolvable(testBoard):
+// function isSolvable(testBoard):
     // Implement solving logic:
     // 1. For each cell, toggle black/white based on constraints.
     // 2. Validate that all numbers match black cells in their 3x3 area.
     // 3. If multiple solutions exist → return false.
     // 4. If exactly one solution exists → return true.
 
-
-// for (let row = 0; row < gridSize; row++) {
-//    for (let col = 0; col < gridSize; col++) {
-// if (testboard[row][col].adjacent == 9) {
-// for (let nr = row - 1; nr <= row + 1; nr++) { 
-//   for (let nc = col - 1; nc <= col + 1; nc++) {
-// testboard[nr][nc].colour = "black"
-
+// let madeProgress = true;
+// while (madeProgress) {
+// madeProgress = false;
+// for (let row = 0; row < testBoard.length; row++) {
+//     for (let col = 0; col < testBoard.length; col++) {
+// let changed = applyClue(testBoard, row, col)
+// if (changed) {
+// madeProgress = true;
+// }}}}
 
 // function applyClue(testBoard, row, col) {
+// // apply rules. return true if any cells turned revealed
 // let cell = testBoard[row][col]
 // let clue = cell.adjacent
 // let colour = null;
 
-// if (clue == 9) colour = "black";
-// if (clue == 0) colour = "white";
-// else return;
-
 // for (let nr = row - 1; nr <= row + 1; nr++) { 
 //   for (let nc = col - 1; nc <= col + 1; nc++) {
-// check boarder/length
-// .colour = colour
+// for (nr < 0 || nr >= testBoard.length || nc < 0 || nc >= testBoard.length) {
+
+// if (clue == 9) colour = "black";
+// if (clue == 0) colour = "white";
+// if (clue == maxValidCells(row, col, testBoard.length)
+// else return;
 
 
-//function reduceClues(board):
+// cell.colour = colour
+// cell.state = "revealed"
+// }}}
+
+
+
+
+// function reduceClues(board):
 //    visibleCells = getAllDisplayedCells(board)
     
 //    while visibleCells.length > targetClues:
