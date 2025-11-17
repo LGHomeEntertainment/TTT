@@ -77,7 +77,6 @@
 // boardData   → logical cell (what the game knows)
 // Keep them separate!
 
-
 // ==== GLOBALs + CONSTANTS ====
 
 let gridSize = 10; // start with 10, easier to adjust later
@@ -86,7 +85,7 @@ let blackCell = Math.floor(Math.random() * 11) + 40;
 let board = [];
 let grid = [];
 let gameOver = false;
-let sectorSize = Math.max(3, Math.floor(gridSize / 3)) // dynamic sector size
+let sectorSize = Math.max(3, Math.floor(gridSize / 3)); // dynamic sector size
 let errorCells = new Set(); // if error, errorCells.add("1,5") .delete .has .... use string.
 let anchorCount = 0;
 
@@ -96,7 +95,7 @@ document.addEventListener("DOMContentLoaded", initialise);
 
 function initialise() {
   generateValidBoard();
-//  removeClues();
+  //  removeClues();
   generateGrid();
   attachListeners();
 }
@@ -116,7 +115,7 @@ function generateGrid() {
     }
     document.getElementById("grid").appendChild(tr);
   }
- addVisualNumbers()
+  addVisualNumbers();
 }
 
 // create clear logic BOARD (the invisible one BTS)
@@ -132,7 +131,8 @@ function generateBoard(gridSize) {
         isBlack: false, // determines if cell is black or white
         displayed: true, // number is showing or not
         isAnchor: false, // points to start deductions from
-        sectorID: Math.floor(row / sectorSize) + "-" + Math.floor(col / sectorSize)
+        sectorID:
+          Math.floor(row / sectorSize) + "-" + Math.floor(col / sectorSize),
       });
     }
     board.push(rowData);
@@ -171,100 +171,116 @@ function generateCells() {
           if (board[neighbourRow][neighbourCol].isBlack == true) {
             if (isAdjacent(neighbourRow, neighbourCol, boardRow, boardCol)) {
               board[boardRow][boardCol].adjacent++;
-}}}
-             
+            }
+          }
+        }
       }
-    }}}
+    }
+  }
+}
 
 function addVisualNumbers() {
   let boardCol = 0;
   let boardRow = 0;
   for (boardRow = 0; boardRow < gridSize; boardRow++) {
     for (boardCol = 0; boardCol < gridSize; boardCol++) {
-let cellElement = document.getElementById(`cell-${boardRow}-${boardCol}`);
- if (board[boardRow][boardCol].displayed) {
-	cellElement.textContent = String(board[boardRow][boardCol].adjacent);
-} else {
-cellElement.textContent = "";
-       }}}}
-
-
-function checkAnchorSpread(minPerSector = Math.max(1, Math.floor(gridSize / 10))) {
-let sectorCount = {}
- for (let r = 0; r < gridSize; r++) {
-        for (let c = 0; c < gridSize; c++) {
-if (board[r][c].isAnchor) {
-let id = board[r][c].sectorID
-sectorCount[id] = (sectorCount[id] || 0) + 1;
+      let cellElement = document.getElementById(`cell-${boardRow}-${boardCol}`);
+      if (board[boardRow][boardCol].displayed) {
+        cellElement.textContent = String(board[boardRow][boardCol].adjacent);
+      } else {
+        cellElement.textContent = "";
+      }
+    }
+  }
 }
-}}
-return Object.values(sectorCount).every(count => count >= minPerSector);
+
+function checkAnchorSpread(
+  minPerSector = Math.max(1, Math.floor(gridSize / 10))
+) {
+  let sectorCount = {};
+  for (let r = 0; r < gridSize; r++) {
+    for (let c = 0; c < gridSize; c++) {
+      if (board[r][c].isAnchor) {
+        let id = board[r][c].sectorID;
+        sectorCount[id] = (sectorCount[id] || 0) + 1;
+      }
+    }
+  }
+  return Object.values(sectorCount).every((count) => count >= minPerSector);
 }
 
 function generateValidBoard() {
   let attempts = 0;
   let maxAttempts = 200;
   do {
-
     generateBoard(gridSize); // empty board
     generateCells(); // fill logic
     attempts++;
     if (attempts > maxAttempts) {
-      document.getElementById("feedback").textContent = "Too many retries, stopping.";
+      document.getElementById("feedback").textContent =
+        "Too many retries, stopping.";
       break;
     }
   } while (!checkAnchor());
 }
 
 function checkAnchor() {
-let anchors = calcAnchorCount(board, gridSize)
-return validAnchorCount(anchors, gridSize) && checkAnchorSpread();
+  let anchors = calcAnchorCount(board, gridSize);
+  return validAnchorCount(anchors, gridSize) && checkAnchorSpread();
 }
-
 
 function calcAnchorCount(board, gridSize) {
-let anchorCount = 0;
-for (row = 0; row < gridSize; row++) {
-    for (col= 0; col < gridSize; col++) {
-let boardData = board[row][col]
-if (boardData.adjacent == 0 || boardData.adjacent == 9) { 
-anchorCount++;
-boardData.isAnchor = true;
-boardData.displayed = true;
-}
-if (row == 0 || row == gridSize - 1 || col == 0 || col == gridSize - 1) {
-if (boardData.adjacent == 6) { 
-anchorCount += 0.8 
-boardData.isAnchor = true;
-boardData.displayed = true;}
-}
-if ((row == 0 || row == gridSize - 1) && (col == 0 || col == gridSize - 1)) {
-if (boardData.adjacent == 4) { 
-anchorCount += 0.6
-boardData.isAnchor = true;
-boardData.displayed = true;
- }
-} else if (boardData.adjacent == 8 || boardData.adjacent == 1) { 
-anchorCount += 0.2;
-boardData.isAnchor = true;
-boardData.displayed = true;
-}}}
-return anchorCount;
+  let anchorCount = 0;
+  for (row = 0; row < gridSize; row++) {
+    for (col = 0; col < gridSize; col++) {
+      let boardData = board[row][col];
+      if (boardData.adjacent == 0 || boardData.adjacent == 9) {
+        anchorCount++;
+        boardData.isAnchor = true;
+        boardData.displayed = true;
+      }
+      if (row == 0 || row == gridSize - 1 || col == 0 || col == gridSize - 1) {
+        if (boardData.adjacent == 6) {
+          anchorCount += 0.8;
+          boardData.isAnchor = true;
+          boardData.displayed = true;
+        }
+      }
+      if (
+        (row == 0 || row == gridSize - 1) &&
+        (col == 0 || col == gridSize - 1)
+      ) {
+        if (boardData.adjacent == 4) {
+          anchorCount += 0.6;
+          boardData.isAnchor = true;
+          boardData.displayed = true;
+        }
+      } else if (boardData.adjacent == 8 || boardData.adjacent == 1) {
+        anchorCount += 0.2;
+        boardData.isAnchor = true;
+        boardData.displayed = true;
+      }
+    }
+  }
+  return anchorCount;
 }
 
-function validAnchorCount(anchorCount, gridSize) { // just for determining min/max. no calcs
-let minAnchor = gridSize * gridSize * 0.08
-// let maxAnchor = gridSize * gridSize * 0.5 // removed cuz criteria too tight
-return anchorCount > minAnchor // && anchorCount < maxAnchor
+function validAnchorCount(anchorCount, gridSize) {
+  // just for determining min/max. no calcs
+  let minAnchor = gridSize * gridSize * 0.08;
+  // let maxAnchor = gridSize * gridSize * 0.5 // removed cuz criteria too tight
+  return anchorCount > minAnchor; // && anchorCount < maxAnchor
 }
 
 function randomiseAnchorVisibility() {
-for (row = 0; row < gridSize; row++) {
+  for (row = 0; row < gridSize; row++) {
     for (col = 0; col < gridSize; col++) {
-if (board[row][col].isAnchor) {
-board[row][col].displayed = Math.random() < 0.75
-}}}}
-
+      if (board[row][col].isAnchor) {
+        board[row][col].displayed = Math.random() < 0.75;
+      }
+    }
+  }
+}
 
 // ==== HELPER FUNCTIONS ====
 
@@ -273,56 +289,70 @@ function isAdjacent(r, c, clickedRow, clickedCol) {
   return Math.abs(r - clickedRow) <= 1 && Math.abs(c - clickedCol) <= 1;
 }
 
-function maxValidCells(row, col, size) { // impt for cells at sides
-if ((row == 0 || row == size - 1) && (col == 0 || col == size - 1)) {
-return 4 // corner
+function maxValidCells(row, col, size) {
+  // impt for cells at sides
+  if ((row == 0 || row == size - 1) && (col == 0 || col == size - 1)) {
+    return 4; // corner
+  } else if (row == 0 || col == 0 || row == size - 1 || col == size - 1) {
+    return 6; // border
+  } else {
+    return 9;
+  }
 }
-else if (row == 0 || col == 0 || row == size - 1 || col = size - 1) {
-return 6 // border
-} else { return 9 }
-}
-
 
 // ==== GAMEPLAY LOGIC (should be set unless change in variable names) ====
 
 function countImmediate(clickedRow, clickedCol) {
- let boardData = board[clickedRow][clickedCol];
+  let boardData = board[clickedRow][clickedCol];
   let blackCount = 0;
   let whiteCount = 0;
   let cellCount = 0;
-for (let r = clickedRow - 1; r <= clickedRow + 1; r++) {
+  for (let r = clickedRow - 1; r <= clickedRow + 1; r++) {
     for (let c = clickedCol - 1; c <= clickedCol + 1; c++) {
       if (r < 0 || r >= gridSize || c < 0 || c >= gridSize) continue;
-  cellCount++;
-let nData = board[r][c]
-if (nData.colour == "black") { blackCount++ }
-else if (nData.colour == "white") { whiteCount++ }
-}}
-return { blackCount, whiteCount, cellCount }}
+      cellCount++;
+      let nData = board[r][c];
+      if (nData.colour == "black") {
+        blackCount++;
+      } else if (nData.colour == "white") {
+        whiteCount++;
+      }
+    }
+  }
+  return { blackCount, whiteCount, cellCount };
+}
 
 function checkImmediate(clickedRow, clickedCol) {
-let { blackCount, whiteCount, cellCount } = countImmediate(clickedRow, clickedCol)
-let boardData = board[clickedRow][clickedCol];
-if (!boardData.displayed) return;
-let isError = blackCount > boardData.adjacent ||
-              whiteCount > cellCount - boardData.adjacent
-let cellElement = document.getElementById(`cell-${clickedRow}-${clickedCol}`);
-let coords = `${clickedRow},${clickedCol}`;
-if (isError) {
-	cellElement.classList.add("error");
-        errorCells.add(coords);
-      } else if (!isError) {
-        cellElement.classList.remove("error");
-        errorCells.delete(coords);
-}}
+  let { blackCount, whiteCount, cellCount } = countImmediate(
+    clickedRow,
+    clickedCol
+  );
+  let boardData = board[clickedRow][clickedCol];
+  if (!boardData.displayed) return;
+  let isError =
+    blackCount > boardData.adjacent ||
+    whiteCount > cellCount - boardData.adjacent;
+  let cellElement = document.getElementById(`cell-${clickedRow}-${clickedCol}`);
+  let coords = `${clickedRow},${clickedCol}`;
+  if (isError) {
+    cellElement.classList.add("error");
+    errorCells.add(coords);
+  } else if (!isError) {
+    cellElement.classList.remove("error");
+    errorCells.delete(coords);
+  }
+}
 
-function updateArea(clickedRow, clickedCol) { // not accurate. 
-for (let r = clickedRow - 2; r <= clickedRow + 2; r++) {
+function updateArea(clickedRow, clickedCol) {
+  // not accurate.
+  for (let r = clickedRow - 2; r <= clickedRow + 2; r++) {
     for (let c = clickedCol - 2; c <= clickedCol + 2; c++) {
       if (r < 0 || r >= gridSize || c < 0 || c >= gridSize) continue;
-if (!board[r] || !board[r][c]) continue; // just in case it checks outside 
-checkImmediate(r, c)
-}}}
+      if (!board[r] || !board[r][c]) continue; // just in case it checks outside
+      checkImmediate(r, c);
+    }
+  }
+}
 
 function checkWin() {
   if (errorCells.size > 0) return;
@@ -331,11 +361,11 @@ function checkWin() {
   for (let r = 0; r < gridSize; r++) {
     for (let c = 0; c < gridSize; c++) {
       let cellData = board[r][c];
-    if (cellData.state == "neutral") return;  
-        if (cellData.isBlack && cellData.colour == "black") {
-          correctTile++;
-        } else if (cellData.isBlack && cellData.colour != "black") {
-          incorrectTile++;
+      if (cellData.state == "neutral") return;
+      if (cellData.isBlack && cellData.colour == "black") {
+        correctTile++;
+      } else if (cellData.isBlack && cellData.colour != "black") {
+        incorrectTile++;
       }
     }
   }
@@ -359,7 +389,6 @@ function resetGame(newSize = gridSize) {
   attachListeners();
 }
 
-
 // ==== UI + INTERACTION ====
 
 function handleCellClick(e) {
@@ -374,14 +403,14 @@ function handleCellClick(e) {
     boardData.colour = "black";
     clickedCell.classList.remove("grey", "white");
     clickedCell.classList.add("black");
-   updateArea(clickedRow, clickedCol);
+    updateArea(clickedRow, clickedCol);
     checkWin();
   } else if (boardData.state == "revealed" && boardData.colour == "black") {
     boardData.state = "neutral";
     boardData.colour = "grey";
     clickedCell.classList.remove("black");
     clickedCell.classList.add("grey");
- updateArea(clickedRow, clickedCol);
+    updateArea(clickedRow, clickedCol);
   }
 }
 
@@ -399,18 +428,19 @@ function toggleWhite(e) {
     boardData.colour = "white";
     clickedCell.classList.remove("grey", "black");
     clickedCell.classList.add("white");
-  updateArea(clickedRow, clickedCol);
+    updateArea(clickedRow, clickedCol);
     checkWin();
   } else if (boardData.state == "revealed" && boardData.colour == "white") {
     boardData.state = "neutral";
     boardData.colour = "grey";
     clickedCell.classList.remove("white");
     clickedCell.classList.add("grey");
-updateArea(clickedRow, clickedCol);
+    updateArea(clickedRow, clickedCol);
   }
 }
 
-function triggerGameOver() { // disableInputs
+function triggerGameOver() {
+  // disableInputs
   let cells = document.querySelectorAll("td");
   cells.forEach((cell) => {
     cell.replaceWith(cell.cloneNode(true)); // easiest way to remove all listeners
@@ -463,78 +493,71 @@ function customise() {
   resetGame(newSize);
 }
 
-
-
-
 // // ==== BOARD VALIDATION ====
 // // Part 1: ensure board is playable with all numbers shown (settled with anchorcount + spread check)
 // // Part 2: hide numbers while ensuring board is still solvable
 
+function removeClues() {
+let testBoard = cloneBoard(board)
+isSolvable(testBoard)
+}
 
-// function removeClues() {
-// let testBoard = cloneBoard(board) 
-// call isSolvable(testBoard) 
-//}
+function isSolvable(testBoard) {
+// Implement solving logic:
+// 1. For each cell, toggle black/white based on constraints.
+// 2. Validate that all numbers match black cells in their 3x3 area.
+// 3. If multiple solutions exist → return false.
+// 4. If exactly one solution exists → return true.
 
-// function isSolvable(testBoard):
-    // Implement solving logic:
-    // 1. For each cell, toggle black/white based on constraints.
-    // 2. Validate that all numbers match black cells in their 3x3 area.
-    // 3. If multiple solutions exist → return false.
-    // 4. If exactly one solution exists → return true.
+let madeProgress = true;
+while (madeProgress) {
+madeProgress = false;
+for (let row = 0; row < testBoard.length; row++) {
+    for (let col = 0; col < testBoard.length; col++) {
+let changed = applyClue(testBoard, row, col)
+if (changed) {
+madeProgress = true;
+}}}}}
 
-// let madeProgress = true;
-// while (madeProgress) {
-// madeProgress = false;
-// for (let row = 0; row < testBoard.length; row++) {
-//     for (let col = 0; col < testBoard.length; col++) {
-// let changed = applyClue(testBoard, row, col)
-// if (changed) {
-// madeProgress = true;
-// }}}}
+function applyClue(testBoard, row, col) {
+// apply rules. return true if any cells turned revealed
+let cell = testBoard[row][col]
+let clue = cell.adjacent
+let colour = null;
 
-// function applyClue(testBoard, row, col) {
-// // apply rules. return true if any cells turned revealed
-// let cell = testBoard[row][col]
-// let clue = cell.adjacent
-// let colour = null;
+for (let nr = row - 1; nr <= row + 1; nr++) {
+  for (let nc = col - 1; nc <= col + 1; nc++) {
+if (nr < 0 || nr >= testBoard.length || nc < 0 || nc >= testBoard.length) {
 
-// for (let nr = row - 1; nr <= row + 1; nr++) { 
-//   for (let nc = col - 1; nc <= col + 1; nc++) {
-// for (nr < 0 || nr >= testBoard.length || nc < 0 || nc >= testBoard.length) {
+if (clue == 9) colour = "black";
+if (clue == 0) colour = "white";
+if (clue == maxValidCells(row, col, testBoard.length)) {
+  // revealed vs number vs all the other stuff.. 
+}
+else return;
 
-// if (clue == 9) colour = "black";
-// if (clue == 0) colour = "white";
-// if (clue == maxValidCells(row, col, testBoard.length)
-// else return;
-
-
-// cell.colour = colour
-// cell.state = "revealed"
-// }}}
-
-
-
+cell.colour = colour
+cell.state = "revealed"
+}}}}
 
 // function reduceClues(board):
 //    visibleCells = getAllDisplayedCells(board)
-    
+
 //    while visibleCells.length > targetClues:
 //        randomCell = pickRandomCell(visibleCells)
-        
-        // Hide this clue
+
+// Hide this clue
 //        board[randomCell.row][randomCell.col].displayed = false
-        
-        // Clone board for testing
+
+// Clone board for testing
 //        testBoard = cloneBoard(board)
-        
+
 //        if isSolvable(testBoard):
-            // Keep it hidden
+// Keep it hidden
 //            remove randomCell from visibleCells
 //        else:
-            // Revert visibility
+// Revert visibility
 //            board[randomCell.row][randomCell.col].displayed = true
-
 
 //function getAllDisplayedCells(board):
 //    cells = []
@@ -547,6 +570,7 @@ function customise() {
 //function pickRandomCell(cells):
 //    index = random integer between 0 and cells.length - 1
 //    return cells[index]
+
 
 
 </script>
