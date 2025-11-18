@@ -520,52 +520,53 @@ madeProgress = true;
 }}}}}
 
 function applyClue(testBoard, row, col) {
-let cell = testBoard[row][col]
-let clue = cell.adjacent
-let maxCells = maxValidCells(row, col, testBoard.length) // aka how many neighbours
-let counts = countNeighbours(row, col, testBoard)
-let unknownCells = counts.unknown
-  let knownBlacks = counts.blacks
-  let knownWhites = counts.whites
+  let cell = testBoard[row][col];
+  let clue = cell.adjacent;
+  let maxCells = maxValidCells(row, col, testBoard.length);
+  let counts = countNeighbours(row, col, testBoard);
+  let unknownCells = counts.unknown;
+  let knownBlacks = counts.blacks;
+  let knownWhites = counts.whites;
+  let changed = false;
 
-for (let nr = row - 1; nr <= row + 1; nr++) {
-  for (let nc = col - 1; nc <= col + 1; nc++) {
-if (nr < 0 || nr >= testBoard.length || nc < 0 || nc >= testBoard.length) continue;
-let neighbourCell = testBoard[nr][nc]
+  // Early exit if nothing to do
+  if (unknownCells === 0) return false;
 
-if (clue == maxCells) {
-if (neighbourCell != "revealed") {
-neighbourCell.colour = "black"
-neighbourCell.state = "revealed"
-changed = true
-}}
+  for (let nr = row - 1; nr <= row + 1; nr++) {
+    for (let nc = col - 1; nc <= col + 1; nc++) {
+      if (nr < 0 || nr >= testBoard.length || nc < 0 || nc >= testBoard.length) continue;
+      let neighbourCell = testBoard[nr][nc];
 
-if (clue == 0) {
- if (neighbourCell != "revealed") {
-neighbourCell.colour = "white"
-neighbourCell.state = "revealed"
-changed = true
-}}
+      // Extreme cases
+      if (clue === maxCells && neighbourCell.state !== "revealed") {
+        neighbourCell.colour = "black";
+        neighbourCell.state = "revealed";
+        changed = true;
+      }
 
-// if 9 cells, clue is 3 known black is 3
-if (clue - knownBlacks == unknownCells || clue == knownBlacks) {
-  if (neighbourCell != "revealed") {
-neighbourCell.colour = "white"
-neighbourCell.state = "revealed"
-changed = true
-}}
+      if (clue === 0 && neighbourCell.state !== "revealed") {
+        neighbourCell.colour = "white";
+        neighbourCell.state = "revealed";
+        changed = true;
+      }
 
-// clue = 6, unknown = 6, knownwhite = 3
-if (clue + knownWhites == maxCells && clue == unknownCells) {
-  if (neighbourCell != "revealed") {
-neighbourCell.colour = "black"
-neighbourCell.state = "revealed"
-changed = true
-}}
+      // Deduction cases
+      if ((clue - knownBlacks === unknownCells) && neighbourCell.colour === "grey") {
+        neighbourCell.colour = "black";
+        neighbourCell.state = "revealed";
+        changed = true;
+      }
 
+      if ((clue === knownBlacks) && neighbourCell.colour === "grey") {
+        neighbourCell.colour = "white";
+        neighbourCell.state = "revealed";
+        changed = true;
+      }
+    }
+  }
 
-}}}
-
+  return changed;
+}
 
 function countNeighbours(row, col, testBoard) {
 let unknown = 0
@@ -579,8 +580,8 @@ if (nr < 0 || nr >= testBoard.length || nc < 0 || nc >= testBoard.length) contin
  let neighbourCell = testBoard[nr][nc] 
 
 if (neighbourCell.colour == "grey") { unknown++ }
-if (neighbourCell.colour == "black") { blacks++ }
-if (neighbourCell.colour == "white") { whites++ }
+else if (neighbourCell.colour == "black") { blacks++ }
+else if (neighbourCell.colour == "white") { whites++ }
 }}
 return { unknown, blacks, whites }
 }
