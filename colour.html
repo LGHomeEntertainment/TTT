@@ -126,7 +126,7 @@ function generateBoard(gridSize) {
     for (let col = 0; col < gridSize; col++) {
       rowData.push({
         colour: "grey", // "grey", "black", "white"
-        state: "neutral", // "neutral" / "flagged" / "error"
+        state: "neutral", // "neutral" / "revealed" / "error"
         adjacent: 0, // use this for the number shown on the cell
         isBlack: false, // determines if cell is black or white
         displayed: true, // number is showing or not
@@ -176,7 +176,7 @@ function generateCells() {
         }
       }
     }
-  } removeClues()
+  } validateBoard()
 }
 
 function addVisualNumbers() {
@@ -484,7 +484,7 @@ function attachListeners() {
       pressTimer = setTimeout(() => {
         toggleWhite(e);
         longPressTriggered = true;
-      }, 600); // long press
+      }, 300); // long press
     });
 
     cell.addEventListener("touchend", (e) => {
@@ -509,7 +509,7 @@ function customise() {
 // // Part 1: ensure board is playable with all numbers shown (settled with anchorcount + spread check)
 // // Part 2: hide numbers while ensuring board is still solvable
 
-function removeClues() {
+function validateBoard() {
 let testBoard = cloneBoard(board)
 isSolvable(testBoard)
 }
@@ -599,37 +599,25 @@ return { unknown, blacks, whites }
 }
 
 
-// function reduceClues(board):
-//    visibleCells = getAllDisplayedCells(board)
+// Hiding clues
+function createPuzzle() {
+let puzzleBoard = cloneBoard(board)
+let hiddenTarget = gridSize * gridSize * 0.65 // 65% hidden
+let hiddenCount = 0
 
-//    while visibleCells.length > targetClues:
-//        randomCell = pickRandomCell(visibleCells)
+while (hiddenCount < hiddenTarget) {
+let r = Math.floor(Math.random() * gridSize)
+let c = Math.floor(Math.random() * gridSize)
+if (puzzleBoard[r][c].isDisplayed == false) continue;
+let originalClue = puzzleBoard[r][c].adjacent
+puzzleBoard[r][c].isDisplayed = false
+isSolvable (
 
-// Hide this clue
-//        board[randomCell.row][randomCell.col].displayed = false
 
-// Clone board for testing
-//        testBoard = cloneBoard(board)
 
-//        if isSolvable(testBoard):
-// Keep it hidden
-//            remove randomCell from visibleCells
-//        else:
-// Revert visibility
-//            board[randomCell.row][randomCell.col].displayed = true
 
-//function getAllDisplayedCells(board):
-//    cells = []
-//    for each row in board:
-//        for each cell in row:
-//            if cell.displayed == true:
-//                add cell to cells
-//    return cells
-
-//function pickRandomCell(cells):
-//    index = random integer between 0 and cells.length - 1
-//    return cells[index]
-
+isSolvable(puzzleBoard)
+}
 
 
 </script>
