@@ -520,25 +520,71 @@ madeProgress = true;
 }}}}}
 
 function applyClue(testBoard, row, col) {
-// apply rules. return true if any cells turned revealed
 let cell = testBoard[row][col]
 let clue = cell.adjacent
-let colour = null;
+let maxCells = maxValidCells(row, col, testBoard.length) // aka how many neighbours
+let counts = countNeighbours(row, col, testBoard)
+let unknownCells = counts.unknown
+  let knownBlacks = counts.blacks
+  let knownWhites = counts.whites
 
 for (let nr = row - 1; nr <= row + 1; nr++) {
   for (let nc = col - 1; nc <= col + 1; nc++) {
 if (nr < 0 || nr >= testBoard.length || nc < 0 || nc >= testBoard.length) {
 
-if (clue == 9) colour = "black";
-if (clue == 0) colour = "white";
-if (clue == maxValidCells(row, col, testBoard.length)) {
-  // revealed vs number vs all the other stuff.. 
-}
+if (clue == maxCells) {
+if (neighbourCell != "revealed") {
+neighbourCell.colour = "black"
+neighbourCell.state = "revealed"
+changed = true
+}}
+
+if (clue == 0) {
+ if (neighbourCell != "revealed") {
+neighbourCell.colour = "white"
+neighbourCell.state = "revealed"
+changed = true
+}}
+
+// if 9 cells, clue is 3 known black is 3
+if (clue - knownBlacks == unknownCells || clue == knownBlacks) {
+  if (neighbourCell != "revealed") {
+neighbourCell.colour = "white"
+neighbourCell.state = "revealed"
+changed = true
+}}
+
+// clue = 6, unknown = 6, knownwhite = 3
+if (clue + knownWhites == maxCells && clue == unknownCells) {
+  if (neighbourCell != "revealed") {
+neighbourCell.colour = "black"
+neighbourCell.state = "revealed"
+changed = true
+}}
+
 else return;
 
-cell.colour = colour
-cell.state = "revealed"
-}}}}
+}}}
+}
+
+function countNeighbours(row, col, testBoard) {
+let unknown = 0
+  let blacks = 0
+  let whites = 0
+
+for (let nr = row - 1; nr <= row + 1; nr++) {
+  for (let nc = col - 1; nc <= col + 1; nc++) {
+if (nr < 0 || nr >= testBoard.length || nc < 0 || nc >= testBoard.length) {
+
+ let neighbourCell = testBoard[nr][nc] 
+
+if (neighbourCell.color == "grey") { unknown++ }
+if (neighbourCell.color == "black") { blacks++ }
+if (neighbourCell.color == "white") { whites++ }
+}}
+return { unknown, blacks, whites }
+}
+
 
 // function reduceClues(board):
 //    visibleCells = getAllDisplayedCells(board)
