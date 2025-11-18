@@ -176,7 +176,7 @@ function generateCells() {
         }
       }
     }
-  }
+  } removeClues()
 }
 
 function addVisualNumbers() {
@@ -298,6 +298,18 @@ function maxValidCells(row, col, size) {
   } else {
     return 9;
   }
+}
+
+function cloneBoard(board) {
+  let testBoard = [];
+  for (let row = 0; row < gridSize; row++) {
+    let rowTest = [];
+    for (let col = 0; col < gridSize; col++) {
+      rowTest.push({ ...board[row][col] });
+    }
+    testBoard.push(rowTest);
+  }
+  return testBoard; // only by returning, we can access it in the validate board (). it's not really global though
 }
 
 // ==== GAMEPLAY LOGIC (should be set unless change in variable names) ====
