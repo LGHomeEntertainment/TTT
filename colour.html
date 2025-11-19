@@ -95,7 +95,7 @@ document.addEventListener("DOMContentLoaded", initialise);
 
 function initialise() {
   generateValidBoard();
-  //  removeClues();
+  createPuzzle();
   generateGrid();
   attachListeners();
 }
@@ -542,7 +542,7 @@ function applyClue(testBoard, row, col) {
   let changed = false;
 
   // Early exit if nothing to do
-  if (unknownCells === 0) return false;
+  if (unknownCells == 0) return false;
 
   for (let nr = row - 1; nr <= row + 1; nr++) {
     for (let nc = col - 1; nc <= col + 1; nc++) {
@@ -550,26 +550,26 @@ function applyClue(testBoard, row, col) {
       let neighbourCell = testBoard[nr][nc];
 
       // Extreme cases
-      if (clue === maxCells && neighbourCell.state !== "revealed") {
+      if (clue == maxCells && neighbourCell.state != "revealed") {
         neighbourCell.colour = "black";
         neighbourCell.state = "revealed";
         changed = true;
       }
 
-      if (clue === 0 && neighbourCell.state !== "revealed") {
+      if (clue == 0 && neighbourCell.state != "revealed") {
         neighbourCell.colour = "white";
         neighbourCell.state = "revealed";
         changed = true;
       }
 
       // Deduction cases
-      if ((clue - knownBlacks === unknownCells) && neighbourCell.colour === "grey") {
+      if ((clue - knownBlacks == unknownCells) && neighbourCell.colour == "grey") {
         neighbourCell.colour = "black";
         neighbourCell.state = "revealed";
         changed = true;
       }
 
-      if ((clue === knownBlacks) && neighbourCell.colour === "grey") {
+      if ((clue == knownBlacks) && neighbourCell.colour == "grey") {
         neighbourCell.colour = "white";
         neighbourCell.state = "revealed";
         changed = true;
@@ -602,21 +602,27 @@ return { unknown, blacks, whites }
 // Hiding clues
 function createPuzzle() {
 let puzzleBoard = cloneBoard(board)
-let hiddenTarget = gridSize * gridSize * 0.65 // 65% hidden
+let hiddenTarget = gridSize * gridSize * 0.2 // 65% hidden
 let hiddenCount = 0
+let testBoard = [] 
 
 while (hiddenCount < hiddenTarget) {
+testBoard = cloneBoard(puzzleBoard) 
 let r = Math.floor(Math.random() * gridSize)
 let c = Math.floor(Math.random() * gridSize)
-if (puzzleBoard[r][c].isDisplayed == false) continue;
-let originalClue = puzzleBoard[r][c].adjacent
+if (testBoard[r][c].isDisplayed == false) continue;
+
+testBoard[r][c].isDisplayed = false
+if (isSolvable(testBoard)) {
 puzzleBoard[r][c].isDisplayed = false
-isSolvable (
+hiddenCount++
+}
 
-
-
-
-isSolvable(puzzleBoard)
+else if (!isSolvable(testBoard)) {
+continue;
+}}
+let board = cloneBoard(puzzleBoard)
+return board
 }
 
 
