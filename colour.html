@@ -95,7 +95,7 @@ document.addEventListener("DOMContentLoaded", initialise);
 
 function initialise() {
   generateValidBoard();
-  createPuzzle();
+  board = createPuzzle();
   generateGrid();
   attachListeners();
 }
@@ -602,27 +602,30 @@ return { unknown, blacks, whites }
 // Hiding clues
 function createPuzzle() {
 let puzzleBoard = cloneBoard(board)
-let hiddenTarget = gridSize * gridSize * 0.2 // 65% hidden
+let hiddenTarget = gridSize * gridSize * 0.5 // 50% hidden
 let hiddenCount = 0
-let testBoard = [] 
+let attempts = 0
+let maxAttempts = gridSize * gridSize * 10
 
-while (hiddenCount < hiddenTarget) {
-testBoard = cloneBoard(puzzleBoard) 
+
+while (hiddenCount < hiddenTarget && attempts < maxAttempts) {
+attempts++
+
 let r = Math.floor(Math.random() * gridSize)
 let c = Math.floor(Math.random() * gridSize)
-if (testBoard[r][c].isDisplayed == false) continue;
+if (puzzleBoard[r][c].displayed == false) continue;
 
-testBoard[r][c].isDisplayed = false
+let testBoard = cloneBoard(puzzleBoard) 
+testBoard[r][c].displayed = false
 if (isSolvable(testBoard)) {
-puzzleBoard[r][c].isDisplayed = false
+puzzleBoard[r][c].displayed = false
 hiddenCount++
 }
 
-else if (!isSolvable(testBoard)) {
-continue;
-}}
-let board = cloneBoard(puzzleBoard)
-return board
+// else if (!isSolvable(testBoard)) {
+// continue; }
+}
+return puzzleBoard
 }
 
 
