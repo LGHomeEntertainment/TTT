@@ -81,7 +81,6 @@
 
 let gridSize = 10; // start with 10, easier to adjust later
 let blackCell = Math.floor(Math.random() * 11) + 40;
-// let firstClick = true;
 let board = [];
 let grid = [];
 let gameOver = false;
@@ -515,21 +514,19 @@ isSolvable(testBoard)
 }
 
 function isSolvable(testBoard) {
-// Implement solving logic:
-// 1. For each cell, toggle black/white based on constraints.
-// 2. Validate that all numbers match black cells in their 3x3 area.
-// 3. If multiple solutions exist → return false.
-// 4. If exactly one solution exists → return true.
-
 let madeProgress = true;
 while (madeProgress) {
 madeProgress = false;
 for (let row = 0; row < testBoard.length; row++) {
     for (let col = 0; col < testBoard.length; col++) {
 let changed = applyClue(testBoard, row, col)
-if (changed) {
-madeProgress = true;
-}}}}}
+if (changed) madeProgress = true;
+}}}
+for (let row = 0; row < testBoard.length; row++) {
+    for (let col = 0; col < testBoard.length; col++) {
+if (testBoard[row][col].colour == "grey") return false;
+}}
+return true; }
 
 function applyClue(testBoard, row, col) {
   let cell = testBoard[row][col];
@@ -619,6 +616,7 @@ let testBoard = cloneBoard(puzzleBoard)
 testBoard[r][c].displayed = false
 if (isSolvable(testBoard)) {
 puzzleBoard[r][c].displayed = false
+console.log(`Hiding cell ${r},${c}`)
 hiddenCount++
 }
 
