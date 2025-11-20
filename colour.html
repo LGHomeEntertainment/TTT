@@ -599,7 +599,7 @@ return { unknown, blacks, whites }
 // Hiding clues
 function createPuzzle() {
 let puzzleBoard = cloneBoard(board)
-let hiddenTarget = gridSize * gridSize * 0.5 // 50% hidden
+let hiddenTarget = 20 // gridSize * gridSize * 0.5 // 50% hidden
 let hiddenCount = 0
 let attempts = 0
 let maxAttempts = gridSize * gridSize * 10
