@@ -20,3 +20,20 @@ for (let row = 0; row < gridSize; row++) {
     sectorSets[sectorKey].push(cell);
   }
 }
+
+
+updateCandidatesAfterInput(row, col, value)
+→ Removes value from peers.
+resetAndRecomputeCandidates(row, col)
+→ Clears candidates and rebuilds based on current board state.
+getPeers(row, col)
+→ Returns all cells in same row, column, and sector.
+
+ Pro Tip: Instead of doing “dump then recompute,” you can skip the dump and just recompute directly. It’s cleaner:
+function recomputeCandidates(cell) {
+  let usedNumbers = new Set();
+  for (let peer of getPeers(cell.row, cell.col)) {
+    if (peer.value) usedNumbers.add(peer.value);
+  }
+  cell.candidates = [1,2,3,4,5,6,7,8,9].filter(num => !usedNumbers.has(num));
+}
