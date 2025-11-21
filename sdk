@@ -1,0 +1,22 @@
+let rowSets = {};
+let colSets = {};
+let sectorSets = {};
+
+for (let row = 0; row < gridSize; row++) {
+  for (let col = 0; col < gridSize; col++) {
+    let cell = board[row][col];
+    let sectorKey = cell.sectorID;
+
+    // Row grouping
+    if (!rowSets[row]) rowSets[row] = [];
+    rowSets[row].push(cell);
+
+    // Column grouping
+    if (!colSets[col]) colSets[col] = [];
+    colSets[col].push(cell);
+
+    // Sector grouping
+    if (!sectorSets[sectorKey]) sectorSets[sectorKey] = [];
+    sectorSets[sectorKey].push(cell);
+  }
+}
