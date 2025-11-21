@@ -162,6 +162,7 @@ function generateCells() {
 
   for (boardRow = 0; boardRow < gridSize; boardRow++) {
     for (boardCol = 0; boardCol < gridSize; boardCol++) {
+board[boardRow][boardCol].adjacent = 0;
       for (let dr = -1; dr <= 1; dr++) {
         for (let dc = -1; dc <= 1; dc++) {
           let neighbourRow = boardRow + dr;
@@ -177,7 +178,8 @@ function generateCells() {
           }
         }
       }
-board[boardRow][boardCol].visibleNumber = board[boardRow][boardCol].adjacent
+board[boardRow][boardCol].visibleNumber = board[boardRow][boardCol].adjacent;
+board[boardRow][boardCol].displayed = true;
     }
   } 
 validateBoard()
@@ -276,16 +278,45 @@ function validAnchorCount(anchorCount, gridSize) {
   return anchorCount > minAnchor; // && anchorCount < maxAnchor
 }
 
-function randomiseAnchorVisibility() {
-  for (row = 0; row < gridSize; row++) {
-    for (col = 0; col < gridSize; col++) {
+function assignHardAnchors(minHard, maxHard) {
+  // Group anchors by sectorID
+  let sectors = {};
+  for (let row = 0; row < gridSize; row++) {
+    for (let col = 0; col < gridSize; col++) {
       if (board[row][col].isAnchor) {
-        board[row][col].hardAnchor = Math.random() < 0.25;
+        let sectorKey = board[row][col].sectorID;
+        if (!sectors[sectorKey]) sectors[sectorKey] = [];
+        sectors[sectorKey].push({ row, col });
       }
     }
   }
-}
 
+  let hardAnchors = [];
+
+  // Step 1: Guarantee at least one hard anchor per sector
+  for (let key in sectors) {
+    let anchorsInSector = sectors[key];
+    if (anchorsInSector.length > 0) {
+      let pickIndex = Math.floor(Math.random() * anchorsInSector.length);
+      hardAnchors.push(anchorsInSector.splice(pickIndex, 1)[0]);
+    }
+  }
+
+  // Step 2: Fill remaining hard anchors randomly until min/max reached
+  let remainingAnchors = Object.values(sectors).flat();
+  remainingAnchors.sort(() => Math.random() - 0.5);
+
+  let hardCount = Math.min(maxHard, Math.max(minHard, hardAnchors.length));
+  while (hardAnchors.length < hardCount && remainingAnchors.length > 0) {
+    hardAnchors.push(remainingAnchors.pop());
+  }
+
+  // Step 3: Mark them on the board
+  for (let { row, col } of hardAnchors) {
+    board[row][col].hardAnchor = true;
+    board[row][col].displayed = true; // Always visible
+  }
+}
 // ==== HELPER FUNCTIONS ====
 
 function isAdjacent(r, c, clickedRow, clickedCol) {
@@ -488,7 +519,7 @@ function attachListeners() {
       pressTimer = setTimeout(() => {
         toggleWhite(e);
         longPressTriggered = true;
-      }, 300); // long press
+      }, 200); // long press
     });
 
     cell.addEventListener("touchend", (e) => {
@@ -535,7 +566,11 @@ return true; }
 
 function applyClue(testBoard, row, col) {
   let cell = testBoard[row][col];
-  let clue = cell.visibleNumber;
+// SKIP hidden clues!!! 
+if (!cell.displayed || cell.visibleNumber == "" || cell.visibleNumber == null) return false;
+// ensure clue is actual number
+let clue = Number(cell.visibleNumber);
+if (Number.isNaN(clue)) return false;
   let maxCells = maxValidCells(row, col, testBoard.length);
   let counts = countNeighbours(row, col, testBoard);
   let unknownCells = counts.unknown;
@@ -604,6 +639,7 @@ return { unknown, blacks, whites }
 // Hiding clues
 function createPuzzle() {
 let puzzleBoard = cloneBoard(board)
+assignHardAnchors()
 let hiddenTarget = 20 // gridSize * gridSize * 0.5 // 50% hidden
 let hiddenCount = 0
 let attempts = 0
