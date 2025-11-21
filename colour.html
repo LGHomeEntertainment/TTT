@@ -94,7 +94,8 @@ document.addEventListener("DOMContentLoaded", initialise);
 
 function initialise() {
   generateValidBoard();
-  board = createPuzzle();
+  let puzzle = createPuzzle();
+  board = puzzle;
   generateGrid();
   attachListeners();
 }
@@ -126,7 +127,8 @@ function generateBoard(gridSize) {
       rowData.push({
         colour: "grey", // "grey", "black", "white"
         state: "neutral", // "neutral" / "revealed" / "error"
-        adjacent: 0, // use this for the number shown on the cell
+        adjacent: 0, // use this checking win
+	visibleNumber: "",
         isBlack: false, // determines if cell is black or white
         displayed: true, // number is showing or not
         isAnchor: false, // points to start deductions from
@@ -167,15 +169,17 @@ function generateCells() {
           if (neighbourRow < 0 || neighbourRow >= gridSize) continue;
           if (neighbourCol < 0 || neighbourCol >= gridSize) continue;
 
-          if (board[neighbourRow][neighbourCol].isBlack == true) {
+          if (board[neighbourRow][neighbourCol].isBlack) {
             if (isAdjacent(neighbourRow, neighbourCol, boardRow, boardCol)) {
               board[boardRow][boardCol].adjacent++;
             }
           }
         }
       }
+board[boardRow][boardCol].visibleNumber = board[boardRow][boardCol].adjacent
     }
-  } validateBoard()
+  } 
+validateBoard()
 }
 
 function addVisualNumbers() {
@@ -185,7 +189,7 @@ function addVisualNumbers() {
     for (boardCol = 0; boardCol < gridSize; boardCol++) {
       let cellElement = document.getElementById(`cell-${boardRow}-${boardCol}`);
       if (board[boardRow][boardCol].displayed) {
-        cellElement.textContent = String(board[boardRow][boardCol].adjacent);
+        cellElement.textContent = String(board[boardRow][boardCol].visibleNumber);
       } else {
         cellElement.textContent = "";
       }
@@ -530,7 +534,7 @@ return true; }
 
 function applyClue(testBoard, row, col) {
   let cell = testBoard[row][col];
-  let clue = cell.adjacent;
+  let clue = cell.visibleNumber;
   let maxCells = maxValidCells(row, col, testBoard.length);
   let counts = countNeighbours(row, col, testBoard);
   let unknownCells = counts.unknown;
@@ -614,8 +618,10 @@ if (puzzleBoard[r][c].displayed == false) continue;
 
 let testBoard = cloneBoard(puzzleBoard) 
 testBoard[r][c].displayed = false
-if (isSolvable(testBoard)) {
+testBoard[r][c].visibleNumber = ""
+if (isSolvable(testBoard)) { 
 puzzleBoard[r][c].displayed = false
+puzzleBoard[r][c].visibleNumber = "";
 console.log(`Hiding cell ${r},${c}`)
 hiddenCount++
 }
@@ -625,6 +631,7 @@ hiddenCount++
 }
 return puzzleBoard
 }
+
 
 
 </script>
