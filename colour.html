@@ -132,6 +132,7 @@ function generateBoard(gridSize) {
         isBlack: false, // determines if cell is black or white
         displayed: true, // number is showing or not
         isAnchor: false, // points to start deductions from
+	hardAnchor: false,
         sectorID:
           Math.floor(row / sectorSize) + "-" + Math.floor(col / sectorSize),
       });
@@ -279,7 +280,7 @@ function randomiseAnchorVisibility() {
   for (row = 0; row < gridSize; row++) {
     for (col = 0; col < gridSize; col++) {
       if (board[row][col].isAnchor) {
-        board[row][col].displayed = Math.random() < 0.75;
+        board[row][col].hardAnchor = Math.random() < 0.25;
       }
     }
   }
@@ -614,7 +615,7 @@ attempts++
 
 let r = Math.floor(Math.random() * gridSize)
 let c = Math.floor(Math.random() * gridSize)
-if (puzzleBoard[r][c].displayed == false) continue;
+if (!puzzleBoard[r][c].displayed || puzzleBoard[r][c].hardAnchor) continue;
 
 let testBoard = cloneBoard(puzzleBoard) 
 testBoard[r][c].displayed = false
