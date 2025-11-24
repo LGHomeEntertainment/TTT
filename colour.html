@@ -72,11 +72,6 @@
 
 <script>
 
-// ==== NAMING RULES ====
-// cellElement → DOM cell (what the player sees)
-// boardData   → logical cell (what the game knows)
-// Keep them separate!
-
 // ==== GLOBALs + CONSTANTS ====
 
 let gridSize = 10; // start with 10, easier to adjust later
@@ -88,6 +83,7 @@ let sectorSize = Math.max(3, Math.floor(gridSize / 3)); // dynamic sector size
 let errorCells = new Set(); // if error, errorCells.add("1,5") .delete .has .... use string.
 let anchorCount = 0;
 
+
 // ==== INITIALISATION + GENERATION ====
 
 document.addEventListener("DOMContentLoaded", initialise);
@@ -95,40 +91,23 @@ document.addEventListener("DOMContentLoaded", initialise);
 function initialise() {
   generateValidBoard();
   let puzzle = createPuzzle();
-  board = puzzle;
+  let finalBoard = puzzle;
   generateGrid();
-  attachListeners();
+  addVisualNumbers(finalBoard);
+  attachListeners(finalBoard);
 }
 
-// visible GRID
-function generateGrid() {
-  grid = [];
-  for (let gridRow = 0; gridRow < gridSize; gridRow++) {
-    let tr = document.createElement("tr");
-    for (let gridCol = 0; gridCol < gridSize; gridCol++) {
-      let td = document.createElement("td");
-      td.classList.add("cell");
-      td.dataset.row = gridRow;
-      td.dataset.col = gridCol;
-      td.id = `cell-${gridRow}-${gridCol}`;
-      tr.appendChild(td);
-    }
-    document.getElementById("grid").appendChild(tr);
-  }
-  addVisualNumbers();
-}
-
-// create clear logic BOARD (the invisible one BTS)
+// create BTS logic BOARD (schema)
 function generateBoard(gridSize) {
-  board = [];
+  board = []; // clear the board in case there's looping in other functions
   for (let row = 0; row < gridSize; row++) {
     let rowData = [];
     for (let col = 0; col < gridSize; col++) {
       rowData.push({
         colour: "grey", // "grey", "black", "white"
         state: "neutral", // "neutral" / "revealed" / "error"
-        adjacent: 0, // use this checking win
-	visibleNumber: "",
+        adjacent: 0, // use this for checking win
+	visibleNumber: "", // use this for solving clues
         isBlack: false, // determines if cell is black or white
         displayed: true, // number is showing or not
         isAnchor: false, // points to start deductions from
@@ -141,7 +120,33 @@ function generateBoard(gridSize) {
   }
 }
 
-// create the blackcells. put within checkanswer
+function cloneBoard(board) {
+  let testBoard = [];
+  for (let row = 0; row < gridSize; row++) {
+    let rowTest = [];
+    for (let col = 0; col < gridSize; col++) {
+      rowTest.push({ ...board[row][col] });
+    }
+    testBoard.push(rowTest);
+  }
+  return testBoard; // only by returning, we can access it in the validate board (). it's not really global though
+}
+
+function generateValidBoard() {
+  let attempts = 0;
+  let maxAttempts = 200;
+  do {
+    generateBoard(gridSize); // empty board
+    generateCells(); // fill logic
+    attempts++;
+    if (attempts > maxAttempts) {
+      document.getElementById("feedback").textContent =
+        "Too many retries, stopping.";
+      break;
+    }
+  } while (!checkAnchor());
+}
+
 function generateCells() {
   let blackNumber = 0;
   let col = 0;
@@ -185,20 +190,7 @@ board[boardRow][boardCol].displayed = true;
 validateBoard()
 }
 
-function addVisualNumbers() {
-  let boardCol = 0;
-  let boardRow = 0;
-  for (boardRow = 0; boardRow < gridSize; boardRow++) {
-    for (boardCol = 0; boardCol < gridSize; boardCol++) {
-      let cellElement = document.getElementById(`cell-${boardRow}-${boardCol}`);
-      if (board[boardRow][boardCol].displayed) {
-        cellElement.textContent = String(board[boardRow][boardCol].visibleNumber);
-      } else {
-        cellElement.textContent = "";
-      }
-    }
-  }
-}
+
 
 function checkAnchorSpread(
   minPerSector = Math.max(1, Math.floor(gridSize / 10))
@@ -215,20 +207,6 @@ function checkAnchorSpread(
   return Object.values(sectorCount).every((count) => count >= minPerSector);
 }
 
-function generateValidBoard() {
-  let attempts = 0;
-  let maxAttempts = 200;
-  do {
-    generateBoard(gridSize); // empty board
-    generateCells(); // fill logic
-    attempts++;
-    if (attempts > maxAttempts) {
-      document.getElementById("feedback").textContent =
-        "Too many retries, stopping.";
-      break;
-    }
-  } while (!checkAnchor());
-}
 
 function checkAnchor() {
   let anchors = calcAnchorCount(board, gridSize);
@@ -278,7 +256,7 @@ function validAnchorCount(anchorCount, gridSize) {
   return anchorCount > minAnchor; // && anchorCount < maxAnchor
 }
 
-function assignHardAnchors(minHard, maxHard) {
+function assignHardAnchors(targetBoard, minHard, maxHard) {
   // Group anchors by sectorID
   let sectors = {};
   for (let row = 0; row < gridSize; row++) {
@@ -317,6 +295,7 @@ function assignHardAnchors(minHard, maxHard) {
     board[row][col].displayed = true; // Always visible
   }
 }
+
 // ==== HELPER FUNCTIONS ====
 
 function isAdjacent(r, c, clickedRow, clickedCol) {
@@ -335,17 +314,8 @@ function maxValidCells(row, col, size) {
   }
 }
 
-function cloneBoard(board) {
-  let testBoard = [];
-  for (let row = 0; row < gridSize; row++) {
-    let rowTest = [];
-    for (let col = 0; col < gridSize; col++) {
-      rowTest.push({ ...board[row][col] });
-    }
-    testBoard.push(rowTest);
-  }
-  return testBoard; // only by returning, we can access it in the validate board (). it's not really global though
-}
+
+
 
 // ==== GAMEPLAY LOGIC (should be set unless change in variable names) ====
 
@@ -436,7 +406,8 @@ function resetGame(newSize = gridSize) {
   attachListeners();
 }
 
-// ==== UI + INTERACTION ====
+// ==== UI + INTERACTION (MOSTLY CONSTANT) ====
+// MOSTLY CONSTANT BETWEEN GAMES
 
 function handleCellClick(e) {
   // left click turns it BLACK, even from white
@@ -540,9 +511,10 @@ function customise() {
   resetGame(newSize);
 }
 
-// // ==== BOARD VALIDATION ====
-// // Part 1: ensure board is playable with all numbers shown (settled with anchorcount + spread check)
-// // Part 2: hide numbers while ensuring board is still solvable
+
+// ==== BOARD VALIDATION ====
+// Part 1: ensure board is playable with all numbers shown (settled with anchorcount + spread check)
+// Part 2: hide numbers while ensuring board is still solvable
 
 function validateBoard() {
 let testBoard = cloneBoard(board)
@@ -635,11 +607,10 @@ else if (neighbourCell.colour == "white") { whites++ }
 return { unknown, blacks, whites }
 }
 
-
 // Hiding clues
 function createPuzzle() {
 let puzzleBoard = cloneBoard(board)
-assignHardAnchors()
+assignHardAnchors(puzzleBoard, 5, 15)
 let hiddenTarget = 20 // gridSize * gridSize * 0.5 // 50% hidden
 let hiddenCount = 0
 let attempts = 0
@@ -669,6 +640,41 @@ hiddenCount++
 return puzzleBoard
 }
 
+
+// ==== FINALISATION OF BOARD ====
+// READY TO BE PLAYED!
+
+// visible GRID
+function generateGrid() {
+  grid = [];
+  for (let gridRow = 0; gridRow < gridSize; gridRow++) {
+    let tr = document.createElement("tr");
+    for (let gridCol = 0; gridCol < gridSize; gridCol++) {
+      let td = document.createElement("td");
+      td.classList.add("cell");
+      td.dataset.row = gridRow;
+      td.dataset.col = gridCol;
+      td.id = `cell-${gridRow}-${gridCol}`;
+      tr.appendChild(td);
+    }
+    document.getElementById("grid").appendChild(tr);
+  } 
+}
+
+function addVisualNumbers(finalBoard) {
+  let boardCol = 0;
+  let boardRow = 0;
+  for (boardRow = 0; boardRow < gridSize; boardRow++) {
+    for (boardCol = 0; boardCol < gridSize; boardCol++) {
+      let cellElement = document.getElementById(`cell-${boardRow}-${boardCol}`);
+      if (finalBoard[boardRow][boardCol].displayed) {
+        cellElement.textContent = String(finalBoard[boardRow][boardCol].visibleNumber);
+      } else {
+        cellElement.textContent = "";
+      }
+    }
+  }
+}
 
 
 </script>
