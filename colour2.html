@@ -89,10 +89,10 @@ document.addEventListener("DOMContentLoaded", initialise);
 function initialise() {
   generateValidBoard();
   let puzzle = createPuzzle();
-  let finalBoard = puzzle;
+  board = puzzle;
   generateGrid();
-  addVisualNumbers(finalBoard);
-  attachListeners(finalBoard);
+  addVisualNumbers(board);
+  attachListeners();
 }
 
 // === Board Generation ===
@@ -269,13 +269,13 @@ function validAnchorCount(anchorCount, gridSize) {
   return anchorCount > minAnchor; // && anchorCount < maxAnchor
 }
 
-function assignHardAnchors(targetBoard, minHard, maxHard) {
+function assignHardAnchors(puzzleBoard, minHard, maxHard) {
   // Group anchors by sectorID
   let sectors = {};
   for (let row = 0; row < gridSize; row++) {
     for (let col = 0; col < gridSize; col++) {
-      if (board[row][col].isAnchor) {
-        let sectorKey = board[row][col].sectorID;
+      if (puzzleBoard[row][col].isAnchor) {
+        let sectorKey = puzzleBoard[row][col].sectorID;
         if (!sectors[sectorKey]) sectors[sectorKey] = [];
         sectors[sectorKey].push({ row, col });
       }
@@ -304,9 +304,9 @@ function assignHardAnchors(targetBoard, minHard, maxHard) {
 
   // Step 3: Mark them on the board
   for (let { row, col } of hardAnchors) {
-    board[row][col].hardAnchor = true;
-    board[row][col].displayed = true; // Always visible
-    console.log("HardAnchor:", board[row][col]);
+    puzzleBoard[row][col].hardAnchor = true;
+    puzzleBoard[row][col].displayed = true; // Always visible
+    console.log("HardAnchor:", puzzleBoard[row][col]);
   }
 }
 
