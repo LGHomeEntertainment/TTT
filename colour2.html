@@ -234,13 +234,13 @@ function calcAnchorCount(board, gridSize) {
       if (boardData.adjacent == 0 || boardData.adjacent == 9) {
         anchorCount++;
         boardData.isAnchor = true;
-        boardData.displayed = true;
+       // boardData.displayed = true;
       }
       if (row == 0 || row == gridSize - 1 || col == 0 || col == gridSize - 1) {
         if (boardData.adjacent == 6) {
           anchorCount += 0.8;
           boardData.isAnchor = true;
-          boardData.displayed = true;
+       //   boardData.displayed = true;
         }
       }
       if (
@@ -250,12 +250,12 @@ function calcAnchorCount(board, gridSize) {
         if (boardData.adjacent == 4) {
           anchorCount += 0.6;
           boardData.isAnchor = true;
-          boardData.displayed = true;
+     //     boardData.displayed = true;
         }
       } else if (boardData.adjacent == 8 || boardData.adjacent == 1) {
         anchorCount += 0.2;
         boardData.isAnchor = true;
-        boardData.displayed = true;
+    //    boardData.displayed = true;
       }
     }
   }
