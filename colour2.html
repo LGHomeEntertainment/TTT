@@ -387,9 +387,33 @@ if (Number.isNaN(clue)) return false;
 function hasUniqueSolution(board) {
 let solutionCount = 0;
 
-if (solutionCount > 1) return false;
+  function backtrack(testBoard) {
+  if (solutionCount > 1) return;
+
+applyLogicUntilStalled(testBoard)
+if (isFullySolved(testBoard)) {
+solutionCount++
+return;
+
+// find first grey cell
+let cellPos = findFirstGreyCell(testBoard)
 
 }
+}
+}
+
+
+// still need:
+// applyLogicUntilStalled(board)
+// → Run your existing applyClue() loop until no progress.
+// isFullySolved(board)
+// → Check if all cells are revealed and consistent.
+// findFirstGreyCell(board)
+// → Return [row, col] of first unresolved cell.
+// isValidPartial(board)
+// → Check if current assignments violate any clue (e.g., too many blacks around a clue).
+
+
 
 // === Clicky UI + Resets (reusable) ===
 function handleCellClick(e) {
