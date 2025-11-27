@@ -340,6 +340,8 @@ if (Number.isNaN(clue)) return false;
   let unknownCells = counts.unknown;
   let knownBlacks = counts.blacks;
   let knownWhites = counts.whites;
+  let minBlack = knownBlacks
+  let maxBlack = knownBlacks + unknownCells
   let changed = false;
 
   // Early exit if nothing to do
@@ -349,6 +351,23 @@ if (Number.isNaN(clue)) return false;
     for (let nc = col - 1; nc <= col + 1; nc++) {
       if (nr < 0 || nr >= testBoard.length || nc < 0 || nc >= testBoard.length) continue;
       let neighbourCell = testBoard[nr][nc];
+
+// ?? newly added
+// Forced blacks
+if (maxBlack == clue) {
+neighbourCell.colour = "black";
+neighbourCell.state = "revealed";
+changed = true; }
+// Forced whites
+if (minBlack == clue) {
+neighbourCell.colour = "white";
+neighbourCell.state = "revealed";
+changed = true; }
+// if cell is known white, then max is no longer 9. 
+if (cell.colour = "white") {
+if (knownBlacks > clue) return markContradiction();
+if (maxBlack < clue) return markContradiction();
+}
 
       // Extreme cases
       if (clue == maxCells && neighbourCell.state != "revealed") {
@@ -380,13 +399,29 @@ if (Number.isNaN(clue)) return false;
   return changed;
 }
 
+// ?? just added
+function markContradiction() {
+
+}
+function propagateConstraints(testBoard) {
+let changed = true
+while (changed) {
+changed = false;
+for (let row = 0; row < testBoard.length; row++) {
+    for (let col = 0; col < testBoard.length; col++) {
+if (applyClue(testBoard, row, col)) {
+changed = true }
+}
+}}}
+
+
 function hasUniqueSolution(testBoard) {
 let solutionCount = 0;
 
   function backtrack(testBoard) {
   if (solutionCount > 1) return;
 
-applyLogicUntilStalled(testBoard)
+propagateConstraints(testBoard)
   if (isFullySolved(testBoard)) {
     solutionCount++
     return; 
@@ -410,8 +445,7 @@ boardWhite[row][col].state = "displayed"
 if (isValidPartial(boardWhite, row, col)) {
 backtrack(boardWhite)
 }
-backtrack(testBoard)
-solutionCount == 1
+return // this?
 }}
 
 function applyLogicUntilStalled(testBoard) {
@@ -427,7 +461,7 @@ progress = true; }
 function isFullySolved(testBoard) {
   for (let r = 0; r < gridSize; r++) {
     for (let c = 0; c < gridSize; c++) {
-      let cellData = board[r][c];
+      let cellData = testBoard[r][c];
       if (cellData.state == "neutral") return false;
       if (cellData.isBlack && cellData.colour == "black") return false;
       if (cellData.isBlack && cellData.colour != "black") return false;
@@ -442,7 +476,7 @@ for (let row = 0; row < testBoard.length; row++) {
     for (let col = 0; col < testBoard.length; col++) {
       let cellData = testBoard[row][col];
 if (cellData.colour == "grey") {
-return { row, col };
+return [ row, col ];
 }}}
 return null; // no grey cells found
 }
@@ -452,6 +486,8 @@ function isValidPartial(colouredBoard, row, col) {
 for (let r = 0; r < testBoard.length; r++) {
     for (let c = 0; c < testBoard.length; c++) {
       let cellData = colouredBoard[r][c];
+if (!cellData.displayed) continue;
+if (cellData.visibleNumber == "") continue;
 if (cellData.displayed && cellData.visibleNumber != "") {
 let clue = Number(cellData.visibleNumber)
 let counts = countNeighbours(r, c, colouredBoard) // similar to countImmediate
