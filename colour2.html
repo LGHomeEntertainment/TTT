@@ -337,9 +337,10 @@ let clue = Number(cell.visibleNumber);
 if (Number.isNaN(clue)) return false;
   let maxCells = maxValidCells(row, col, testBoard.length);
   let counts = countNeighbours(row, col, testBoard);
-  let unknownCells = counts.unknown;
+//  let maxCells = counts.cellCount;
   let knownBlacks = counts.blacks;
   let knownWhites = counts.whites;
+let unknownCells = maxCells - knownBlacks - knownWhites
   let minBlack = knownBlacks
   let maxBlack = knownBlacks + unknownCells
   let changed = false;
@@ -364,7 +365,7 @@ neighbourCell.colour = "white";
 neighbourCell.state = "revealed";
 changed = true; }
 // if cell is known white, then max is no longer 9. 
-if (cell.colour = "white") {
+if (cell.colour == "white") {
 if (knownBlacks > clue) return markContradiction();
 if (maxBlack < clue) return markContradiction();
 }
@@ -403,6 +404,7 @@ if (maxBlack < clue) return markContradiction();
 function markContradiction() {
 
 }
+
 function propagateConstraints(testBoard) {
 let changed = true
 while (changed) {
@@ -413,6 +415,7 @@ if (applyClue(testBoard, row, col)) {
 changed = true }
 }
 }}}
+
 
 
 function hasUniqueSolution(testBoard) {
@@ -483,15 +486,15 @@ return null; // no grey cells found
 
 function isValidPartial(colouredBoard, row, col) {
 // → Check if current assignments violate any clue (e.g., too many blacks around a clue).
-for (let r = 0; r < testBoard.length; r++) {
-    for (let c = 0; c < testBoard.length; c++) {
+for (let r = 0; r < colouredBoard.length; r++) {
+    for (let c = 0; c < colouredBoard.length; c++) {
       let cellData = colouredBoard[r][c];
 if (!cellData.displayed) continue;
 if (cellData.visibleNumber == "") continue;
 if (cellData.displayed && cellData.visibleNumber != "") {
 let clue = Number(cellData.visibleNumber)
 let counts = countNeighbours(r, c, colouredBoard) // similar to countImmediate
-let maxCells = maxValidCells(r, c, testBoard.length)
+let maxCells = maxValidCells(r, c, colouredBoard.length)
 if (counts.blackCount > clue) return false;
 if (counts.whiteCount > maxCells - clue) return false;
 }}}
