@@ -191,16 +191,12 @@ if (!puzzleBoard[r][c].displayed || puzzleBoard[r][c].hardAnchor) continue;
 let testBoard = cloneBoard(puzzleBoard) 
 testBoard[r][c].displayed = false
 testBoard[r][c].visibleNumber = ""
-if (isSolvable(testBoard)) { 
+if (hasUniqueSolution(testBoard)) { 
 puzzleBoard[r][c].displayed = false
 puzzleBoard[r][c].visibleNumber = "";
-console.log(`Hiding cell ${r},${c}`)
 hiddenCount++
-}
-
-// else if (!isSolvable(testBoard)) {
-// continue; }
-}
+console.log(`Hiding cell ${r},${c}`)
+}}
 return puzzleBoard
 }
 
@@ -384,35 +380,107 @@ if (Number.isNaN(clue)) return false;
   return changed;
 }
 
-function hasUniqueSolution(board) {
+function hasUniqueSolution(testBoard) {
 let solutionCount = 0;
 
   function backtrack(testBoard) {
   if (solutionCount > 1) return;
 
 applyLogicUntilStalled(testBoard)
-if (isFullySolved(testBoard)) {
-solutionCount++
-return;
+  if (isFullySolved(testBoard)) {
+    solutionCount++
+    return; 
+  }
 
 // find first grey cell
 let cellPos = findFirstGreyCell(testBoard)
-
+let [row, col] = cellPos;
+//branch out and try diff colours. it will complete both loops
+// Try black
+let boardBlack = cloneBoard(testBoard)
+boardBlack[row][col].colour = "black"
+boardBlack[row][col].state = "displayed"
+if (isValidPartial(boardBlack, row, col)) {
+backtrack(boardBlack)
 }
+// Try white
+let boardWhite = cloneBoard(testBoard)
+boardWhite[row][col].colour = "white"
+boardWhite[row][col].state = "displayed"
+if (isValidPartial(boardWhite, row, col)) {
+backtrack(boardWhite)
 }
+backtrack(testBoard)
+solutionCount == 1
+}}
+
+function applyLogicUntilStalled(testBoard) {
+let progress = true;
+while (progress) {
+progress = false;
+for (let row = 0; row < testBoard.length; row++) {
+    for (let col = 0; col < testBoard.length; col++) {
+if (applyClue(testBoard, row, col)) {
+progress = true; }
+}}}}
+
+function isFullySolved(testBoard) {
+  for (let r = 0; r < gridSize; r++) {
+    for (let c = 0; c < gridSize; c++) {
+      let cellData = board[r][c];
+      if (cellData.state == "neutral") return false;
+      if (cellData.isBlack && cellData.colour == "black") return false;
+      if (cellData.isBlack && cellData.colour != "black") return false;
+    }
+  }
+  return true;
 }
 
-
-// still need:
-// applyLogicUntilStalled(board)
-// → Run your existing applyClue() loop until no progress.
-// isFullySolved(board)
-// → Check if all cells are revealed and consistent.
-// findFirstGreyCell(board)
+function findFirstGreyCell(testBoard) {
 // → Return [row, col] of first unresolved cell.
-// isValidPartial(board)
-// → Check if current assignments violate any clue (e.g., too many blacks around a clue).
+for (let row = 0; row < testBoard.length; row++) {
+    for (let col = 0; col < testBoard.length; col++) {
+      let cellData = testBoard[row][col];
+if (cellData.colour == "grey") {
+return { row, col };
+}}}
+return null; // no grey cells found
+}
 
+function isValidPartial(colouredBoard, row, col) {
+// → Check if current assignments violate any clue (e.g., too many blacks around a clue).
+for (let r = 0; r < testBoard.length; r++) {
+    for (let c = 0; c < testBoard.length; c++) {
+      let cellData = colouredBoard[r][c];
+if (cellData.displayed && cellData.visibleNumber != "") {
+let clue = Number(cellData.visibleNumber)
+let counts = countNeighbours(r, c, colouredBoard) // similar to countImmediate
+let maxCells = maxValidCells(r, c, testBoard.length)
+if (counts.blackCount > clue) return false;
+if (counts.whiteCount > maxCells - clue) return false;
+}}}
+return true;
+}
+
+function countNeighbours(row, col, testBoard) {
+  let cellData = testBoard[row][col];
+  let blackCount = 0;
+  let whiteCount = 0;
+  let cellCount = 0;
+  for (let nr = row - 1; nr <= row + 1; nr++) {
+    for (let nc = col - 1; nc <= col + 1; nc++) {
+      if (nr < 0 || nr >= testBoard.length || nc < 0 || nc >= testBoard.length) continue;
+      cellCount++;
+      let nData = testBoard[nr][nc];
+      if (nData.colour == "black") {
+        blackCount++;
+      } else if (nData.colour == "white") {
+        whiteCount++;
+      }
+    }
+  }
+  return { blackCount, whiteCount, cellCount };
+}
 
 
 // === Clicky UI + Resets (reusable) ===
