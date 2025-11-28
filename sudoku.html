@@ -100,18 +100,30 @@ function makePuzzle(board, blanks = 40) {
 }
 
 // 3. Render the board in HTML
+
 function renderBoard(board) {
   const container = document.getElementById("sudoku-board");
   container.innerHTML = "";
-  board.forEach(row => {
-    row.forEach(cell => {
+  board.forEach((row, rIndex) => {
+    row.forEach((cell, cIndex) => {
       const div = document.createElement("div");
       div.className = "cell";
       div.textContent = cell === 0 ? "" : cell;
+
+      // ✅ Add position info
+      div.dataset.row = rIndex;
+      div.dataset.col = cIndex;
+
+      // ✅ Attach click listener
+      div.addEventListener("click", () => {
+        console.log(`Clicked cell: Row ${rIndex}, Col ${cIndex}`);
+      });
+
       container.appendChild(div);
     });
   });
 }
+
 
 // 4. Run everything
 const solved = generateSolvedSudoku();
