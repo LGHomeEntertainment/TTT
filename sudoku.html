@@ -1,3 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>B&W</title>
+
+    <style>
+
+body {
+  font-family: Arial, sans-serif;
+  text-align: center;
+  margin-top: 20px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(9, 40px);
+  grid-template-rows: repeat(9, 40px);
+  gap: 2px;
+ :nth-child(27n) {
+  border-bottom: 2px solid #000;
+}
+
+    </style>
+
+  </head>
+  <body>
+    
+ <h1>Sudoku Puzzle</h1>
+  <div id="sudoku-board" class="grid"></div>
+
+
+    <div>
+      <p id="feedback"></p>
+    </div>
+
+    <div>
+      <button id="resetBtn">Start a new game</button>
+    </div>
+
+
+<script>
+
+
 
 // 1. Generate a solved Sudoku board
 function generateSolvedSudoku() {
@@ -74,3 +118,11 @@ const solved = generateSolvedSudoku();
 const puzzle = makePuzzle(solved, 40);
 renderBoard(puzzle);
 console.table(puzzle);
+
+
+
+
+</script>
+
+</body>
+</html>
