@@ -384,8 +384,9 @@ let unknownCells = counts.unknown;
   let changed = false;
 
 // check for contradiction
-if (minBlack > clue || maxBlack < clue) return false;
-
+if (minBlack > clue || maxBlack < clue) {
+return "contradiction";
+}
   // Early exit if nothing to do
   if (unknownCells == 0) return false;
 
@@ -413,8 +414,8 @@ continue;
 
 // if cell is known white, then max is no longer 9. 
 if (cell.colour == "white") {
-if (knownBlacks > clue) return markContradiction();
-if (maxBlack < clue) return markContradiction();
+if (knownBlacks > clue) return "Contradiction";
+if (maxBlack < clue) return "Contradiction";
 }
 
       // Extreme cases
@@ -451,22 +452,18 @@ continue;
   return changed;
 }
 
-// ?? just added
-function markContradiction() {
-console.log("i'm lost")
-}
+
 
 function propagateConstraints(testBoard) {
 let changed = true
+let result = applyClue(testBoard, row, col)
 while (changed) {
 changed = false;
 for (let row = 0; row < testBoard.length; row++) {
     for (let col = 0; col < testBoard.length; col++) {
-if (applyClue(testBoard, row, col)) {
-changed = true }
-}
-}}}
-
+if (result == "contradiction") {
+return "contradiction" }
+}}}}
 
 
 function hasUniqueSolution(testBoard) {
@@ -734,7 +731,28 @@ function cloneBoard(board) {
     }
     testBoard.push(rowTest);
   }
-  return testBoard; // only by returning, we can access it in the validate board (). it's not really global though
+  return board.map(row => row.map(cell => ({ ...cell }))); 
+  // only by returning, we can access it in the validate board (). it's not really global though
+}
+
+function neighbourPositions(row, col, size) {
+let pos = [];
+for (let nr = row - 1; nr <= row + 1; nr++) {
+  for (let nc = col - 1; nc <= col + 1; nc++) {
+if( nr < 0 || nr >= size || nc < 0 || nc >= size) continue;
+pos.push([nr, nc]);}}
+return pos
+}
+
+function neighbourCountsForSet(posList, testBoard) {
+let blacks = 0, whites = 0, unknown = 0;
+for (let [nr, nc] of posList) {
+  let cell = testBoard[nr][nc];
+if (cell.colour == "black") blacks++;
+else if (cell.colour == "white") whites++;
+else unknown++;
+}
+return { blacks, whites, unknown};
 }
 
 function countImmediate(clickedRow, clickedCol) {
