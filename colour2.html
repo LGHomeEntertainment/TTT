@@ -274,6 +274,7 @@ function assignHardAnchors(puzzleBoard, minHard, maxHard) {
         let sectorKey = puzzleBoard[row][col].sectorID;
         if (!sectors[sectorKey]) sectors[sectorKey] = [];
         sectors[sectorKey].push({ row, col });
+console.log(`${sectorKey} & ${row} , ${col}`)
       }
     }
   }
@@ -330,20 +331,22 @@ return true; }
 
 function applyClue(testBoard, row, col) {
   let cell = testBoard[row][col];
-// SKIP hidden clues!!! 
+// SKIP non-number cells!!! 
 if (!cell.displayed || cell.visibleNumber == "" || cell.visibleNumber == null) return false;
 // ensure clue is actual number
 let clue = Number(cell.visibleNumber);
 if (Number.isNaN(clue)) return false;
   let maxCells = maxValidCells(row, col, testBoard.length);
-  let counts = countNeighbours(row, col, testBoard);
-//  let maxCells = counts.cellCount;
+  let counts = countNeighbours(row, col, testBoard); // returns { unknown, blacks, whites }
   let knownBlacks = counts.blacks;
   let knownWhites = counts.whites;
-let unknownCells = maxCells - knownBlacks - knownWhites
+let unknownCells = counts.unknown;
   let minBlack = knownBlacks
   let maxBlack = knownBlacks + unknownCells
   let changed = false;
+
+// check for contradiction
+if (minBlack > clue || maxBlack < clue) return false;
 
   // Early exit if nothing to do
   if (unknownCells == 0) return false;
@@ -352,18 +355,24 @@ let unknownCells = maxCells - knownBlacks - knownWhites
     for (let nc = col - 1; nc <= col + 1; nc++) {
       if (nr < 0 || nr >= testBoard.length || nc < 0 || nc >= testBoard.length) continue;
       let neighbourCell = testBoard[nr][nc];
+if (neighbourCell.colour != "grey") continue;
 
 // ?? newly added
 // Forced blacks
 if (maxBlack == clue) {
 neighbourCell.colour = "black";
 neighbourCell.state = "revealed";
-changed = true; }
+changed = true; 
+continue;
+}
 // Forced whites
 if (minBlack == clue) {
 neighbourCell.colour = "white";
 neighbourCell.state = "revealed";
-changed = true; }
+changed = true; 
+continue;
+}
+
 // if cell is known white, then max is no longer 9. 
 if (cell.colour == "white") {
 if (knownBlacks > clue) return markContradiction();
@@ -374,13 +383,15 @@ if (maxBlack < clue) return markContradiction();
       if (clue == maxCells && neighbourCell.state != "revealed") {
         neighbourCell.colour = "black";
         neighbourCell.state = "revealed";
-        changed = true;
+        changed = true; 
+continue;
       }
 
-      if (clue == 0 && neighbourCell.state != "revealed") {
+      if (clue == 0) {
         neighbourCell.colour = "white";
         neighbourCell.state = "revealed";
         changed = true;
+continue;
       }
 
       // Deduction cases
@@ -388,12 +399,14 @@ if (maxBlack < clue) return markContradiction();
         neighbourCell.colour = "black";
         neighbourCell.state = "revealed";
         changed = true;
+continue;
       }
 
       if ((clue == knownBlacks) && neighbourCell.colour == "grey") {
         neighbourCell.colour = "white";
         neighbourCell.state = "revealed";
         changed = true;
+continue;
       }
     }
   }
@@ -402,7 +415,7 @@ if (maxBlack < clue) return markContradiction();
 
 // ?? just added
 function markContradiction() {
-
+console.log("i'm lost")
 }
 
 function propagateConstraints(testBoard) {
