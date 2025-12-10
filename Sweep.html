@@ -139,6 +139,7 @@ function generateBoard(gridSize) {
         revealed: false,
         adjacent: 0,
         flagged: false,
+        neighbours: []
       });
     }
     board.push(rowData);
@@ -356,7 +357,17 @@ let safeCell = findGuaranteedSafeCell()
     for (let c = 0; c < gridSize; c++) {
       let cell = board[r][c];
 if (!cell.revealed || cell.adjacent == 0) continue;
-      // ****
+
+for (let dr = -1; dr <= 1; dr++) {
+        for (let dc = -1; dc <= 1; dc++) {
+          if (dr == 0 && dc == 0) continue;
+          let neighbourRow = r + dr;
+          let neighbourCol = c + dc;
+          if (neighbourRow < 0 || neighbourRow >= gridSize) continue;
+          if (neighbourCol < 0 || neighbourCol >= gridSize) continue;
+
+          let neighbourCell = board[neighbourRow][neighbourCol]
+****
   }
 
   function highlightCell(r, c) {
