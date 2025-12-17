@@ -154,7 +154,7 @@ function populateNeighbours() {
 board[r][c].neighbours = getNeighbourCoords(r,c)
 }
 }
-console.log("neighbours known")
+console.log(board[0][0].neighbours)
 } 
 // now each cell knows its neighbours, and can check the specific 8 immediately instead of looking through the whole board
 
@@ -193,7 +193,7 @@ if (board[nr][nc].mine) count++;
 }
 cell.adjacent = count
 }}
-  console.log("adjacent?")
+  console.log("adjacent count completed")
 }
 
 // ==== GAME LOGIC ====
@@ -230,40 +230,28 @@ function checkAnswer(e) {
 }
 
 function revealCell(clickedRow, clickedCol, clickedCell) {
-  if (
-    board[clickedRow][clickedCol].revealed == true ||
-    board[clickedRow][clickedCol].flagged == true
-  ) {
-    return;
-  } else if (board[clickedRow][clickedCol].mine == true) {
+let cell = board[clickedRow][clickedCol]
+  if (cell.revealed || cell.flagged) return;
+  cell.revealed = true;
+clickedCell.classList.add("revealed");
+
+  if (cell.mine) {
     clickedCell.classList.add("mine");
     triggerGameOver();
     return; // need this cuz after running gameOver(), it will come back to this
-  } else {
-    board[clickedRow][clickedCol].revealed = true;
-    if (board[clickedRow][clickedCol].adjacent > 0) {
-      clickedCell.classList.add("revealed");
-      clickedCell.innerHTML = `${board[clickedRow][clickedCol].adjacent}`;
-    } else {
-      clickedCell.classList.add("revealed"); // the clicked cell only
+  } 
+    if (cell.adjacent > 0) {  
 
-      for (let dr = -1; dr <= 1; dr++) {
-        for (let dc = -1; dc <= 1; dc++) {
-          if (dr == 0 && dc == 0) continue;
+      clickedCell.textContent = cell.adjacent;
+return
+    } 
+// adjacent == 0 --> cascade
 
-          let neighbourRow = clickedRow + dr;
-          let neighbourCol = clickedCol + dc;
-          if (neighbourRow < 0 || neighbourRow >= gridSize) continue;
-          if (neighbourCol < 0 || neighbourCol >= gridSize) continue;
+  for (let [nr, nc] of cell.neighbours) {
+if (board[nr][nc].flagged) continue;
 
-          let neighbourCell = document.getElementById(
-            `cell-${neighbourRow}-${neighbourCol}`
-          );
-          if (board[neighbourRow][neighbourCol].flagged == true) continue;
-          revealCell(neighbourRow, neighbourCol, neighbourCell); // CASCADE!!
-        }
-      }
-    }
+  let neighbourCell = document.getElementById(`cell-${nr}-${nc}`);
+  revealCell(nr, nc, neighbourCell); // CASCADE!!
   }
 }
 
@@ -385,7 +373,7 @@ for (let dr = -1; dr <= 1; dr++) {
           if (neighbourCol < 0 || neighbourCol >= gridSize) continue;
 
           neighbours.push([neighbourRow, neighbourCol])
-}}}
+}}
 return neighbours }
 
   function highlightCell(r, c) {
@@ -396,7 +384,7 @@ cellElement.classList.add("hint");
     setTimeout(() => {
       cellElement.classList.remove("hint");
     }, 1500)};
-  }
+  
 
 // ==== UI + INTERACTION ====
 
@@ -514,14 +502,8 @@ function validateBoard(clickedRow, clickedCol) {
 
         let hidden = [];
         let flagged = 0;
-        for (let dr = -1; dr <= 1; dr++) {
-          for (let dc = -1; dc <= 1; dc++) {
-            if (dr == 0 && dc == 0) continue;
-            let nr = row + dr;
-            let nc = col + dc;
-            if (nr < 0 || nr >= gridSize || nc < 0 || nc >= gridSize) continue;
-
-            if (flaggedMap[nr][nc])
+        for (let [nr, nc] of cell.neighbours) {
+          if (flaggedMap[nr][nc])
               flagged++; // count how many flagged cells are in the adjacent of this cell
             else if (!revealedMap[nr][nc]) hidden.push([nr, nc]);
           }
@@ -589,24 +571,10 @@ function cascadeReveal(clickedRow, clickedCol, testBoard, revealedMap) {
   if (revealedMap[clickedRow][clickedCol]) return;
   revealedMap[clickedRow][clickedCol] = true;
   if (testBoard[clickedRow][clickedCol].adjacent > 0) return;
-
-  // cascade to neighbours
-  for (let dr = -1; dr <= 1; dr++) {
-    for (let dc = -1; dc <= 1; dc++) {
-      if (dr == 0 && dc == 0) continue;
-
-      let neighbourRow = clickedRow + dr;
-      let neighbourCol = clickedCol + dc;
-      if (
-        neighbourRow < 0 ||
-        neighbourRow >= gridSize ||
-        neighbourCol < 0 ||
-        neighbourCol >= gridSize
-      )
-        continue;
+for (let [nr, nc] of testBoard[clickedRow][clickedCol].neighbours) {
       cascadeReveal(neighbourRow, neighbourCol, testBoard, revealedMap); // CASCADE!!
     }
-  }
+
 }
 
 </script>
