@@ -145,6 +145,7 @@ function generateBoard(gridSize) {
     }
     board.push(rowData);
   }
+console.log("board generated")
 }
 
 function populateNeighbours() {
@@ -153,7 +154,9 @@ function populateNeighbours() {
 board[r][c].neighbours = getNeighbourCoords(r,c)
 }
 }
-} // now each cell knows its neighbours, and can check the specific 8 immediately instead of looking through the whole board
+console.log("neighbours known")
+} 
+// now each cell knows its neighbours, and can check the specific 8 immediately instead of looking through the whole board
 
 // create the MINES. put within checkanswer
 function generateMines(clickedRow, clickedCol, newMines = totalMines) {
@@ -175,20 +178,22 @@ function generateMines(clickedRow, clickedCol, newMines = totalMines) {
     board[mineRow][mineCol].mine = true; // set the mine flag
     minesNumber++;
   }
+console.log("mines placed")
 
   // count adjacent once all mines placed
   // For each cell, loop through its 8 neighbors
   // If neighbor is in bounds and has a mine, increment adjacent count
-  let count = 0;
+
 for (let r = 0; r < gridSize; r++) {
     for (let c = 0; c < gridSize; c++) {
-let cell = board[r][c]
+let cell = board[r][c];
+  let count = 0;
   for (let [nr, nc] of cell.neighbours) {
 if (board[nr][nc].mine) count++;
 }
 cell.adjacent = count
 }}
-  
+  console.log("adjacent?")
 }
 
 // ==== GAME LOGIC ====
