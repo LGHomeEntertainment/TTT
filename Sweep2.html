@@ -517,48 +517,45 @@ function validateBoard(clickedRow, clickedCol) {
             flagged++; // count how many flagged cells are in the adjacent of this cell
           else if (!revealedMap[nr][nc]) hidden.push([nr, nc]);
         }
-      }
 
-      if (hidden.length > 0) {
-        // hidden.length > 0 meaning there's still hidden cells
-        // Condition 1: all adjacent mines flagged ==> rest are safe
-        if (cell.adjacent == flagged) {
-          hidden.forEach(([nr, nc]) => {
-            cascadeReveal(nr, nc, testBoard, revealedMap);
-          });
-          change = true;
-        }
+        if (hidden.length > 0) {
+          // hidden.length > 0 meaning there's still hidden cells
+          // Condition 1: all adjacent mines flagged ==> rest are safe
+          if (cell.adjacent == flagged) {
+            hidden.forEach(([nr, nc]) => {
+              cascadeReveal(nr, nc, testBoard, revealedMap);
+            });
+            change = true;
+          }
 
-        // Condition 2: all adjacent is hidden ==> adjacents are mines ==> flag them
-        if (cell.adjacent == hidden.length + flagged) {
-          // + flagged to account for those already flagged
-          hidden.forEach(([nr, nc]) => {
-            flaggedMap[nr][nc] = true;
-          });
-          change = true;
+          // Condition 2: all adjacent is hidden ==> adjacents are mines ==> flag them
+          if (cell.adjacent == hidden.length + flagged) {
+            // + flagged to account for those already flagged
+            hidden.forEach(([nr, nc]) => {
+              flaggedMap[nr][nc] = true;
+            });
+            change = true;
+          }
         }
       }
     }
   }
-}
 
-// Step 4: Evaluate
-// If revealed count == total safe cells → return true (valid board)
-// Else → return false (board requires guessing)
+  // Step 4: Evaluate
+  // If revealed count == total safe cells → return true (valid board)
+  // Else → return false (board requires guessing)
 
-let revealedSafe = 0;
-let totalSafeCells = gridSize * gridSize - totalMines;
-for (let r = 0; r < gridSize; r++) {
-  for (let c = 0; c < gridSize; c++) {
-    if (revealedMap[r][c] && testBoard[r][c].mine == false) {
-      revealedSafe++;
+  let revealedSafe = 0;
+  let totalSafeCells = gridSize * gridSize - totalMines;
+  for (let r = 0; r < gridSize; r++) {
+    for (let c = 0; c < gridSize; c++) {
+      if (revealedMap[r][c] && testBoard[r][c].mine == false) {
+        revealedSafe++;
+      }
     }
   }
-}
-if (revealedSafe == totalSafeCells) {
-  return true;
-} else {
-  return false;
+
+  return revealedSafe == totalSafeCells;
 }
 
 // Step 5: Retry logic (outside this function)
@@ -582,7 +579,7 @@ function cascadeReveal(clickedRow, clickedCol, testBoard, revealedMap) {
   revealedMap[clickedRow][clickedCol] = true;
   if (testBoard[clickedRow][clickedCol].adjacent > 0) return;
   for (let [nr, nc] of testBoard[clickedRow][clickedCol].neighbours) {
-    cascadeReveal(neighbourRow, neighbourCol, testBoard, revealedMap); // CASCADE!!
+    cascadeReveal(nr, nc, testBoard, revealedMap); // CASCADE!!
   }
 }
 
