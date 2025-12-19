@@ -161,6 +161,15 @@ function populateNeighbours() {
 // create the MINES. put within checkanswer
 function generateMines(clickedRow, clickedCol, newMines = totalMines) {
   totalMines = newMines;
+
+// RESET everything first. *in case* validate board regenerates board due to unsolvability.
+for (let r = 0; r < gridSize; r++) {
+for (let c = 0; c < gridSize; c++) {
+board[r][c].mine = false
+board[r][c].adjacent = 0
+}}
+
+// then place mines
   let minesNumber = 0;
   let mineCol = 0;
   let mineRow = 0;
@@ -207,8 +216,11 @@ let clickedCell = e.target;
   let clickedCol = parseInt(clickedCell.dataset.col);
 let cell = board[clickedRow][clickedCol]
 
-if (!cell.revealed) checkAnswer(clickedRow, clickedCol, clickedCell);
-if (cell.revealed) chordCell(clickedRow, clickedCol, clickedCell);
+if (!cell.revealed) {
+  checkAnswer(clickedRow, clickedCol, clickedCell);
+} else {
+  chordCell(clickedRow, clickedCol, clickedCell);
+}
 }
 
 function checkAnswer(clickedRow, clickedCol, clickedCell) {
@@ -312,6 +324,7 @@ function checkWin() {
 }
 
 function triggerGameOver() {
+gameOver = true
   for (let r = 0; r < gridSize; r++) {
     for (let c = 0; c < gridSize; c++) {
       let cellData = board[r][c];
@@ -466,7 +479,9 @@ function attachListeners() {
     cell.addEventListener("touchend", (e) => {
       clearTimeout(pressTimer);
       if (!longPressTriggered) {
-        checkAnswer(e); // treat as single tap
+        let r = parseInt(cell.dataset.row);
+        let c = parseInt(cell.dataset.col);
+        checkAnswer(r, c, cell); // treat as single tap
       }
     });
   });
