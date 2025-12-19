@@ -200,15 +200,18 @@ function generateMines(clickedRow, clickedCol, newMines = totalMines) {
 // ==== GAME LOGIC ====
 
 function onClick(e) {
+  if (gameOver) return;
+if (!e.target.classList.contains("cell")) return;
 let clickedCell = e.target;
   let clickedRow = parseInt(clickedCell.dataset.row);
   let clickedCol = parseInt(clickedCell.dataset.col);
-  if (gameOver) return;
-if (!clickedCell.revealed) checkAnswer(clickedRow, clickedCol);
-if (clickedCell.revealed) chordCell(clickedRow, clickedCol);
+let cell = board[clickedRow][clickedCol]
+
+if (!cell.revealed) checkAnswer(clickedRow, clickedCol, clickedCell);
+if (cell.revealed) chordCell(clickedRow, clickedCol, clickedCell);
 }
 
-function checkAnswer(clickedRow, clickedCol) {
+function checkAnswer(clickedRow, clickedCol, clickedCell) {
 //  let clickedCell = e.target;
 //  let clickedRow = parseInt(clickedCell.dataset.row);
 //  let clickedCol = parseInt(clickedCell.dataset.col);
