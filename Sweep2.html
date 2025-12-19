@@ -199,11 +199,20 @@ function generateMines(clickedRow, clickedCol, newMines = totalMines) {
 
 // ==== GAME LOGIC ====
 
-function checkAnswer(e) {
-  let clickedCell = e.target;
+function onClick(e) {
+let clickedCell = e.target;
   let clickedRow = parseInt(clickedCell.dataset.row);
   let clickedCol = parseInt(clickedCell.dataset.col);
   if (gameOver) return;
+if (!clickedCell.revealed) checkAnswer(clickedRow, clickedCol);
+if (clickedCell.revealed) chordCell(clickedRow, clickedCol);
+}
+
+function checkAnswer(clickedRow, clickedCol) {
+//  let clickedCell = e.target;
+//  let clickedRow = parseInt(clickedCell.dataset.row);
+//  let clickedCol = parseInt(clickedCell.dataset.col);
+//  if (gameOver) return;
   if (firstClick) {
     generateMines(clickedRow, clickedCol);
 
@@ -255,6 +264,21 @@ function revealCell(clickedRow, clickedCol, clickedCell) {
     revealCell(nr, nc, neighbourCell); // CASCADE!!
   }
 }
+
+function chordCell(clickedRow, clickedCol) {
+let cell = board[clickedRow][clickedCol];
+if (!cell.revealed || cell.adjacent == 0) return;
+let flagged = 0
+let hidden = []
+for (let [nr, nc] of cell.neighbours) {
+if (board[nr][nc].flagged) flagged++;
+else if (!board[nr][nc].revealed) hidden.push([nr, nc])
+}
+if (flagged == cell.adjacent) {
+hidden.forEach(([nr, nc]) => {
+revealCell(nr, nc, document.getElementById(`cell-${nr}-${nc}`))
+})
+}}
 
 function checkWin() {
   let revealedCount = 0;
@@ -347,7 +371,7 @@ function revealHint() {
   }
 }
 
-function findGuaranteedSafeCell() {
+function findGuaranteedSafeCell() { // incomplete hint system
   for (let r = 0; r < gridSize; r++) {
     for (let c = 0; c < gridSize; c++) {
       let cell = board[r][c];
@@ -409,7 +433,7 @@ function attachListeners() {
   // all my listeners
   let cells = document.querySelectorAll("td");
   cells.forEach((cell) => {
-    cell.addEventListener("click", checkAnswer); // left click
+    cell.addEventListener("click", onClick); // left click
   });
   cells.forEach((cell) => {
     cell.addEventListener("contextmenu", toggleFlag); // right click
@@ -460,6 +484,8 @@ function customise() {
   }
   resetGame(newSize, newMines);
 }
+
+
 
 // ==== BOARD VALIDATION ====
 
