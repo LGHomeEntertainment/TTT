@@ -1,4 +1,4 @@
-// this is original from Colour
+// this is original from Colour.html
 function checkAnchor() {
   let boardCol = 0;
   let boardRow = 0;
@@ -22,3 +22,116 @@ if (anchorCount < minAnchor || anchorCount > maxAnchor) {
 resetGame()
 }
 }
+
+
+      ** for Sweep.html or Sweep2.html **
+a slider for changing grid size
+<label for="grid-slider">Grid size: <span id="grid-size-label">16</span> × <span id="grid-size-label2">16</span></label>
+<input
+  type="range"
+  id="grid-slider"
+  min="5"
+  max="50"
+  step="1"
+  value="16"
+/>
+
+<button id="new-game">New Game</button>
+...
+
+
+const MIN_SIZE = 5;
+const MAX_SIZE = 50;
+const DEFAULT_SIZE = 16;
+
+let gridSize = DEFAULT_SIZE;
+
+const slider = document.getElementById('grid-slider');
+const label1 = document.getElementById('grid-size-label');
+const label2 = document.getElementById('grid-size-label2');
+
+function clamp(n, min, max) {
+  return Math.max(min, Math.min(max, n));
+}
+
+slider.addEventListener('input', (e) => {
+  const val = clamp(Number(e.target.value), MIN_SIZE, MAX_SIZE);
+  gridSize = val;
+  label1.textContent = val;
+  label2.textContent = val;
+});
+
+documentdocument.getElementById('new-game').addEventListener('click', () => {
+  startNewGame(gridSize);
+});
+
+**** OR A HYBRID 
+
+<select id="grid-size">
+  <option value="8">8 × 8</option>
+  <option value="10">10 × 10</option>
+  <option value="12">12 × 12</option>
+  <option value="16" selected>16 × 16</option>
+  <option value="custom">Custom…</option>
+</select>
+
+<div id="custom-size" style="display:none;">
+  <label for="grid-slider">Custom size: <span id="grid-size-label">20</span> × <span id="grid-size-label2">20</span></label>
+  <input type="range" id="grid-slider" min="5" max="50" step="1" value="20" />
+</div>
+
+<button id="new-game">New Game</button>
+``
+
+const DEFAULT_SIZE = 16;
+const MIN_SIZE = 5;
+const MAX_SIZE = 50;
+
+let gridSize = DEFAULT_SIZE;
+let useCustom = false;
+
+const selectEl = document.getElementById('grid-size');
+const customWrap = document.getElementById('custom-size');
+const slider = document.getElementById('grid-slider');
+const label1 = document.getElementById('grid-size-label');
+const label2 = document.getElementById('grid-size-label2');
+
+selectEl.addEventListener('change', (e) => {
+  const val = e.target.value;
+  if (val === 'custom') {
+    useCustom = true;
+    customWrap.style.display = 'block';
+    gridSize = Number(slider.value);
+    label1.textContent = gridSize;
+    label2.textContent = gridSize;
+  } else {
+    useCustom = false;
+    customWrap.style.display = 'none';
+    gridSize = Number(val);
+  }
+});
+
+slider.addEventListener('input', (e) => {
+  if (!useCustom) return;
+  gridSize = Math.max(MIN_SIZE, Math.min(MAX_SIZE, Number(e.target.value)));
+  label1.textContent = gridSize;
+  label2.textContent = gridSize;
+});
+
+document.getElementById('new-game').addEventListener('click', () => {
+  startNewGame(gridSize);
+});
+``
+
+****
+ideas for infinity
+- sectors - solving a sector will lock it/prevent changes. 
+- auto solve - if all safe cells are revealed = all mines revealed. (what if it's all mines flagged, does it auto reveal all safe cells?)
+- if locked sector due to mines: unlock after opening all 8 neighbours. also, implement sector points. for clearing 1 sector = 1 point, if consecutive then more points possible? 
+then 10 points or something to unlock a sector in cluster of dead sectors (instead of ads)
+- hint system - a logically solvable safe cell to pulse. 
+
+game play:
+- sectors of 8x8 or 10x10. something manageable
+- on first click, to generate up to neighbour sectors? so that the validate board can ensure solvability, and can cascade etc. 
+- holy crap. populateneighbours need to be rewritten. when new sector is generated, the existing edge cells will have new neighbours. need to add into schema!! hmm.. maybe not. 
