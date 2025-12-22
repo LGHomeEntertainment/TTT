@@ -482,7 +482,7 @@ function attachListeners() {
       if (!longPressTriggered) {
         let r = parseInt(cell.dataset.row);
         let c = parseInt(cell.dataset.col);
-        checkAnswer(r, c, cell); // treat as single tap
+        onClick(); // treat as single tap
       }
     });
   });
