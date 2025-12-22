@@ -482,7 +482,13 @@ function attachListeners() {
       if (!longPressTriggered) {
         let r = parseInt(cell.dataset.row);
         let c = parseInt(cell.dataset.col);
-        onClick(); // treat as single tap
+        let cellData = board[r][c];
+    
+        if (!cellData.revealed) {
+  checkAnswer(r, c, cell);
+} else {
+  chordCell(r, c, cell);
+}
       }
     });
   });
