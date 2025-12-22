@@ -81,7 +81,7 @@
 </div>
 
 <label>Grid size:
-<input type="number" id="gridSizeInput" value="10" min="5" max="20">
+<input type="number" id="sizeInput" value="10" min="5" max="20">
 </label>
 <label>Mines:
   <input type="number" id="mineInput" value="10" min="1" max="100">
@@ -94,7 +94,7 @@
 
 // ==== GLOBALs + CONSTANTS ====
 
-let gridSize = 10; // start with 10, easier to adjust later
+let size = 10; // start with 10, easier to adjust later
 let totalMines = 10;
 let firstClick = true;
 let board = [];
@@ -106,18 +106,19 @@ let gameOver = false;
 document.addEventListener("DOMContentLoaded", initialise);
 
 function initialise() {
-  generateGrid();
-  generateBoard(gridSize);
+  document.getElementById("grid").innerHTML = "";
+  generateGrid(size);
+  generateBoard(size);
   populateNeighbours();
   attachListeners();
 }
 
 // visible GRID
-function generateGrid() {
+function generateGrid(size) {
   grid = [];
-  for (let gridRow = 0; gridRow < gridSize; gridRow++) {
+  for (let gridRow = 0; gridRow < size; gridRow++) {
     let tr = document.createElement("tr");
-    for (let gridCol = 0; gridCol < gridSize; gridCol++) {
+    for (let gridCol = 0; gridCol < size; gridCol++) {
       let td = document.createElement("td");
       td.classList.add("cell");
       td.dataset.row = gridRow;
@@ -130,11 +131,11 @@ function generateGrid() {
 }
 
 // create clear logic BOARD (the invisible one BTS)
-function generateBoard(gridSize) {
+function generateBoard(size) {
   board = [];
-  for (let row = 0; row < gridSize; row++) {
+  for (let row = 0; row < size; row++) {
     let rowData = [];
-    for (let col = 0; col < gridSize; col++) {
+    for (let col = 0; col < size; col++) {
       rowData.push({
         mine: false,
         revealed: false,
@@ -149,8 +150,8 @@ function generateBoard(gridSize) {
 }
 
 function populateNeighbours() {
-  for (let r = 0; r < gridSize; r++) {
-    for (let c = 0; c < gridSize; c++) {
+  for (let r = 0; r < size; r++) {
+    for (let c = 0; c < size; c++) {
       board[r][c].neighbours = getNeighbourCoords(r, c);
     }
   }
@@ -163,8 +164,8 @@ function generateMines(clickedRow, clickedCol, newMines = totalMines) {
   totalMines = newMines;
 
 // RESET everything first. *in case* validate board regenerates board due to unsolvability.
-for (let r = 0; r < gridSize; r++) {
-for (let c = 0; c < gridSize; c++) {
+for (let r = 0; r < size; r++) {
+for (let c = 0; c < size; c++) {
 board[r][c].mine = false
 board[r][c].adjacent = 0
 }}
@@ -175,8 +176,8 @@ board[r][c].adjacent = 0
   let mineRow = 0;
 
   while (minesNumber < totalMines) {
-    mineCol = Math.floor(Math.random() * gridSize);
-    mineRow = Math.floor(Math.random() * gridSize);
+    mineCol = Math.floor(Math.random() * size);
+    mineRow = Math.floor(Math.random() * size);
     if (mineCol == clickedCol && mineRow == clickedRow) continue;
     if (
       board[mineRow][mineCol].mine == true ||
@@ -193,8 +194,8 @@ board[r][c].adjacent = 0
   // For each cell, loop through its 8 neighbors
   // If neighbor is in bounds and has a mine, increment adjacent count
 
-  for (let r = 0; r < gridSize; r++) {
-    for (let c = 0; c < gridSize; c++) {
+  for (let r = 0; r < size; r++) {
+    for (let c = 0; c < size; c++) {
       let cell = board[r][c];
       let count = 0;
       for (let [nr, nc] of cell.neighbours) {
@@ -297,8 +298,8 @@ revealCell(nr, nc, document.getElementById(`cell-${nr}-${nc}`))
 
 function checkWin() {
   let revealedCount = 0;
-  for (let r = 0; r < gridSize; r++) {
-    for (let c = 0; c < gridSize; c++) {
+  for (let r = 0; r < size; r++) {
+    for (let c = 0; c < size; c++) {
       let cellData = board[r][c];
       if (!cellData.mine && cellData.revealed == true) {
         // just check non mines in case.
@@ -307,10 +308,10 @@ function checkWin() {
     }
   }
 
-  if (revealedCount == gridSize * gridSize - totalMines) {
+  if (revealedCount == size * size - totalMines) {
     gameOver = true;
-    for (let r = 0; r < gridSize; r++) {
-      for (let c = 0; c < gridSize; c++) {
+    for (let r = 0; r < size; r++) {
+      for (let c = 0; c < size; c++) {
         let cellData = board[r][c];
         if (cellData.mine == true && !cellData.revealed) {
           let cellElement = document.getElementById(`cell-${r}-${c}`);
@@ -325,8 +326,8 @@ function checkWin() {
 
 function triggerGameOver() {
 gameOver = true
-  for (let r = 0; r < gridSize; r++) {
-    for (let c = 0; c < gridSize; c++) {
+  for (let r = 0; r < size; r++) {
+    for (let c = 0; c < size; c++) {
       let cellData = board[r][c];
       let cellElement = document.getElementById(`cell-${r}-${c}`);
 
@@ -339,15 +340,15 @@ gameOver = true
   }
 }
 
-function resetGame(newSize = gridSize, newMines = totalMines) {
-  gridSize = newSize;
+function resetGame(newSize = size, newMines = totalMines) {
+  size = newSize;
   totalMines = newMines;
   document.getElementById("feedback").textContent = "";
   board = [];
-  generateBoard(gridSize);
+  generateBoard(size);
   populateNeighbours();
   document.getElementById("grid").innerHTML = "";
-  generateGrid(gridSize);
+  generateGrid(size);
   firstClick = true;
   gameOver = false;
   attachListeners();
@@ -388,8 +389,8 @@ function revealHint() {
 }
 
 function findGuaranteedSafeCell() { // incomplete hint system
-  for (let r = 0; r < gridSize; r++) {
-    for (let c = 0; c < gridSize; c++) {
+  for (let r = 0; r < size; r++) {
+    for (let c = 0; c < size; c++) {
       let cell = board[r][c];
       if (!cell.revealed || cell.adjacent == 0) continue;
 
@@ -398,8 +399,8 @@ function findGuaranteedSafeCell() { // incomplete hint system
           if (dr == 0 && dc == 0) continue;
           let neighbourRow = r + dr;
           let neighbourCol = c + dc;
-          if (neighbourRow < 0 || neighbourRow >= gridSize) continue;
-          if (neighbourCol < 0 || neighbourCol >= gridSize) continue;
+          if (neighbourRow < 0 || neighbourRow >= size) continue;
+          if (neighbourCol < 0 || neighbourCol >= size) continue;
 
           let neighbourCell = board[neighbourRow][neighbourCol];
           // ****
@@ -417,8 +418,8 @@ function getNeighbourCoords(r, c) {
       if (dr == 0 && dc == 0) continue;
       let neighbourRow = r + dr;
       let neighbourCol = c + dc;
-      if (neighbourRow < 0 || neighbourRow >= gridSize) continue;
-      if (neighbourCol < 0 || neighbourCol >= gridSize) continue;
+      if (neighbourRow < 0 || neighbourRow >= size) continue;
+      if (neighbourCol < 0 || neighbourCol >= size) continue;
 
       neighbours.push([neighbourRow, neighbourCol]);
     }
@@ -455,7 +456,7 @@ function attachListeners() {
     cell.addEventListener("contextmenu", toggleFlag); // right click
   });
   document.getElementById("resetBtn").addEventListener("click", () => {
-    resetGame(gridSize, totalMines);
+    resetGame(size, totalMines);
   });
   document.getElementById("hintBtn").addEventListener("click", () => {
     revealHint();
@@ -488,10 +489,10 @@ function attachListeners() {
 }
 
 function customise() {
-  let inputSize = document.getElementById("gridSizeInput").value;
+  let inputSize = document.getElementById("sizeInput").value;
   let inputMine = document.getElementById("mineInput").value;
 
-  let newSize = gridSize;
+  let newSize = size;
   let newMines = totalMines;
 
   if (inputSize !== "") {
@@ -519,16 +520,16 @@ function validateBoard(clickedRow, clickedCol) {
   // creates a 2D array (same shape as your board) where each cell starts as false, meaning not revealed
   // revealedMap is for keeping track of the player, as though he is actually playing the board, like checkAnswer(e)
 
-  let revealedMap = Array(gridSize)
+  let revealedMap = Array(size)
     .fill()
-    .map(() => Array(gridSize).fill(false));
+    .map(() => Array(size).fill(false));
 
   // Create a list of flagged cells (initially empty)
   // tracks whether a cell is flagged in your simulation
 
-  let flaggedMap = Array(gridSize)
+  let flaggedMap = Array(size)
     .fill()
-    .map(() => Array(gridSize).fill(false));
+    .map(() => Array(size).fill(false));
 
   // Step 2: Simulate logical deduction
   // Loop through revealed cells
@@ -547,8 +548,8 @@ function validateBoard(clickedRow, clickedCol) {
   while (change) {
     change = false; // rmb to add change = true after logic, so that it continues to run as long as there are new reveals
 
-    for (let row = 0; row < gridSize; row++) {
-      for (let col = 0; col < gridSize; col++) {
+    for (let row = 0; row < size; row++) {
+      for (let col = 0; col < size; col++) {
         if (!revealedMap[row][col]) continue; // skip if it's not yet opened
 
         let cell = testBoard[row][col];
@@ -590,9 +591,9 @@ function validateBoard(clickedRow, clickedCol) {
   // Else → return false (board requires guessing)
 
   let revealedSafe = 0;
-  let totalSafeCells = gridSize * gridSize - totalMines;
-  for (let r = 0; r < gridSize; r++) {
-    for (let c = 0; c < gridSize; c++) {
+  let totalSafeCells = size * size - totalMines;
+  for (let r = 0; r < size; r++) {
+    for (let c = 0; c < size; c++) {
       if (revealedMap[r][c] && testBoard[r][c].mine == false) {
         revealedSafe++;
       }
@@ -608,9 +609,9 @@ function validateBoard(clickedRow, clickedCol) {
 
 function cloneBoard(board) {
   let testBoard = [];
-  for (let row = 0; row < gridSize; row++) {
+  for (let row = 0; row < size; row++) {
     let rowTest = [];
-    for (let col = 0; col < gridSize; col++) {
+    for (let col = 0; col < size; col++) {
       rowTest.push({ ...board[row][col] });
     }
     testBoard.push(rowTest);
