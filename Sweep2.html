@@ -214,9 +214,9 @@ function handleClicks(r, c, cellEl) {
 let cell = board[r][c]
 
 if (!cell.revealed) {
-  checkAnswer(r, c, cell);
+  checkAnswer(r, c, cellEl);
 } else {
-  chordCell(r, c, cell);
+  chordCell(r, c);
 }
 }
 
@@ -488,10 +488,10 @@ handleClicks(r, c, cell);
 
 function onClick(e) {
 if (!e.target.classList.contains("cell")) return;
-let clickedCell = e.target;
-  let clickedRow = parseInt(clickedCell.dataset.row);
-  let clickedCol = parseInt(clickedCell.dataset.col);
-handleClicks(clickedRow, clickedCol, clickedCell);
+let cellEl = e.target;
+  let clickedRow = parseInt(cellEl.dataset.row);
+  let clickedCol = parseInt(cellEl.dataset.col);
+handleClicks(clickedRow, clickedCol, cellEl);
 }
 
 function customise() {
