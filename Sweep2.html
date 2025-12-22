@@ -209,18 +209,14 @@ board[r][c].adjacent = 0
 
 // ==== GAME LOGIC ====
 
-function onClick(e) {
-  if (gameOver) return;
-if (!e.target.classList.contains("cell")) return;
-let clickedCell = e.target;
-  let clickedRow = parseInt(clickedCell.dataset.row);
-  let clickedCol = parseInt(clickedCell.dataset.col);
-let cell = board[clickedRow][clickedCol]
+function handleClicks(r, c, cellEl) {
+ if (gameOver) return;
+let cell = board[r][c]
 
 if (!cell.revealed) {
-  checkAnswer(clickedRow, clickedCol, clickedCell);
+  checkAnswer(r, c, cell);
 } else {
-  chordCell(clickedRow, clickedCol, clickedCell);
+  chordCell(r, c, cell);
 }
 }
 
@@ -484,14 +480,18 @@ function attachListeners() {
         let c = parseInt(cell.dataset.col);
         let cellData = board[r][c];
     
-        if (!cellData.revealed) {
-  checkAnswer(r, c, cell);
-} else {
-  chordCell(r, c, cell);
-}
+handleClicks(r, c, cell);
       }
     });
   });
+}
+
+function onClick(e) {
+if (!e.target.classList.contains("cell")) return;
+let clickedCell = e.target;
+  let clickedRow = parseInt(clickedCell.dataset.row);
+  let clickedCol = parseInt(clickedCell.dataset.col);
+handleClicks(clickedRow, clickedCol, clickedCell);
 }
 
 function customise() {
