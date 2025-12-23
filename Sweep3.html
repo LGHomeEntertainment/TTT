@@ -86,7 +86,7 @@
 
 // ==== GLOBALs + CONSTANTS ====
 
-// let size = 10; // start with 10, easier to adjust later
+let size = 10; // start with 10, easier to adjust later
 let totalMines = Math.floor(Math.random() * 16 + 10)
 let firstClick = true;
 let board = new Map();
@@ -100,7 +100,7 @@ document.addEventListener("DOMContentLoaded", initialise);
 function initialise() {
   document.getElementById("grid").innerHTML = "";
   generateGrid(size);
-  generateBoard(size);
+//  generateBoard(size);
   attachListeners();
 }
 
@@ -191,19 +191,19 @@ function checkAnswer(clickedRow, clickedCol, clickedCell) { // need to adjust to
     generateMines(clickedRow, clickedCol);
 
     // validate board after generating mines
-    let isValid = validateBoard(clickedRow, clickedCol);
-    if (!isValid) {
-      let attempts = 0;
-      while (!isValid && attempts < 10) {
-        generateMines(clickedRow, clickedCol);
-        isValid = validateBoard(clickedRow, clickedCol);
-        attempts++;
-      }
-      if (!isValid && attempts >= 10) {
-        document.getElementById("feedback").textContent =
-          "Something went wrong, please start a new game.";
-      }
-    }
+//    let isValid = validateBoard(clickedRow, clickedCol);
+//    if (!isValid) {
+//      let attempts = 0;
+//      while (!isValid && attempts < 10) {
+//        generateMines(clickedRow, clickedCol);
+//        isValid = validateBoard(clickedRow, clickedCol);
+//        attempts++;
+//      }
+//      if (!isValid && attempts >= 10) {
+//        document.getElementById("feedback").textContent =
+//          "Something went wrong, please start a new game.";
+//      }
+//    }
 
     firstClick = false;
     revealCell(clickedRow, clickedCol, clickedCell);
@@ -235,7 +235,7 @@ let neighbour = ensureCell(nr, nc)
     if (neighbour.flagged) continue;
 
     let neighbourCell = document.getElementById(`cell-${nr}-${nc}`);
-if (!neighbourCell) return;
+if (!neighbourCell) continue;
     revealCell(nr, nc, neighbourCell); // CASCADE!!
   }
 }
@@ -252,10 +252,10 @@ else if (!neighbour.revealed) hidden.push([nr, nc])
 }
 if (flagged == cell.adjacent) {
 hidden.forEach(([nr, nc]) => {
-revealCell(nr, nc, document.getElementById(`cell-${nr}-${nc}`))
-if (!neighbourCell) return;
-})
-}}
+let el = document.getElementById(`cell-${nr}-${nc}`);
+if (!el) return;
+revealCell(nr, nc, el)
+})}}
 
 function checkWin() {
   let revealedCount = 0;
@@ -306,7 +306,7 @@ function resetGame(newSize = size, newMines = totalMines) {
   totalMines = newMines;
   document.getElementById("feedback").textContent = "";
   board = new Map();
-  generateBoard(size);
+//  generateBoard(size);
   document.getElementById("grid").innerHTML = "";
   generateGrid(size);
   firstClick = true;
@@ -544,7 +544,7 @@ function validateBoard(clickedRow, clickedCol) {
   let totalSafeCells = size * size - totalMines;
   for (let r = 0; r < size; r++) {
     for (let c = 0; c < size; c++) {
-      if (revealedMap[r][c] && testensureCell(r, c).mine == false) {
+      if (revealedMap[r][c] && testBoard[r][c].mine == false) {
         revealedSafe++;
       }
     }
