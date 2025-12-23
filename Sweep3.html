@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- To Infinity and Beyond! -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -100,7 +101,6 @@ function initialise() {
   document.getElementById("grid").innerHTML = "";
   generateGrid(size);
   generateBoard(size);
-  populateNeighbours();
   attachListeners();
 }
 
@@ -129,8 +129,9 @@ function generateMines(clickedRow, clickedCol, newMines = totalMines) {
 // RESET everything first. *in case* validate board regenerates board due to unsolvability.
 for (let r = 0; r < size; r++) {
 for (let c = 0; c < size; c++) {
-ensureCell(r, c).mine = false
-ensureCell(r, c).adjacent = 0
+let cell = ensureCell(r, c)
+cell.mine = false
+cell.adjacent = 0
 }}
 
 // then place mines
@@ -142,13 +143,14 @@ ensureCell(r, c).adjacent = 0
     mineCol = Math.floor(Math.random() * size); // *** 8x8 sector. just need to set sector?
     mineRow = Math.floor(Math.random() * size);
     if (mineCol == clickedCol && mineRow == clickedRow) continue;
+let potentialMine = ensureCell(mineRow, mineCol)
     if (
-      board[mineRow][mineCol].mine == true ||
+      potentialMine.mine == true ||
       isAdjacent(mineRow, mineCol, clickedRow, clickedCol) // if mine or if is adjacent to the cell
     )
       continue; // skip!
 
-    board[mineRow][mineCol].mine = true; // set the mine flag
+    potentialMine.mine = true; // set the mine flag
     minesNumber++;
   }
   console.log("mines placed");
@@ -159,7 +161,7 @@ ensureCell(r, c).adjacent = 0
 
   for (let r = 0; r < size; r++) {
     for (let c = 0; c < size; c++) {
-      let cell = ensureCell(r, c);
+      let cell = ensureCell(r, c); // shouldn't this be ensured earlier?
       let count = 0;
       for (let [nr, nc] of cell.neighbours) {
 let neighbour = ensureCell(nr, nc)
@@ -184,11 +186,7 @@ if (!cell.revealed) {
 }
 }
 
-function checkAnswer(clickedRow, clickedCol, clickedCell) {
-//  let clickedCell = e.target;
-//  let clickedRow = parseInt(clickedCell.dataset.row);
-//  let clickedCol = parseInt(clickedCell.dataset.col);
-//  if (gameOver) return;
+function checkAnswer(clickedRow, clickedCol, clickedCell) { // need to adjust to check current sector
   if (firstClick) {
     generateMines(clickedRow, clickedCol);
 
@@ -197,7 +195,6 @@ function checkAnswer(clickedRow, clickedCol, clickedCell) {
     if (!isValid) {
       let attempts = 0;
       while (!isValid && attempts < 10) {
-        // attempts is more impt in sudoku, to throw out the board entirely?
         generateMines(clickedRow, clickedCol);
         isValid = validateBoard(clickedRow, clickedCol);
         attempts++;
@@ -217,7 +214,7 @@ function checkAnswer(clickedRow, clickedCol, clickedCell) {
 }
 
 function revealCell(clickedRow, clickedCol, clickedCell) {
-  let cell = board[clickedRow][clickedCol];
+  let cell = ensureCell(clickedRow, clickedCol);
   if (cell.revealed || cell.flagged) return;
   cell.revealed = true;
   clickedCell.classList.add("revealed");
@@ -238,12 +235,13 @@ let neighbour = ensureCell(nr, nc)
     if (neighbour.flagged) continue;
 
     let neighbourCell = document.getElementById(`cell-${nr}-${nc}`);
+if (!neighbourCell) return;
     revealCell(nr, nc, neighbourCell); // CASCADE!!
   }
 }
 
 function chordCell(clickedRow, clickedCol) {
-let cell = board[clickedRow][clickedCol];
+let cell = ensureCell(clickedRow, clickedCol);
 if (!cell.revealed || cell.adjacent == 0) return;
 let flagged = 0
 let hidden = []
@@ -255,6 +253,7 @@ else if (!neighbour.revealed) hidden.push([nr, nc])
 if (flagged == cell.adjacent) {
 hidden.forEach(([nr, nc]) => {
 revealCell(nr, nc, document.getElementById(`cell-${nr}-${nc}`))
+if (!neighbourCell) return;
 })
 }}
 
@@ -306,9 +305,8 @@ function resetGame(newSize = size, newMines = totalMines) {
   size = newSize;
   totalMines = newMines;
   document.getElementById("feedback").textContent = "";
-  board = [];
+  board = new Map();
   generateBoard(size);
-  populateNeighbours();
   document.getElementById("grid").innerHTML = "";
   generateGrid(size);
   firstClick = true;
@@ -327,14 +325,15 @@ function toggleFlag(e) {
   e.preventDefault();
   let clickedRow = parseInt(clickedCell.dataset.row);
   let clickedCol = parseInt(clickedCell.dataset.col);
-  if (board[clickedRow][clickedCol].revealed == true) {
+let cell = ensureCell(clickedRow, clickedCol)
+  if (cell.revealed == true) {
     return;
-  } else if (board[clickedRow][clickedCol].flagged) {
-    board[clickedRow][clickedCol].flagged = false;
+  } else if (cell.flagged) {
+    cell.flagged = false;
     clickedCell.textContent = ""; // no flag
     clickedCell.classList.remove("flagged");
   } else {
-    board[clickedRow][clickedCol].flagged = true;
+    cell.flagged = true;
     clickedCell.textContent = "🚩"; // add flag
     clickedCell.classList.add("flagged");
   }
@@ -361,10 +360,8 @@ function findGuaranteedSafeCell() { // incomplete hint system
           if (dr == 0 && dc == 0) continue;
           let neighbourRow = r + dr;
           let neighbourCol = c + dc;
-          if (neighbourRow < 0 || neighbourRow >= size) continue;
-          if (neighbourCol < 0 || neighbourCol >= size) continue;
-
-          let neighbourCell = board[neighbourRow][neighbourCol];
+          
+          let neighbourCell = ensureCell(neighbourRow, neighbourCol);
           // ****
         }
       }
@@ -380,8 +377,6 @@ function getNeighbourCoords(r, c) {
       if (dr == 0 && dc == 0) continue;
       let neighbourRow = r + dr;
       let neighbourCol = c + dc;
-      if (neighbourRow < 0 || neighbourRow >= size) continue;
-      if (neighbourCol < 0 || neighbourCol >= size) continue;
 
       neighbours.push([neighbourRow, neighbourCol]);
     }
@@ -423,7 +418,7 @@ function attachListeners() {
   document.getElementById("hintBtn").addEventListener("click", () => {
     revealHint();
   });
-  document.getElementById("applyBtn").addEventListener("click", customise);
+
 
   // phone long tap
   cells.forEach((cell) => {
@@ -455,27 +450,10 @@ handleClicks(r, c, cell);
 function onClick(e) {
 if (!e.target.classList.contains("cell")) return;
 let cellEl = e.target;
-  let clickedRow = parseInt(cellEl.dataset.row);
-  let clickedCol = parseInt(cellEl.dataset.col);
-handleClicks(clickedRow, clickedCol, cellEl);
+  let x = parseInt(cellEl.dataset.row);
+  let y = parseInt(cellEl.dataset.col);
+handleClicks(x, y, cellEl);
 }
-
-function customise() {
-  let inputSize = document.getElementById("sizeInput").value;
-  let inputMine = document.getElementById("mineInput").value;
-
-  let newSize = size;
-  let newMines = totalMines;
-
-  if (inputSize !== "") {
-    newSize = parseInt(inputSize);
-  }
-  if (inputMine !== "") {
-    newMines = parseInt(inputMine);
-  }
-  resetGame(newSize, newMines);
-}
-
 
 
 // ==== BOARD VALIDATION ====
