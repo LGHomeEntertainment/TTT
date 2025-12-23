@@ -16,8 +16,12 @@
   margin: 20px auto;
 }
 
+table {
+border-collapse: collapse;
+}
+
 /* Each cell */
-.cell {
+td.cell {
   width: 30px;
   height: 30px;
   background-color: lightgray;
@@ -31,20 +35,40 @@
   user-select: none;
 }
 
+/* Thicker borders */
+td.cell {
+  border-right: 1px solid #555;
+  border-bottom: 1px solid #555;
+}
+
+td.cell[data-sector-col="0"],
+td.cell[data-sector-col="8"],
+td.cell[data-sector-col="16"] {
+border-left: 3px solid #aaa;
+}
+
+td.cell[data-sector-row="0"],
+td.cell[data-sector-row="8"],
+td.cell[data-sector-row="16"] {
+border-top: 3px solid #aaa;
+}
+
+
+
 /* Revealed cell */
-.cell.revealed {
+td.cell.revealed {
   background-color: lightblue;
   cursor: default;
 }
 
 /* Mine cell */
-.cell.mine {
+td.cell.mine {
   background-color: red;
   color: white;
 }
 
 /* Flagged cell */
-.cell.flagged {
+td.cell.flagged {
   background-color: orange;
   color: white;
 }
@@ -86,7 +110,7 @@
 
 // ==== GLOBALs + CONSTANTS ====
 
-let size = 10; // start with 10, easier to adjust later
+let size = 8; // start with 10, easier to adjust later
 let totalMines = Math.floor(Math.random() * 16 + 10)
 let firstClick = true;
 let board = new Map();
@@ -111,9 +135,11 @@ function generateGrid(size) {
     let tr = document.createElement("tr");
     for (let gridCol = 0; gridCol < size; gridCol++) {
       let td = document.createElement("td");
-      td.classList.add("cell");
-      td.dataset.row = gridRow;
-      td.dataset.col = gridCol;
+let sectorRow = Math.floor(gridRow / size)
+let sectorCol = Math.floor(gridCol / size)
+      td.classList.add(`sector-${sectorRow}-${sectorCol}`);
+      td.dataset.row = sectorRow;
+      td.dataset.col = sectorCol;
       td.id = `cell-${gridRow}-${gridCol}`;
       tr.appendChild(td);
     }
@@ -461,10 +487,6 @@ handleClicks(x, y, cellEl);
 function validateBoard(clickedRow, clickedCol) {
   // use after firstclick
   // Step 1: Setup
-  // Create a copy of the board state (optional, for simulation)
-  // test board is like board. holds data, doesn't change during the game
-
-  let testBoard = cloneBoard(board); // this allows testBoard to store the cloneboard data itself
 
   // Create a list of revealed cells starting from the first click
   // creates a 2D array (same shape as your board) where each cell starts as false, meaning not revealed
@@ -489,7 +511,7 @@ function validateBoard(clickedRow, clickedCol) {
   //   - If adjacent == flagged count → reveal remaining hidden neighbors
   //   - If adjacent == hidden count → flag all hidden neighbors
 
-  cascadeReveal(clickedRow, clickedCol, testBoard, revealedMap);
+  cascadeReveal(clickedRow, clickedCol, revealedMap);
 
   // Step 3: Track progress
   // Keep a counter of how many non-mine cells are revealed (using flaggedMap)
@@ -502,7 +524,7 @@ function validateBoard(clickedRow, clickedCol) {
       for (let col = 0; col < size; col++) {
         if (!revealedMap[row][col]) continue; // skip if it's not yet opened
 
-        let cell = testBoard[row][col];
+        let cell = ensureCell(row, col);
         if (cell.adjacent == 0) continue;
 
         let hidden = [];
@@ -518,7 +540,7 @@ function validateBoard(clickedRow, clickedCol) {
           // Condition 1: all adjacent mines flagged ==> rest are safe
           if (cell.adjacent == flagged) {
             hidden.forEach(([nr, nc]) => {
-              cascadeReveal(nr, nc, testBoard, revealedMap);
+              cascadeReveal(nr, nc, revealedMap);
             });
             change = true;
           }
@@ -544,7 +566,8 @@ function validateBoard(clickedRow, clickedCol) {
   let totalSafeCells = size * size - totalMines;
   for (let r = 0; r < size; r++) {
     for (let c = 0; c < size; c++) {
-      if (revealedMap[r][c] && testBoard[r][c].mine == false) {
+let cellData = ensureCell(r, c)
+      if (revealedMap[r][c] && cellData.mine == false) {
         revealedSafe++;
       }
     }
@@ -557,24 +580,15 @@ function validateBoard(clickedRow, clickedCol) {
 // If validateBoard() returns false, regenerate mines and try again
 // already put in generateMines(), after first click
 
-function cloneBoard(board) {
-  let testBoard = [];
-  for (let row = 0; row < size; row++) {
-    let rowTest = [];
-    for (let col = 0; col < size; col++) {
-      rowTest.push({ ...board[row][col] });
-    }
-    testBoard.push(rowTest);
-  }
-  return testBoard; // only by returning, we can access it in the validate board (). it's not really global though
-}
+function cascadeReveal(r, c, revealedMap) { // bound by size of sector
+if (r < 0 || c < 0 || r >= size || c >= size) return;
+if (revealedMap[r][c]) return;
 
-function cascadeReveal(clickedRow, clickedCol, testBoard, revealedMap) {
-  if (revealedMap[clickedRow][clickedCol]) return;
-  revealedMap[clickedRow][clickedCol] = true;
-  if (testBoard[clickedRow][clickedCol].adjacent > 0) return;
-  for (let [nr, nc] of testBoard[clickedRow][clickedCol].neighbours) {
-    cascadeReveal(nr, nc, testBoard, revealedMap); // CASCADE!!
+  revealedMap[r][c] = true;
+let cell = ensureCell(r, c)
+  if (cell.adjacent > 0) return;
+  for (let [nr, nc] of cell.neighbours) {
+    cascadeReveal(nr, nc, revealedMap); // CASCADE!!
   }
 }
 
