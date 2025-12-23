@@ -8,11 +8,7 @@
   <style>
 /* Container for the grid */
 #grid {
-  display: grid;
   border-collapse: collapse;
-  border-spacing: 0;
-  grid-template-columns: repeat(var(--grid-size), 1fr); /* dynamic columns */
-  width: fit-content;
   margin: 20px auto;
 }
 
@@ -41,19 +37,13 @@ td.cell {
   border-bottom: 1px solid #555;
 }
 
-td.cell[data-sector-col="0"],
-td.cell[data-sector-col="8"],
-td.cell[data-sector-col="16"] {
+td.cell.sector-left {
 border-left: 3px solid #aaa;
 }
 
-td.cell[data-sector-row="0"],
-td.cell[data-sector-row="8"],
-td.cell[data-sector-row="16"] {
+td.cell.sector-top {
 border-top: 3px solid #aaa;
 }
-
-
 
 /* Revealed cell */
 td.cell.revealed {
@@ -130,17 +120,25 @@ function initialise() {
 
 // visible GRID
 function generateGrid(size) {
-  grid = [];
+ 
   for (let gridRow = 0; gridRow < size; gridRow++) {
     let tr = document.createElement("tr");
+
     for (let gridCol = 0; gridCol < size; gridCol++) {
       let td = document.createElement("td");
-let sectorRow = Math.floor(gridRow / size)
-let sectorCol = Math.floor(gridCol / size)
-      td.classList.add(`sector-${sectorRow}-${sectorCol}`);
-      td.dataset.row = sectorRow;
-      td.dataset.col = sectorCol;
+
+td.classList.add("cell");
+      td.dataset.row = gridRow;
+      td.dataset.col = gridCol;
       td.id = `cell-${gridRow}-${gridCol}`;
+
+  if (gridCol % size == 0) {
+      td.classList.add("sector-left");
+}
+  if (gridRow % size == 0) {
+      td.classList.add("sector-top");
+}
+    
       tr.appendChild(td);
     }
     document.getElementById("grid").appendChild(tr);
