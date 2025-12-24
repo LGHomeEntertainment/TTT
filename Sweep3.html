@@ -101,7 +101,7 @@ td.cell.flagged {
 // ==== GLOBALs + CONSTANTS ====
 
 let size = 8; // start with 10, easier to adjust later
-let totalMines = Math.floor(Math.random() * 16 + 10)
+let totalMines = Math.floor(Math.random() * 10 + 10)
 let firstClick = true;
 let board = new Map();
 let grid = [];
@@ -212,22 +212,23 @@ if (!cell.revealed) {
 
 function checkAnswer(clickedRow, clickedCol, clickedCell) { // need to adjust to check current sector
   if (firstClick) {
+size = 15
     generateMines(clickedRow, clickedCol);
 
     // validate board after generating mines
-//    let isValid = validateBoard(clickedRow, clickedCol);
-//    if (!isValid) {
-//      let attempts = 0;
-//      while (!isValid && attempts < 10) {
-//        generateMines(clickedRow, clickedCol);
-//        isValid = validateBoard(clickedRow, clickedCol);
-//        attempts++;
-//      }
-//      if (!isValid && attempts >= 10) {
-//        document.getElementById("feedback").textContent =
-//          "Something went wrong, please start a new game.";
-//      }
-//    }
+    let isValid = validateBoard(clickedRow, clickedCol);
+    if (!isValid) {
+      let attempts = 0;
+      while (!isValid && attempts < 10) {
+        generateMines(clickedRow, clickedCol);
+        isValid = validateBoard(clickedRow, clickedCol);
+        attempts++;
+      }
+      if (!isValid && attempts >= 10) {
+        document.getElementById("feedback").textContent =
+          "Something went wrong, please start a new game.";
+      }
+    }
 
     firstClick = false;
     revealCell(clickedRow, clickedCol, clickedCell);
@@ -483,31 +484,14 @@ handleClicks(x, y, cellEl);
 // ==== BOARD VALIDATION ====
 
 function validateBoard(clickedRow, clickedCol) {
-  // use after firstclick
-  // Step 1: Setup
-
-  // Create a list of revealed cells starting from the first click
-  // creates a 2D array (same shape as your board) where each cell starts as false, meaning not revealed
-  // revealedMap is for keeping track of the player, as though he is actually playing the board, like checkAnswer(e)
-
+  // Setup
   let revealedMap = Array(size)
     .fill()
     .map(() => Array(size).fill(false));
 
-  // Create a list of flagged cells (initially empty)
-  // tracks whether a cell is flagged in your simulation
-
   let flaggedMap = Array(size)
     .fill()
     .map(() => Array(size).fill(false));
-
-  // Step 2: Simulate logical deduction
-  // Loop through revealed cells
-  // For each cell with a number:
-  //   - Count hidden neighbors
-  //   - Count flagged neighbors
-  //   - If adjacent == flagged count → reveal remaining hidden neighbors
-  //   - If adjacent == hidden count → flag all hidden neighbors
 
   cascadeReveal(clickedRow, clickedCol, revealedMap);
 
@@ -590,6 +574,23 @@ let cell = ensureCell(r, c)
   }
 }
 
+function countNeighbourMines(r, c) {
+let count = 0
+for (let dr = -1; dr <= 1; dr++) {
+for (let dc = -1; dc <= 1; dc++) {
+if (dr = 0 && dc == 0) continue;
+if (ensureCell(r + dr, c + dc).mine) {
+count++
+}}}
+return count;
+}
+
+function validateCell(r, c) {
+let cell = ensureCell(r, c)
+if (!cell.revealed || cell.mine) return true;
+return cell.number == countNeighbourMines(r, c)
+}
+
 
 // ==== INFINITY HELPERS ====
 // no longer set grid/board size. returns the exact coord of that cell
@@ -616,7 +617,7 @@ return board.get(key(x, y));
 function createEmptyCell(x, y) {
 return {
         x, y,
-        mine: false,
+        mine: "unknown", // safe/mine/unknown
         revealed: false,
         adjacent: 0,
         flagged: false,
