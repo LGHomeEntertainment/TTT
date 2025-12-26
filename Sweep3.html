@@ -238,6 +238,7 @@ if (!cell.revealed) {
 
 function revealCell(clickedRow, clickedCol, clickedCell) {
   let cell = ensureCell(clickedRow, clickedCol);
+cell.neighbours = getNeighbourCoords(clickedRow, clickedCol)
   if (cell.revealed) return;
   cell.revealed = true;
   clickedCell.classList.add("revealed");
@@ -248,7 +249,7 @@ function revealCell(clickedRow, clickedCol, clickedCell) {
     cell.constraint = {
       total: n,
       minesPlaced: 0, 
-      unknowns: getNeighbourCoords(clickedRow, clickedCol).filter(([nr, nc]) => {
+      unknowns: cell.neighbours.filter(([nr, nc]) => {
 let neigh = board.get(key(nr, nc));
 return !neigh || !neigh.revealed;
 }).length
@@ -655,16 +656,19 @@ handleClicks(x, y, cellEl);
 // If validateBoard() returns false, regenerate mines and try again
 // already put in generateMines(), after first click
 
-function cascadeReveal(r, c, revealedMap) { // bound by size of sector
-if (r < 0 || c < 0 || r >= size || c >= size) return;
-if (revealedMap[r][c]) return;
+function cascadeReveal(r, c, visited = new Set()) { 
+let k = key(r, c)
+if (visited.has(k)) return;
+visited.add(k)
 
-  revealedMap[r][c] = true;
-let cell = ensureCell(r, c)
-  if (cell.adjacent > 0) return;
-  for (let [nr, nc] of cell.neighbours) {
-    cascadeReveal(nr, nc, revealedMap); // CASCADE!!
-  }
+for (let [nr, nc] of getNeighbourCoords(r, c)) {
+let neigh = ensureCell(nr, nc);
+if (neigh.revealed) continue;
+
+let neighEl = document.getElementById(`cell-${nr}-${nc}`);
+if (!neighEl) continue;
+revealCell(nr, nc, neighEl);
+}
 }
 
 
