@@ -248,7 +248,10 @@ function revealCell(clickedRow, clickedCol, clickedCell) {
     cell.constraint = {
       total: n,
       minesPlaced: 0, 
-      unknowns: getNeighbourCoords(clickedRow, clickedCol).length
+      unknowns: getNeighbourCoords(clickedRow, clickedCol).filter(([nr, nc]) => {
+let neigh = board.get(key(nr, nc));
+return !neigh || !neigh.revealed;
+}).length
     };
   }
 
@@ -273,6 +276,7 @@ function revealCell(clickedRow, clickedCol, clickedCell) {
 ///=      if (!neighbourCell) continue;
 //    revealCell(nr, nc, neighbourCell); // CASCADE!!
   }
+setTimeout(logForcedMoves, 0)
 }
 
 function decideNumber(r, c) {
@@ -310,10 +314,10 @@ function randomInt(min, max) {
 return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-function canBeMine() {
+function canBeMine(r, c) {
 for (let [nr, nc] of getNeighbourCoords(r, c)) {
 let n = board.get(key(nr, nc))
-if (!n || !n.constrait) continue;
+if (!n || typeof n.constraint != "object") continue;
 
 let { total, minesPlaced, unknowns } = n.constraint;
 
@@ -331,7 +335,7 @@ if (!cell.constraint) continue;
 let { total, minesPlaced, unknowns } = cell.constraint;
 let remaining = total - minesPlaced
 
-if (remaining == 0 && unknowns == 0) {
+if (remaining == 0 && unknowns > 0) {
 console.log("Forced SAFE around", cell)
 }
 if (remaining == unknowns && unknowns > 0) {
