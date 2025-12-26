@@ -203,10 +203,11 @@ function handleClicks(r, c, cellEl) {
 let cell = ensureCell(r, c)
 
 if (!cell.revealed) {
-  checkAnswer(r, c, cellEl);
-} else {
-  chordCell(r, c);
-}
+  revealCell(r, c, cellEl);
+ } 
+// else {
+//   chordCell(r, c);
+// }
 }
 
 // function checkAnswer(clickedRow, clickedCol, clickedCell) { // need to adjust to check current sector
@@ -237,29 +238,62 @@ if (!cell.revealed) {
 
 function revealCell(clickedRow, clickedCol, clickedCell) {
   let cell = ensureCell(clickedRow, clickedCol);
-  if (cell.revealed || cell.flagged) return;
+  if (cell.revealed) return;
   cell.revealed = true;
   clickedCell.classList.add("revealed");
 
-  if (cell.mine) {
-    clickedCell.classList.add("mine");
-    triggerGameOver();
-    return; // need this cuz after running gameOver(), it will come back to this
+  if (cell.adjacent == null) {
+    cell.adjacent = decideNumber(clickedRow, clickedCol);
   }
+
+//  if (cell.mine) {
+//    clickedCell.classList.add("mine");
+//    triggerGameOver();
+//    return; // need this cuz after running gameOver(), it will come back to this
+//  }
   if (cell.adjacent > 0) {
     clickedCell.textContent = cell.adjacent;
     return;
-  }
+  } else {
+    cascadeReveal(clickedRow, clickedCol, new Set())
+
   // adjacent == 0 --> cascade
 
-  for (let [nr, nc] of cell.neighbours) {
-let neighbour = ensureCell(nr, nc)
-    if (neighbour.flagged) continue;
+//  for (let [nr, nc] of cell.neighbours) {
+//    let neighbour = ensureCell(nr, nc)
+//    if (neighbour.flagged) continue;
 
-    let neighbourCell = document.getElementById(`cell-${nr}-${nc}`);
-if (!neighbourCell) continue;
-    revealCell(nr, nc, neighbourCell); // CASCADE!!
+//    let neighbourCell = document.getElementById(`cell-${nr}-${nc}`);
+///=      if (!neighbourCell) continue;
+//    revealCell(nr, nc, neighbourCell); // CASCADE!!
   }
+}
+
+function decideNumber(r, c) {
+let neighbours = getNeighbourCoords(r, c)
+let knownMines = 0;
+let unknowns = 0;
+for (let [nr, nc] of neighbours) {
+let n = board.get(key(nr, nc))
+if (!n) {
+unknowns++; 
+} else if (n.mine == "mine") {
+knownMines++;
+} else if (n.mine == "unknown") {
+unknowns++; 
+}
+}
+
+// Allowed range
+let min = knownMines
+let max = knownMines + unknowns
+
+// Pick something safe for solvability
+return randomInt(min, Math.min(max, 3))
+}
+
+function randomInt(min, max) {
+return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
 function chordCell(clickedRow, clickedCol) {
