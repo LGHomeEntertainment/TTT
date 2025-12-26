@@ -243,7 +243,13 @@ function revealCell(clickedRow, clickedCol, clickedCell) {
   clickedCell.classList.add("revealed");
 
   if (cell.adjacent == null) {
-    cell.adjacent = decideNumber(clickedRow, clickedCol);
+    let n = decideNumber(clickedRow, clickedCol);
+    cell.adjacent = n;
+    cell.constraint = {
+      total: n,
+      minesPlaced: 0, 
+      unknowns: getNeighbourCoords(clickedRow, clickedCol).length
+    };
   }
 
 //  if (cell.mine) {
@@ -284,16 +290,53 @@ unknowns++;
 }
 }
 
+if (unknowns == 0) return knownMines;
+
+let frontierUnknowns = neighbours.filter(([nr, nc]) => {
+let n = board.get(key(nr, nc))
+return !n || !n.revealed
+}).length
+
 // Allowed range
 let min = knownMines
 let max = knownMines + unknowns
+let maxAllowed = Math.min(knownMines + frontierUnknowns, 3);
 
 // Pick something safe for solvability
-return randomInt(min, Math.min(max, 3))
+return randomInt(min, maxAllowed)
 }
 
 function randomInt(min, max) {
 return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function canBeMine() {
+for (let [nr, nc] of getNeighbourCoords(r, c)) {
+let n = board.get(key(nr, nc))
+if (!n || !n.constrait) continue;
+
+let { total, minesPlaced, unknowns } = n.constraint;
+
+// If placing a mine here would exceed the number
+if (minesPlaced + 1 > total) return false
+
+// If leaving too few spots for remaining mines 
+if (minesPlaced + unknowns - 1 < total) return false
+} return true
+}
+
+function logForcedMoves() {
+for (let cell of board.values()) {
+if (!cell.constraint) continue;
+let { total, minesPlaced, unknowns } = cell.constraint;
+let remaining = total - minesPlaced
+
+if (remaining == 0 && unknowns == 0) {
+console.log("Forced SAFE around", cell)
+}
+if (remaining == unknowns && unknowns > 0) {
+console.log("Forced mines around", cell)
+}}
 }
 
 function chordCell(clickedRow, clickedCol) {
