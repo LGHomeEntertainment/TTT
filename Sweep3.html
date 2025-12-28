@@ -156,10 +156,55 @@ function handleClicks(r, c, cellEl) {
   }
 }
 
+// function revealCell(r, c, clickedCell) { // old
+//   let cell = ensureCell(r, c);
+//   cell.neighbours = getNeighbourCoords(r, c);
+//   if (cell.revealed) return;
+
+//   if (firstClick) {
+//     forbidMinesInRadius(clickedCell, 1);
+//     forceNumber(0);
+//     firstClick = false;
+//   }
+
+//   cell.revealed = true;
+//   clickedCell.classList.add("revealed");
+
+//   if (cell.adjacent == null) {
+//     let n = decideNumber(r, c);
+//     cell.adjacent = n;
+
+//     let unknowns = cell.neighbours.filter(([nr, nc]) => {
+//       let neigh = board.get(key(nr, nc));
+//       return !neigh || !neigh.revealed;
+//     }).length;
+
+//     cell.constraint = {
+//       total: n,
+//       minesPlaced: 0,
+//       unknowns,
+//     };
+//   }
+
+//     notifyCellRevealed(r, c);
+
+//   if (cell.adjacent > 0) {
+//     clickedCell.textContent = cell.adjacent;
+//     return;
+//   } else {
+//     cascadeReveal(r, c, new Set());
+//   }
+//   // setTimeout(runSolver, 0);
+// }
+
 function revealCell(r, c, clickedCell) {
   let cell = ensureCell(r, c);
-  cell.neighbours = getNeighbourCoords(r, c);
   if (cell.revealed) return;
+
+  // neighbours should be set ONCE (inside ensureCell ideally)
+  if (!cell.neighbours) {
+    cell.neighbours = getNeighbourCoords(r, c);
+  }
 
   if (firstClick) {
     forbidMinesInRadius(clickedCell, 1);
@@ -170,6 +215,10 @@ function revealCell(r, c, clickedCell) {
   cell.revealed = true;
   clickedCell.classList.add("revealed");
 
+  // 🔑 IMPORTANT: notify existing constraints FIRST
+  notifyCellRevealed(r, c);
+
+  // Now safely create THIS cell’s number + constraint
   if (cell.adjacent == null) {
     let n = decideNumber(r, c);
     cell.adjacent = n;
@@ -186,15 +235,11 @@ function revealCell(r, c, clickedCell) {
     };
   }
 
-    notifyCellRevealed(r, c);
-
   if (cell.adjacent > 0) {
     clickedCell.textContent = cell.adjacent;
-    return;
   } else {
     cascadeReveal(r, c, new Set());
   }
-  // setTimeout(runSolver, 0);
 }
 
 function notifyMinePlaced(r, c) {
@@ -227,23 +272,51 @@ function decideNumber(r, c) {
   let neighbours = getNeighbourCoords(r, c);
 
   let knownMines = 0;
-  // let possibleMineSpots = 0;
+  let unknowns = 0;
+  let revealedNeighbours = 0;
 
   for (let [nr, nc] of neighbours) {
     let n = board.get(key(nr, nc));
-    if (n?.mine) knownMines++;
-    //  if (n?.mine == "mine") knownMines++;
-    //  else if (!n || !n.revealed) possibleMineSpots++;
+    if (n?.mine === "mine") knownMines++;
+    else if (!n || !n.revealed) unknowns++;
+    else revealedNeighbours++;
   }
 
-  //   // If there is room to place mines, force at least ONE
-  //   if (possibleMineSpots > 0) {
-  //     return knownMines + 1;
-  //   }
+  // 1️⃣ Deep empty space → zero
+  if (revealedNeighbours <= 1 && unknowns >= 4) {
+    return knownMines;
+  }
 
-  // Pick something Lowest
+  // 2️⃣ Soft frontier → still zero
+  if (unknowns >= 5) {
+    return knownMines;
+  }
+
+  // 3️⃣ Tight frontier → introduce pressure
+  if (unknowns <= 3) {
+    return knownMines + 1;
+  }
+  
+  // 4️⃣ Constraint overlap → stronger pressure
+let pressure = 0;
+
+for (let [nr, nc] of neighbours) {
+  let n = board.get(key(nr, nc));
+  if (n?.constraint) {
+    let remaining = n.constraint.total - n.constraint.minesPlaced;
+    let unk = n.constraint.unknowns;
+    if (unk <= remaining + 1) pressure++;
+  }
+}
+
+if (pressure >= 2) {
+  return knownMines + 2;
+}
+
+
   return knownMines;
 }
+
 
 function getFrontierCells() {
   let frontier = [];
@@ -706,6 +779,7 @@ function findGuaranteedSafeCell() {
     }
   }
 }
+
 
 </script>
 
