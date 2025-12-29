@@ -155,8 +155,8 @@ function handleClicks(r, c, cellEl) {  // reveal
   if (!cell.revealed) {
 generateCellIfNeeded(cell)
     revealCell(r, c, cellEl);
-cascadeReveal(r, c, cellEl)
-runSolverUntilStable()
+// cascadeReveal(r, c, cellEl)
+// runSolverUntilStable()
   }
 }
 
@@ -203,24 +203,26 @@ runSolverUntilStable()
 
 function revealCell(r, c, clickedCell) {  // reveal
   let cell = ensureCell(r, c);
-  if (cell.revealed) return;
+  if (cell.revealed || cell.flagged) return;
 
   // neighbours should be set ONCE (inside ensureCell ideally)
-  if (!cell.neighbours) {
-    cell.neighbours = getNeighbourCoords(r, c);
-  }
+//  if (!cell.neighbours) {
+//    cell.neighbours = getNeighbourCoords(r, c);
+//  }
 
-  if (firstClick) {
-    forbidMinesInRadius(clickedCell, 1);
-    forceNumber(0);
-    firstClick = false;
-  }
+//  if (firstClick) {
+//    forbidMinesInRadius(clickedCell, 1);
+//    forceNumber(0);
+//    firstClick = false;
+//  }
+
+generateCellIfNeeded(cell)
 
   cell.revealed = true;
   clickedCell.classList.add("revealed");
 
   // 🔑 IMPORTANT: notify existing constraints FIRST
-  notifyCellRevealed(r, c);
+//  notifyCellRevealed(r, c);
 
   if (cell.number > 0) {
     clickedCell.textContent = cell.number;
@@ -435,7 +437,7 @@ function placeMine(r, c) { // solver
   if (cell.flagged) return;
 
   cell.flagged = true;
-  cell.mine = "mine";
+  cell.mineState = MineState.MINE;
 
   let el = document.getElementById(`cell-${r}-${c}`);
   if (!el) return;
@@ -774,6 +776,7 @@ function createEmptyCell(x, y) {
 }
 
 function generateCellIfNeeded(cell) {
+if (cell.number != null) return;
 if (cell.mineState != MineState.UNKNOWN) return;
 
 // TEMP: no mines yet, just numbers
