@@ -149,9 +149,11 @@ function generateGrid(size) {
 
 function handleClicks(r, c, cellEl) {
   if (gameOver) return;
+
   let cell = ensureCell(r, c);
 
   if (!cell.revealed) {
+generateCellIfNeeded(cell)
     revealCell(r, c, cellEl);
   }
 }
@@ -218,28 +220,14 @@ function revealCell(r, c, clickedCell) {
   // 🔑 IMPORTANT: notify existing constraints FIRST
   notifyCellRevealed(r, c);
 
-  // Now safely create THIS cell’s number + constraint
-  if (cell.adjacent == null) {
-    let n = decideNumber(r, c);
-    cell.adjacent = n;
 
-    let unknowns = cell.neighbours.filter(([nr, nc]) => {
-      let neigh = board.get(key(nr, nc));
-      return !neigh || !neigh.revealed;
-    }).length;
 
-    cell.constraint = {
-      total: n,
-      minesPlaced: 0,
-      unknowns,
-    };
-  }
-
-  if (cell.adjacent > 0) {
-    clickedCell.textContent = cell.adjacent;
+  if (cell.number > 0) {
+    clickedCell.textContent = cell.number;
   } else {
-    cascadeReveal(r, c, new Set());
+    zeroFlood(r, c)
   }
+runSolverUntilStable()
 }
 
 function notifyMinePlaced(r, c) {
@@ -334,73 +322,7 @@ function getFrontierCells() {
   return frontier;
 }
 
-// function scoreMine(r, c) {
-//   let score = 0;
 
-//   for (let [nr, nc] of getNeighbourCoords(r, c)) {
-//     let n = board.get(key(nr, nc));
-//     if (!n || !n.constraint) continue;
-
-//     let remaining = n.constraint.total - n.constraint.minesPlaced;
-//     let unknowns = n.constraint.unknowns;
-
-//     // Penalize tightening constraints
-//     score += Math.abs((remaining - 1) / (unknowns - 1 || 1));
-//   }
-
-//   return score;
-// }
-
-// function canBeMine(r, c) {
-//   for (let [nr, nc] of getNeighbourCoords(r, c)) {
-//     let n = board.get(key(nr, nc));
-//     if (!n || typeof n.constraint != "object") continue;
-
-//     let { total, minesPlaced, unknowns } = n.constraint;
-
-//     // If placing a mine here would exceed the number
-//     if (minesPlaced + 1 > total) return false;
-
-//     // If leaving too few spots for remaining mines
-//     if (minesPlaced + unknowns - 1 < total) return false;
-//   }
-//   return true;
-// }
-
-// function applyForcedMoves() {
-//   let progress = false;
-
-//   for (let cell of board.values()) {
-//     if (!cell.constraint || !cell.revealed) continue;
-
-//     let { total, minesPlaced, unknowns } = cell.constraint;
-//     let remaining = total - minesPlaced;
-//     if (unknowns == 0) continue;
-
-//     let unknownNeighbours = cell.neighbours.filter(([r, c]) => {
-//       let n = board.get(key(r, c));
-//       return !n || (!n.flagged && !n.revealed);
-//     });
-
-//     // Rule 1: all SAFE
-//     if (remaining == 0) {
-//       for (let [r, c] of unknownNeighbours) {
-//         forceReveal(r, c);
-//         progress = true;
-//       }
-//     }
-//     // Rule 2: all MINES
-//     if (remaining == unknowns) {
-//       for (let [r, c] of unknownNeighbours) {
-//         if (canBeMine(r, c)) {
-//           placeMine(r, c);
-//         }
-//         progress = true;
-//       }
-//     }
-//   }
-//   return progress;
-// }
 
 function chordCell(clickedRow, clickedCol) {
   let cell = ensureCell(clickedRow, clickedCol);
@@ -419,6 +341,38 @@ function chordCell(clickedRow, clickedCol) {
       revealCell(nr, nc, el);
     });
   }
+}
+
+function solverPass(board) {
+let changed = false
+
+for (let cell of board.getAllRevealedNumberCells()) {
+ let neighbours = cell.neighbours
+
+ let knownMines = 0
+ let unknowns = []
+
+ for (let n of neighbours) {
+if (n.mineState == MineState.UNKNOWN) {
+unknowns.push(n)
+}}
+
+// Rule 1: if all unknowns are mines
+if (cell.number - knownMines == unknowns.length && unknowns.length > 0) {
+ for (let u of unknowns) {
+if (u.mineState != MineState.MINE) {
+u.mineState = MineState.MINE
+changed = true
+}}}
+// Rule 2: if all unknowns are safe
+if (knownMines == cell.number && unknowns.length > 0) {
+ for (let u of unknowns) {
+if (u.mineState != MineState.SAFE) {
+u.mineState = MineState.SAFE
+changed = true
+}}}
+} 
+return changed
 }
 
 function triggerGameOver() {
@@ -496,6 +450,7 @@ function placeMine(r, c) {
   //     n.constraint.minesPlaced++;
   //     n.constraint.unknowns--;
   //   }
+runSolverUntilStable()
 }
 
 function forceReveal(r, c) {
@@ -609,6 +564,78 @@ function forbidMinesInRadius(centerCell, radius) {
 function forceNumber(n) {
   forcedFirstNumber = n;
 }
+
+function runSolverUntilStable() {
+let changed
+do{
+changed = false;
+if (applyBasicConstraints()) changed = true
+if (applySubsetConstraints()) changed = true
+} while changed()
+}
+
+function applyBasicConstraints() {
+let progress = false
+
+for (let cell of board.values()) {
+if (!cell.revealed || !cell.constraint) continue
+
+let { total, minesPlaced, unknowns } = cell.constraint
+let remaining = total - minesPlaced
+if (unknowns == 0) continue
+
+let neighbours = getUnknownNeighbours(cell)
+
+// Rule 1: all Safe
+if (remaining == 0) {
+for (let [r, c] of neighbours) {
+forceReveal(r, c)
+progress = true
+}}
+
+// Rule 2: all mines
+if (remaining == neighbours.length) {
+for (let [r, c] of neighbours) {
+placeMine(r, c)
+progress = true
+}}
+}
+return progress
+}
+
+function zeroFlood(startR, startC) {
+let queue = [[startR, startC]]
+let visited = new Set()
+
+while (queue.length > 0) {
+let [r, c] = queue.shirt()
+let k = key(r, c)
+if (visited.has(k)) continue
+visited.add(k)
+
+let cell = ensureCell(r, c)
+if (!cell.revealed) {
+let el =  getTd(r, c)
+if (!el) continue
+revealCell(r, c, el)
+}
+
+if (cell.number != 0) continue
+
+for (let [nr, nc] of cell.neighbours) {
+let n = ensureCell(nr, nc)
+if (n.flagged|| n.revealed) continue
+
+let el = getTd(nr, nc)
+if (!el) continue;
+
+revealCell(nr, nc, el)
+
+if (n.number == 0) { 
+queue.push([nr, nc])
+}}}}
+
+
 
 // ==== UI + INTERACTION ====
 
@@ -724,18 +751,32 @@ function ensureCell(x, y) {
   return board.get(key(x, y));
 }
 
+    let MineState = {
+UNKNOWN: 0, 
+SAFE: 1, 
+MINE: 2
+}
+
 function createEmptyCell(x, y) {
   return {
     x,
     y,
-    mine: false, // safe/mine/unknown
+    mineState: MineState.UNKNOWN,
     revealed: false,
-    adjacent: null,
+    number: null, // don't use adjacent as well. this is number to be shown
     flagged: false,
     neighbours: getNeighbourCoords(x, y),
   };
-  console.log("board generated");
 }
+
+function generateCellIfNeeded(cell) {
+if (cell.mineState != MineState.UNKNOWN) return;
+
+// TEMP: no mines yet, just numbers
+cell.mineState = MineState.SAFE;
+cell.number = decideNumber (cell.x, cell.y);
+}
+
 
 // ==== HINT SYSTEM (incomplete) ====
 
