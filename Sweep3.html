@@ -157,6 +157,7 @@ function handleClicks(r, c, cellEl) {
     revealCell(r, c, cellEl);
     // cascadeReveal(r, c, cellEl)
     // runSolverUntilStable()
+runSolverOnce()
   }
 }
 
@@ -203,16 +204,14 @@ function revealCell(r, c, clickedCell) {
 
 
 
-function notifyCellRevealed(r, c) {
-  // reveal
-  for (let [nr, nc] of getNeighbourCoords(r, c)) {
-    let n = board.get(key(nr, nc));
-    if (n?.constraint) {
-      n.constraint.unknowns--;
-      console.log("unknowns-- for", nr, nc, n.constraint.unknowns);
-    }
-  }
-}
+// function notifyCellRevealed(r, c) {
+//   // reveal
+//   for (let [nr, nc] of getNeighbourCoords(r, c)) {
+//     let n = board.get(key(nr, nc));
+//     if (n?.constraint) {
+//       n.constraint.unknowns--;
+//       console.log("unknowns-- for", nr, nc, n.constraint.unknowns);
+//     }}}
 
 function decideNumber(r, c) {
   // reveal
@@ -230,7 +229,7 @@ function decideNumber(r, c) {
 
   for (let [nr, nc] of neighbours) {
     let n = board.get(key(nr, nc));
-    if (n?.mine === "mine") knownMines++;
+    if (n?.mineState === MineState.MINE) knownMines++;
     else if (!n || !n.revealed) unknowns++;
     else revealedNeighbours++;
   }
@@ -250,39 +249,40 @@ function decideNumber(r, c) {
     return knownMines + 1;
   }
 
-  // 4️⃣ Constraint overlap → stronger pressure
-  let pressure = 0;
-
-  for (let [nr, nc] of neighbours) {
-    let n = board.get(key(nr, nc));
-    if (n?.constraint) {
-      let remaining = n.constraint.total - n.constraint.minesPlaced;
-      let unk = n.constraint.unknowns;
-      if (unk <= remaining + 1) pressure++;
-    }
-  }
-
-  if (pressure >= 2) {
-    return knownMines + 2;
-  }
-
   return knownMines;
 }
 
-function getFrontierCells() {
-  let frontier = [];
+// function getFrontierCells() {
+//   let frontier = [];
+
+//   for (let cell of board.values()) {
+//     if (!cell.revealed) continue;
+
+//     for (let [r, c] of cell.neighbours) {
+//       let n = board.get(key(r, c));
+//       if (!n || (!n.revealed)) { // && !n.flagged
+//         frontier.push([r, c]);
+//       }}}
+//   return frontier;
+// }
+
+function getFrontierNumberCells() {
+  let result = [];
 
   for (let cell of board.values()) {
-    if (!cell.revealed) continue;
+    if (!cell.revealed || cell.number <= 0) continue;
 
+let hasUnknown = false
     for (let [r, c] of cell.neighbours) {
       let n = board.get(key(r, c));
       if (!n || (!n.revealed)) { // && !n.flagged
-        frontier.push([r, c]);
+        hasUnknown = true
+break
       }
     }
+is (hasUnknown) result.push(cell)
   }
-  return frontier;
+  return result
 }
 
 function chordCell(clickedRow, clickedCol) {
@@ -304,41 +304,52 @@ function chordCell(clickedRow, clickedCol) {
   }
 }
 
-function solverPass(board) {
-  let changed = false;
+function solverPass() {
+   let changed = false;
 
-  for (let cell of board.getAllRevealedNumberCells()) {
-    let neighbours = cell.neighbours;
+let frontier = getFrontierNumberCells()
 
-    let knownMines = 0;
-    let unknowns = [];
+  for (let cell of frontier) {
+let mines = 0
+ let unknowns = [];
 
-    for (let n of neighbours) {
-      if (n.mineState == MineState.UNKNOWN) {
-        unknowns.push(n);
+     for (let [r, c] of cell.neighbours) {
+let n = board.get(key(r, c))
+if (!n) continue
+
+       if (n.mineState == MineState.MINE) mines ++
+else if (!n.revealed) unknowns.push(n);
       }
-    }
 
-    // Rule 1: if all unknowns are mines
-    if (cell.number - knownMines == unknowns.length && unknowns.length > 0) {
-      for (let u of unknowns) {
-        if (u.mineState != MineState.MINE) {
-          u.mineState = MineState.MINE;
-          changed = true;
-        }
-      }
-    }
+let remaining = cell.number - mines
+
+
+
+   // Rule 1: if all unknowns are mines
+     if (remaining == unknowns.length && remaining > 0) {
+       for (let u of unknowns) {
+         if (u.mineState != MineState.MINE) {
+           u.mineState = MineState.MINE;
+           changed = true;
+         }
+       }
+     }
+
     // Rule 2: if all unknowns are safe
-    if (knownMines == cell.number && unknowns.length > 0) {
-      for (let u of unknowns) {
-        if (u.mineState != MineState.SAFE) {
-          u.mineState = MineState.SAFE;
-          changed = true;
+     if (remaining == 0 && unknowns.length > 0) {
+       for (let u of unknowns) {
+         if (u.mineState != MineState.SAFE) {
+           u.mineState = MineState.SAFE;
+           changed = true;
         }
       }
-    }
-  }
-  return changed;
+     }
+   }
+   return changed;
+ }
+
+function runSolverOnce() {
+solverPass()
 }
 
 function triggerGameOver() {
@@ -427,29 +438,31 @@ function getRemainingInfo(cell) {
   };
 }
 
-function applySoftMines() {
-  let changed = false;
 
-  for (let cell of board.values()) {
-    if (!cell.revealed || cell.number === 0) continue;
+// function applySoftMines() {
+//   let changed = false;
 
-    let { remaining, unknowns } = getRemainingInfo(cell);
+//   for (let cell of board.values()) {
+//     if (!cell.revealed || cell.number === 0) continue;
 
-    if (remaining === unknowns.length && remaining > 0) {
-      for (let u of unknowns) {
-        if (u.mineState !== MineState.MINE) {
-          u.mineState = MineState.MINE;
-          changed = true;
+//     let { remaining, unknowns } = getRemainingInfo(cell);
 
-          let el = getTd(u.x, u.y);
-          if (el) el.classList.add("soft-mine");
-        }
-      }
-    }
-  }
+//     if (remaining === unknowns.length && remaining > 0) {
+//       for (let u of unknowns) {
+//         if (u.mineState !== MineState.MINE) {
+//           u.mineState = MineState.MINE;
+//           changed = true;
 
-  return changed;
-}
+//           let el = getTd(u.x, u.y);
+//           if (el) el.classList.add("soft-mine");
+//         }
+//       }
+//     }
+//   }
+
+//   return changed;
+// }
+
 
 
 
@@ -512,7 +525,7 @@ function zeroFlood(startR, startC) {
       }
     }
   }
-  applySoftMines();
+ // applySoftMines();
 }
 
 // ==== UI + INTERACTION ====
@@ -537,7 +550,7 @@ function attachListeners() {
     resetGame(size);
   });
   document.getElementById("hintBtn").addEventListener("click", () => {
-    revealHint();
+    revealHint(); 
   });
 
   // phone long tap
@@ -667,19 +680,20 @@ function scoreCandidates(candidates) {
   return scores;
 }
 
-function revealHint() {
-  let candidates = getHintCandidates();
-  if (candidates.size === 0) return;
+// function revealHint() {
+//   let candidates = getHintCandidates();
+//   if (candidates.size === 0) return;
 
-  let ranked = scoreCandidates(candidates);
-  let best = ranked[0];
+//   let ranked = scoreCandidates(candidates);
+//   let best = ranked[0];
 
-  let [r, c] = best.key.split(",").map(Number);
-  let el = getTd(r, c);
-  if (!el) return;
+//   let [r, c] = best.key.split(",").map(Number);
+//   let el = getTd(r, c);
+//   if (!el) return;
 
-  el.classList.add("hint");
-}
+//   el.classList.add("hint");
+// }
+
 
 
 
