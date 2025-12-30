@@ -101,7 +101,6 @@ td.cell.flagged {
 // ==== GLOBALs + CONSTANTS ====
 
 let size = 8; // start with 10, easier to adjust later
-// let totalMines = Math.floor(Math.random() * 16 + 10);
 let firstClick = true;
 let board = new Map();
 let grid = [];
@@ -166,7 +165,12 @@ function handleClicks(r, c, cellEl) {
 function revealCell(r, c, clickedCell) {
   // reveal
   let cell = ensureCell(r, c);
-  if (cell.revealed || cell.flagged) return;
+  if (cell.revealed) return; // || cell.flagged
+
+ if (cell.mineState == MineState.MINE) {
+ triggerGameOver()
+ return
+ }
 
   // neighbours should be set ONCE (inside ensureCell ideally)
   //  if (!cell.neighbours) {
@@ -179,7 +183,9 @@ function revealCell(r, c, clickedCell) {
   //    firstClick = false;
   //  }
 
-  generateCellIfNeeded(cell);
+//  generateCellIfNeeded(cell);
+
+
 
   cell.revealed = true;
   clickedCell.classList.add("revealed");
@@ -192,13 +198,7 @@ function revealCell(r, c, clickedCell) {
   } else {
     zeroFlood(r, c);
   }
-
-  if (cell.mineState === MineState.MINE) {
-    triggerGameOver();
-    return;
-  }
-
-  applySoftMines();
+//  applySoftMines();
 }
 
 
@@ -277,7 +277,7 @@ function getFrontierCells() {
 
     for (let [r, c] of cell.neighbours) {
       let n = board.get(key(r, c));
-      if (!n || (!n.revealed && !n.flagged)) {
+      if (!n || (!n.revealed)) { // && !n.flagged
         frontier.push([r, c]);
       }
     }
@@ -394,7 +394,7 @@ function toggleFlag(e) {
 
 function forceReveal(r, c) {
   let cell = ensureCell(r, c);
-  if (cell.revealed || cell.flagged) return;
+  if (cell.revealed) return; // || cell.flagged
   let el = document.getElementById(`cell-${r}-${c}`);
   if (!el) return;
   revealCell(r, c, el);
@@ -405,7 +405,7 @@ function forceReveal(r, c) {
 function getUnknownNeighbours(cell) {
   return cell.neighbours.filter(([r, c]) => {
     let n = board.get(key(r, c));
-    return !n || (!n.revealed && !n.flagged);
+    return !n || (!n.revealed); // && !n.flagged
   });
 }
 
@@ -500,7 +500,7 @@ function zeroFlood(startR, startC) {
 
     for (let [nr, nc] of cell.neighbours) {
       let n = ensureCell(nr, nc);
-      if (n.flagged || n.revealed) continue;
+      if (n.revealed) continue; // n.flagged || 
 
       let el = getTd(nr, nc);
       if (!el) continue;
@@ -634,7 +634,7 @@ function getHintCandidates() {
 
     for (let [r, c] of cell.neighbours) {
       let n = board.get(key(r, c));
-      if (!n || (!n.revealed && !n.flagged)) {
+      if (!n || (!n.revealed)) { // && !n.flagged
         unknowns.push([r, c]);
       }
     }
