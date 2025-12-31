@@ -194,6 +194,11 @@ let remaining = cell.number - mines
 function revealCell(r, c, clickedCell) {
   // reveal
   let cell = ensureCell(r, c);
+
+if (cell.number == null) {
+generateCellIfNeeded(cell)
+}
+
   if (cell.revealed) return; // || cell.flagged
 
 // if (cell.mineState == MineState.MINE) {
@@ -538,7 +543,7 @@ function zeroFlood(startR, startC) {
     for (let [nr, nc] of cell.neighbours) {
       let n = ensureCell(nr, nc);
       if (n.number == null) {
-        generateCellIfNeeded(cell)
+        generateCellIfNeeded(n)
       }
       if (n.revealed) continue; // n.flagged || 
 
