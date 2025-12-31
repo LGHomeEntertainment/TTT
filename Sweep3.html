@@ -157,21 +157,49 @@ function handleClicks(r, c, cellEl) {
     revealCell(r, c, cellEl);
     // cascadeReveal(r, c, cellEl)
     // runSolverUntilStable()
-runSolverOnce()
+ applySoftMines();
+// runSolverOnce()
   }
 }
 
+function applySoftMines() {
+for (let cell of board.values()) {
+if (!cell.revealed) continue
+if (cell.number == 0) continue
 
+let unknowns = []
+let mines = 0
+
+ for (let [r, c] of cell.neighbours) {
+let n = board.get(key(r, c))
+if (!n) continue
+
+if (n.mineState == MineState.MINE) mines++
+else if (!n.revealed) unknowns.push(n)
+}
+
+let remaining = cell.number - mines
+
+// All remaining unknowns must be mines (soft)
+     if (remaining == unknowns.length && remaining > 0) {
+       for (let u of unknowns) {
+         if (u.mineState != MineState.MINE) {
+           u.mineState = MineState.MINE;
+           
+
+           let el = getTd(u.x, u.y);
+           if (el) el.classList.add("soft-mine");
+         }}}}}
 
 function revealCell(r, c, clickedCell) {
   // reveal
   let cell = ensureCell(r, c);
   if (cell.revealed) return; // || cell.flagged
 
- if (cell.mineState == MineState.MINE) {
- triggerGameOver()
- return
- }
+// if (cell.mineState == MineState.MINE) {
+// triggerGameOver()
+// return
+// }
 
   // neighbours should be set ONCE (inside ensureCell ideally)
   //  if (!cell.neighbours) {
@@ -199,7 +227,6 @@ function revealCell(r, c, clickedCell) {
   } else {
     zeroFlood(r, c);
   }
-//  applySoftMines();
 }
 
 
@@ -280,7 +307,7 @@ let hasUnknown = false
 break
       }
     }
-is (hasUnknown) result.push(cell)
+if (hasUnknown) result.push(cell)
   }
   return result
 }
@@ -325,15 +352,15 @@ let remaining = cell.number - mines
 
 
 
-   // Rule 1: if all unknowns are mines
-     if (remaining == unknowns.length && remaining > 0) {
-       for (let u of unknowns) {
-         if (u.mineState != MineState.MINE) {
-           u.mineState = MineState.MINE;
-           changed = true;
-         }
-       }
-     }
+//   // Rule 1: if all unknowns are mines
+//     if (remaining == unknowns.length && remaining > 0) {
+//       for (let u of unknowns) {
+//         if (u.mineState != MineState.MINE) {
+//           u.mineState = MineState.MINE;
+//           changed = true;
+ //        }
+//       }
+//     }
 
     // Rule 2: if all unknowns are safe
      if (remaining == 0 && unknowns.length > 0) {
@@ -352,22 +379,19 @@ function runSolverOnce() {
 solverPass()
 }
 
-function triggerGameOver() {
-  gameOver = true;
-  for (let r = 0; r < size; r++) {
-    for (let c = 0; c < size; c++) {
-      let cellData = ensureCell(r, c);
-      let cellElement = document.getElementById(`cell-${r}-${c}`);
-      if (!cellElement) return;
+// function triggerGameOver() {
+//  gameOver = true;
+//  for (let r = 0; r < size; r++) {
+//    for (let c = 0; c < size; c++) {
+//      let cellData = ensureCell(r, c);
+//      let cellElement = document.getElementById(`cell-${r}-${c}`);
+//      if (!cellElement) return;
 
-      if (cellData.mine) {
-        cellData.revealed = true;
-        cellElement.classList.add("mine");
-        cellElement.textContent = "💣"; // add flag
-      }
-    }
-  }
-}
+//      if (cellData.mine) {
+//        cellData.revealed = true;
+//        cellElement.classList.add("mine");
+//        cellElement.textContent = "💣"; // add flag
+//      }}}}
 
 function resetGame(newSize = size) {
   size = newSize;
@@ -399,8 +423,8 @@ function toggleFlag(e) {
     clickedCell.textContent = "🚩"; // add flag
     clickedCell.classList.add("flagged");
   }
+runSolverOnce()
 }
-
 
 
 function forceReveal(r, c) {
@@ -525,7 +549,7 @@ function zeroFlood(startR, startC) {
       }
     }
   }
- // applySoftMines();
+  applySoftMines();
 }
 
 // ==== UI + INTERACTION ====
