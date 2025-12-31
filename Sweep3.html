@@ -537,6 +537,9 @@ function zeroFlood(startR, startC) {
 
     for (let [nr, nc] of cell.neighbours) {
       let n = ensureCell(nr, nc);
+      if (n.number == null) {
+        generateCellIfNeeded(cell)
+      }
       if (n.revealed) continue; // n.flagged || 
 
       let el = getTd(nr, nc);
