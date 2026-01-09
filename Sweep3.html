@@ -266,9 +266,9 @@ function decideNumber(r, c) {
     else revealedNeighbours++;
   }
 
-  // 1️⃣ Deep empty space → zero
-  if (revealedNeighbours <= 1 && unknowns >= 4) {
-    return knownMines;
+  // 1️⃣ Hard stop: prevent infinite flood zero
+  if (revealedNeighbours >= 2) {
+    return knownMines + 1;
   }
 
   // 2️⃣ Soft frontier → still zero
