@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- To Infinity and Beyond! -->
+<!-- To Infinity and Beyond! DEAD -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -806,7 +806,7 @@ for (let [nr, nc] of n.neighbours) {
 let nn = board.get(key(nr, nc))
 if (!nn) continue
 
-if(nn.mineState == MineState.MINE) mines ++
+if (nn.mineState == MineState.MINE) mines ++
 else if (!nn.revealed) unknowns++
 }
 if (mines + 1 > n.number) return false
