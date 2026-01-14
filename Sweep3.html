@@ -158,7 +158,7 @@ function handleClicks(r, c, cellEl) {
     // cascadeReveal(r, c, cellEl)
     // runSolverUntilStable()
  applySoftMines();
-commitForcedMines();
+// commitForcedMines();
 // runSolverOnce()
   }
 }
@@ -176,7 +176,7 @@ let n = board.get(key(r, c))
 if (!n) continue
 
 if (n.mineState == MineState.MINE) mines++
-else if (!n.revealed) unknowns.push(n)
+else if (!n.revealed && n.mineState == MineState.UNKNOWN) unknowns.push(n)
 }
 
 let remaining = cell.number - mines
@@ -184,40 +184,15 @@ let remaining = cell.number - mines
 // All remaining unknowns must be mines (soft)
      if (remaining == unknowns.length && remaining > 0) {
        for (let u of unknowns) {
-         if (u.mineState != MineState.MINE) {
+       //  if (u.mineState != MineState.MINE) {
            u.mineState = MineState.MINE;
-           
+           console.log("mine committed at", u.x, u.y)
 
            let el = getTd(u.x, u.y);
            if (el) el.classList.add("soft-mine");
-}}}}}
+}}}} // }
 
-function commitForcedMines() {
-let committedAny = false
 
-for (let r = 0; r < ROWS; r++) {
-for (let c = 0; c < COLS; c++) {
-let cell = board[r][c]
-
-if (!cell.revealed) continue
-if (cell.number <= 0) continue
-
-let neighbours = getNeighbours(r, c)
-
-let committed = neighbours.filter(n => n.mineState == "committed").length
-let soft = neighbours.filter(n => n.mineState == "soft").length
-
-let hidden = neighbours.filter(n => !n.revealed && n.mineState == "none")
-
-let needed = cell.number - committed - soft
-
-if (needed > 0 && hidden.length == needed) {
-for (let n of hidden) {
-commitMine(n)
-committedAny = true 
-}}}}
-return committedAny
-}
 
 function commitMine(cell) {
 if (cell.mineState == "committed") return
@@ -322,7 +297,7 @@ function decideNumber(r, c) {
     return knownMines + 1;
   }
 
-  return knownMines;
+  return knownMines + (Math.random() < 0.5 ? 1 : 0);
 }
 
 // function getFrontierCells() {
