@@ -158,6 +158,7 @@ function handleClicks(r, c, cellEl) {
     // cascadeReveal(r, c, cellEl)
     // runSolverUntilStable()
  applySoftMines();
+commitForcedMines();
 // runSolverOnce()
   }
 }
@@ -189,7 +190,47 @@ let remaining = cell.number - mines
 
            let el = getTd(u.x, u.y);
            if (el) el.classList.add("soft-mine");
-         }}}}}
+}}}}}
+
+function commitForcedMines() {
+let committedAny = false
+
+for (let r = 0; r < ROWS; r++) {
+for (let c = 0; c < COLS; c++) {
+let cell = board[r][c]
+
+if (!cell.revealed) continue
+if (cell.number <= 0) continue
+
+let neighbours = getNeighbours(r, c)
+
+let committed = neighbours.filter(n => n.mineState == "committed").length
+let soft = neighbours.filter(n => n.mineState == "soft").length
+
+let hidden = neighbours.filter(n => !n.revealed && n.mineState == "none")
+
+let needed = cell.number - committed - soft
+
+if (needed > 0 && hidden.length == needed) {
+for (let n of hidden) {
+commitMine(n)
+committedAny = true 
+}}}}
+return committedAny
+}
+
+function commitMine(cell) {
+if (cell.mineState == "committed") return
+cell.mineState = "committed"
+
+// IMPT: remove soft flag if it exists
+cell.softMine = false
+
+// optional: debug visual
+// cell.el.classList.all("committed-mine")
+console.log("mine committed")
+}
+
 
 function revealCell(r, c, clickedCell) {
   // reveal
@@ -726,6 +767,74 @@ function scoreCandidates(candidates) {
 //   el.classList.add("hint");
 // }
 
+
+function getFrontierUnknowns() {
+// frontier = unrevealed cells adjacent to at least 1 revealed cell
+let frontier = []
+
+for (let cell of board.values()) {
+if (!cell.revealed) continue
+
+for (let [r, c] of cell.neighbours) {
+let n = board.get(key(r, c))
+if (!n || (!n.revealed && n.mineState == MineState.UNKNOWN)) {
+frontier.push(ensureCell(r, c))
+}}}
+return frontier
+}
+
+function shouldForceMine() {
+// force when board is too empty
+let revealed = 0
+let numbered = 0
+
+for (let cell of board.values()) {
+if (!cell.revealed) continue
+revealed++
+if (cell.number > 0) numbered++
+}
+
+if (revealed < 15) return false // early game free ??
+if (numbered >= revealed * 0.4) return false
+
+return true
+}
+
+
+// *** next 2 v impt
+function forceFrontierMineIfNeeded() {
+if (!shouldForceMine()) return false
+
+let frontier = getFrontierUnknowns()
+
+for (let cell of frontier) {
+if (canCommitMine(cell)) {
+cell.mineState = MineState.MINE
+return true
+}}
+return false
+}
+
+function canCommitMine(cell) {
+for (let [r, c] of cell.neighbours) {
+let n = board.get(key(r, c))
+if (!n || !n.revealed || n.number == null) continue
+
+let mines = 0
+let unknowns = 0
+
+for (let [nr, nc] of n.neighbours) {
+let nn = board.get(key(nr, nc))
+if (!nn) continue
+
+if(nn.mineState == MineState.MINE) mines ++
+else if (!nn.revealed) unknowns++
+}
+if (mines + 1 > n.number) return false
+if (mines + unknowns - 1 < n.number) return false
+}
+return true
+}
 
 
 
