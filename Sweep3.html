@@ -158,6 +158,10 @@ function handleClicks(r, c, cellEl) {
     // cascadeReveal(r, c, cellEl)
     // runSolverUntilStable()
  applySoftMines();
+
+if (!applySoftMines()) {
+forceFrontierMineIfNeeded()
+}
 // commitForcedMines();
 // runSolverOnce()
   }
@@ -297,7 +301,7 @@ function decideNumber(r, c) {
     return knownMines + 1;
   }
 
-  return knownMines + (Math.random() < 0.5 ? 1 : 0);
+  return knownMines + (unknowns <= 4 ? 1 : 0);
 }
 
 // function getFrontierCells() {
@@ -679,7 +683,7 @@ function generateCellIfNeeded(cell) {
   if (cell.mineState != MineState.UNKNOWN) return;
 
   // TEMP: no mines yet, just numbers
-  cell.mineState = MineState.SAFE;
+//  cell.mineState = MineState.SAFE;
   cell.number = decideNumber(cell.x, cell.y);
 }
 
