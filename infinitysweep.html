@@ -109,7 +109,7 @@ document.addEventListener("DOMContentLoaded", initialise);
 function initialise() {
   document.getElementById("grid").innerHTML = "";
   generateGrid(size);
-  generateBoard(size);
+//  generateBoard(size);
 //  populateNeighbours();
   attachListeners();
 }
@@ -129,25 +129,6 @@ function generateGrid(size) {
     }
     document.getElementById("grid").appendChild(tr);
   }
-}
-
-// create clear logic BOARD (the invisible one BTS)
-function generateBoard(size) {
-  board = [];
-  for (let row = 0; row < size; row++) {
-    let rowData = [];
-    for (let col = 0; col < size; col++) {
-      rowData.push({
-        mine: false,
-        revealed: false,
-        adjacent: 0,
-        flagged: false,
-        neighbours: [],
-      });
-    }
-    board.push(rowData);
-  }
-  console.log("board generated");
 }
 
 function populateNeighbours() {
@@ -200,7 +181,7 @@ getCell(r, c).adjacent = 0
       let cell = getCell(r, c);
       let count = 0;
       for (let [nr, nc] of cell.neighbours) {
-        if (board[nr][nc].mine) count++;
+        if (getCell(nr, nc).mine) count++;
       }
       cell.adjacent = count;
     }
@@ -272,7 +253,7 @@ function revealCell(clickedRow, clickedCol, clickedCell) {
   // adjacent == 0 --> cascade
 
   for (let [nr, nc] of cell.neighbours) {
-    if (board[nr][nc].flagged) continue;
+    if (getCell(nr, nc).flagged) continue;
 
     let neighbourCell = document.getElementById(`cell-${nr}-${nc}`);
     revealCell(nr, nc, neighbourCell); // CASCADE!!
@@ -285,8 +266,8 @@ if (!cell.revealed || cell.adjacent == 0) return;
 let flagged = 0
 let hidden = []
 for (let [nr, nc] of cell.neighbours) {
-if (board[nr][nc].flagged) flagged++;
-else if (!board[nr][nc].revealed) hidden.push([nr, nc])
+if (getCell(nr, nc).flagged) flagged++;
+else if (!getCell(nr, nc).revealed) hidden.push([nr, nc])
 }
 if (flagged == cell.adjacent) {
 hidden.forEach(([nr, nc]) => {
@@ -343,7 +324,7 @@ function resetGame(newSize = size, newMines = totalMines) {
   totalMines = newMines;
   document.getElementById("feedback").textContent = "";
   board.clear();
-  generateBoard(size);
+//  generateBoard(size);
 //  populateNeighbours();
   document.getElementById("grid").innerHTML = "";
   generateGrid(size);
@@ -400,7 +381,7 @@ let hidden = []
 let flagged = 0
 
       for (let [nr, nc] of cell.neighbours) {
-       let n = board[nr][nc]
+       let n = getCell(nr, nc)
 if (n.flagged) flagged++
 else if (!n.revealed) hidden.push([nr, nc])
 }
@@ -655,17 +636,18 @@ function cascadeReveal(clickedRow, clickedCol, testBoard, revealedMap) {
   }
 }
 
-// ==== INFINITY HELPERS ====
+// ==== INFINITY ====
 
 function key(r, c) {
 return `${r},${c}`;
 }
 
 function getCell(r, c) {
-if (!board.has(key(r, c))) {
-board.set(key(r, c)), createEmptyCell(r, c)
+let k = key(r, c)
+if (!board.has(k)) {
+board.set(k, createEmptyCell(r, c))
 }
-return board.get(key(r, c))
+return board.get(k)
 }
 
 function createEmptyCell(r, c) {
@@ -677,8 +659,12 @@ revealed: false,
 adjacent: 0,
 flagged: false,
 neighbours: getNeighbourCoords(r, c),
-generated: false // impt later
+
+committed: false, // mine is final
+generated: false // whether mine has been decided
 }; }
+
+
 
 </script>
 
