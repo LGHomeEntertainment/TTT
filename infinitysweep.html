@@ -695,7 +695,54 @@ committed: false, // mine is final
 generated: false // whether mine has been decided
 }; }
 
+function countNeighbourState(r, c) {
+let mines = 0
+let undecided = 0
 
+for (let [nr, nc] of getNeighbourCoords(r, c)) {
+let n = getCell(nr, nc)
+if (!n) continue
+
+if (n.mine == true) mines++
+else if (n.mine == null) undecided++
+}
+return { mines, undecided }
+}
+
+function decideCell(r, c) {
+ensureCell(r, c)
+let cell = getCell(r, c)
+
+if (cell.generated) return cell.mine
+
+// check constraints from neighbours
+for (let [nr, nc] of cell.neighbours) {
+let neighbour = getCell(nr, nc)
+if (!neighbour) continue
+if (!neighbour.revealed) continue
+if (neighbour.adjacent == null) continue
+
+let { mines, undecided } = countNeighbourState(nr, nc)
+let remaining = neighbour.adjacent - mines
+
+// if all remaining must be mines --> forced mine
+if (remaining == undecided && undecided > 0) {
+cell.mine = true;
+cell.generated = true
+cell.committed = true
+return false
+}}
+
+// otherwise random
+cell.mine = Math.random() < 0.15 // adjustable density
+cell.generated = true
+cell.committed = true
+return cell.mine
+}
+
+
+
+// ==== PREVENT BREAKAGE ====
 function assertNeverIndexBoard() {
 throw new Error("do not index board[r][c]. Use getCell()")
 }
