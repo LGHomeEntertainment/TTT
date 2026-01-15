@@ -137,7 +137,7 @@ function populateNeighbours() {
       getCell(r, c).neighbours = getNeighbourCoords(r, c);
     }
   }
-  console.log(board[0][0].neighbours);
+  console.log(getCell(0, 0).neighbours);
 }
 // now each cell knows its neighbours, and can check the specific 8 immediately instead of looking through the whole board
 
@@ -161,13 +161,12 @@ getCell(r, c).adjacent = 0
     mineCol = Math.floor(Math.random() * size);
     mineRow = Math.floor(Math.random() * size);
     if (mineCol == clickedCol && mineRow == clickedRow) continue;
-    if (
-      board[mineRow][mineCol].mine == true ||
+    if (getCell(mineRow, mineCol).mine == true ||
       isAdjacent(mineRow, mineCol, clickedRow, clickedCol) // if mine or if is adjacent to the cell
     )
       continue; // skip!
 
-    board[mineRow][mineCol].mine = true; // set the mine flag
+    getCell(mineRow, mineCol).mine = true; // set the mine flag
     minesNumber++;
   }
   console.log("mines placed");
@@ -236,7 +235,7 @@ function checkAnswer(clickedRow, clickedCol, clickedCell) {
 }
 
 function revealCell(clickedRow, clickedCol, clickedCell) {
-  let cell = board[clickedRow][clickedCol];
+  let cell = getCell(clickedRow, clickedCol);
   if (cell.revealed || cell.flagged) return;
   cell.revealed = true;
   clickedCell.classList.add("revealed");
@@ -261,7 +260,7 @@ function revealCell(clickedRow, clickedCol, clickedCell) {
 }
 
 function chordCell(clickedRow, clickedCol) {
-let cell = board[clickedRow][clickedCol];
+let cell = getCell(clickedRow, clickedCol);
 if (!cell.revealed || cell.adjacent == 0) return;
 let flagged = 0
 let hidden = []
@@ -344,14 +343,14 @@ function toggleFlag(e) {
   e.preventDefault();
   let clickedRow = parseInt(clickedCell.dataset.row);
   let clickedCol = parseInt(clickedCell.dataset.col);
-  if (board[clickedRow][clickedCol].revealed == true) {
+  if (getCell(clickedRow, clickedCol).revealed == true) {
     return;
-  } else if (board[clickedRow][clickedCol].flagged) {
-    board[clickedRow][clickedCol].flagged = false;
+  } else if (getCell(clickedRow, clickedCol).flagged) {
+    getCell(clickedRow, clickedCol).flagged = false;
     clickedCell.textContent = ""; // no flag
     clickedCell.classList.remove("flagged");
   } else {
-    board[clickedRow][clickedCol].flagged = true;
+    getCell(clickedRow, clickedCol).flagged = true;
     clickedCell.textContent = "🚩"; // add flag
     clickedCell.classList.add("flagged");
   }
