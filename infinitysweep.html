@@ -18,6 +18,7 @@
 
 /* Each cell */
 .cell {
+  position: relative;
   width: 30px;
   height: 30px;
   background-color: lightgray;
@@ -39,8 +40,11 @@
 
 /* Mine cell */
 .cell.mine {
-  background-color: red;
   color: white;
+}
+
+.cell.fatal-mine {
+background-color: red;
 }
 
 /* Flagged cell */
@@ -53,8 +57,12 @@
 .wrong-flag::after {
 content: "✕";
 position: absolute;
-  color: red;
-  font-size: 18px;
+top: 50%;
+left: 50%;
+transform: translate(-50%, -50%);
+  color: blue;
+  font-size: 20px;
+
 }
 
   /* Hint cell */
@@ -249,8 +257,8 @@ function revealCell(clickedRow, clickedCol, clickedCell) {
   clickedCell.classList.add("revealed");
 
   if (cell.mine) {
-    clickedCell.classList.add("mine");
-    triggerGameOver();
+    clickedCell.classList.add("fatal-mine");
+    triggerGameOver(clickedRow, clickedCol);
     return; // need this cuz after running gameOver(), it will come back to this
   }
   if (cell.adjacent > 0) {
@@ -310,7 +318,7 @@ function checkWin() {
   }
 }
 
-function triggerGameOver() {
+function triggerGameOver(deadRow, deadCol) {
 gameOver = true
   for (let r = 0; r < size; r++) {
     for (let c = 0; c < size; c++) {
@@ -319,14 +327,14 @@ gameOver = true
 
 // mine but not flagged
       if (cell.mine && !cell.flagged) {
-        cell.revealed = true;
-        cellEl.classList.add("mine");
+//        cell.revealed = true;
+//        cellEl.classList.add("mine");
         cellEl.textContent = "💣"; 
       }
 
-// flagged but not mine
+// flagged but not mine. aka wrong flag
       if (!cell.mine && cell.flagged) {
-        cell.revealed = true;
+//        cell.revealed = true;
         cellEl.classList.add("wrong-flag");
         cellEl.textContent = "🚩"; 
       }
