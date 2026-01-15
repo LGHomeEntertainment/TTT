@@ -671,19 +671,23 @@ return `${r},${c}`;
 
 function getCell(r, c) {
 let k = key(r, c)
+return board.get(k) || null;
+}
+
+function ensureCell(r, c) {
+let k = key(r, c)
 if (!board.has(k)) {
 board.set(k, createEmptyCell(r, c))
-}
-return board.get(k)
-}
+}}
 
 function createEmptyCell(r, c) {
 return {
 r, 
 c, 
-mine: false,
+mine: null, // null/true/false
 revealed: false, 
-adjacent: 0,
+// number: null,
+adjacent: null,
 flagged: false,
 neighbours: getNeighbourCoords(r, c),
 
