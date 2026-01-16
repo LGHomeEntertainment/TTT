@@ -211,7 +211,7 @@ function handleClicks(r, c, cellEl) {
 console.log(board instanceof Map)
 let cell = getCell(r, c)
 
-if (!cell.revealed) {
+if (cell.revealed == false) {
   checkAnswer(r, c, cellEl);
 } else {
   chordCell(r, c);
@@ -224,29 +224,11 @@ function checkAnswer(clickedRow, clickedCol, clickedCell) {
 //  let clickedCol = parseInt(clickedCell.dataset.col);
 //  if (gameOver) return;
   if (firstClick) {
-    generateMines(clickedRow, clickedCol);
-
-    // validate board after generating mines
-    let isValid = validateBoard(clickedRow, clickedCol);
-    if (!isValid) {
-      let attempts = 0;
-      while (!isValid && attempts < 10) {
-        // attempts is more impt in sudoku, to throw out the board entirely?
-        generateMines(clickedRow, clickedCol);
-        isValid = validateBoard(clickedRow, clickedCol);
-        attempts++;
-      }
-      if (!isValid && attempts >= 10) {
-        document.getElementById("feedback").textContent =
-          "Something went wrong, please start a new game.";
-      }
-    }
-
     firstClick = false;
     revealCell(clickedRow, clickedCol, clickedCell);
   } else {
     revealCell(clickedRow, clickedCol, clickedCell);
-    checkWin();
+   // checkWin();
   }
 }
 
@@ -256,28 +238,24 @@ ensureCell(r, c)
 
   if (cell.revealed || cell.flagged) return;
 
-// step 1: decide this cell
-decideCell(r, c)
+// Rule 1: revealed cell is always safe
+if (cell.mine == null) {
+  cell.mine == false
+  cell.generated = true
+  }
 
   cell.revealed = true;
   cellEl.classList.add("revealed");
 
-// Step 2: mine check
-  if (cell.mine == true) {
-    cellEl.classList.add("fatal-mine");
-    triggerGameOver(r, c);
-    return; // need this cuz after running gameOver(), it will come back to this
-  }
 
-// step 3: compute number lazily
-let number = computeAdjacent(r, c)
-cell.adjacent = number
-  if (number > 0) {
-    cellEl.textContent = number;
+cell.adjacent = computeAdjacent(r, c)
+propagateFrom (r, c)
+
+  if (cell.adjacent > 0) {
+    cellEl.textContent = cell.adjacent;
     return;
   }
 
-// Step 4: cascade (as per normal)
   for (let [nr, nc] of cell.neighbours) {
     if (getCell(nr, nc).flagged) continue;
 
@@ -301,33 +279,7 @@ revealCell(nr, nc, document.getElementById(`cell-${nr}-${nc}`))
 })
 }}
 
-function checkWin() {
-  let revealedCount = 0;
-  for (let r = 0; r < size; r++) {
-    for (let c = 0; c < size; c++) {
-      let cellData = getCell(r, c);
-      if (!cellData.mine && cellData.revealed == true) {
-        // just check non mines in case.
-        revealedCount++;
-      }
-    }
-  }
 
-  if (revealedCount == size * size - totalMines) {
-    gameOver = true;
-    for (let r = 0; r < size; r++) {
-      for (let c = 0; c < size; c++) {
-        let cellData = getCell(r, c);
-        if (cellData.mine == true && !cellData.revealed) {
-          let cellElement = document.getElementById(`cell-${r}-${c}`);
-          cellElement.textContent = "💣"; // add flag
-        }
-        cellData.revealed = true;
-        document.getElementById("feedback").textContent = "You win!";
-      }
-    }
-  }
-}
 
 function triggerGameOver(deadRow, deadCol) {
 gameOver = true
@@ -554,100 +506,7 @@ function customise() {
 
 // ==== BOARD VALIDATION ====
 
-function validateBoard(clickedRow, clickedCol) {
-  // use after firstclick
-  // Step 1: Setup
-  // Create a copy of the board state (optional, for simulation)
-  // test board is like board. holds data, doesn't change during the game
 
-  let testBoard = cloneBoard(); // this allows testBoard to store the cloneboard data itself
-
-  // Create a list of revealed cells starting from the first click
-  // creates a 2D array (same shape as your board) where each cell starts as false, meaning not revealed
-  // revealedMap is for keeping track of the player, as though he is actually playing the board, like checkAnswer(e)
-
-  let revealedMap = Array(size)
-    .fill()
-    .map(() => Array(size).fill(false));
-
-  // Create a list of flagged cells (initially empty)
-  // tracks whether a cell is flagged in your simulation
-
-  let flaggedMap = Array(size)
-    .fill()
-    .map(() => Array(size).fill(false));
-
-  // Step 2: Simulate logical deduction
-  // Loop through revealed cells
-  // For each cell with a number:
-  //   - Count hidden neighbors
-  //   - Count flagged neighbors
-  //   - If adjacent == flagged count → reveal remaining hidden neighbors
-  //   - If adjacent == hidden count → flag all hidden neighbors
-
-  cascadeReveal(clickedRow, clickedCol, testBoard, revealedMap);
-
-  // Step 3: Track progress
-  // Keep a counter of how many non-mine cells are revealed (using flaggedMap)
-  // Stop when no new cells are revealed in a loop (change = false ==> exit)
-  let change = true;
-  while (change) {
-    change = false; // rmb to add change = true after logic, so that it continues to run as long as there are new reveals
-
-    for (let row = 0; row < size; row++) {
-      for (let col = 0; col < size; col++) {
-        if (!revealedMap[row][col]) continue; // skip if it's not yet opened
-
-        let cell = testBoard[row][col];
-        if (cell.adjacent == 0) continue;
-
-        let hidden = [];
-        let flagged = 0;
-        for (let [nr, nc] of cell.neighbours) {
-          if (flaggedMap[nr][nc])
-            flagged++; // count how many flagged cells are in the adjacent of this cell
-          else if (!revealedMap[nr][nc]) hidden.push([nr, nc]);
-        }
-
-        if (hidden.length > 0) {
-          // hidden.length > 0 meaning there's still hidden cells
-          // Condition 1: all adjacent mines flagged ==> rest are safe
-          if (cell.adjacent == flagged) {
-            hidden.forEach(([nr, nc]) => {
-              cascadeReveal(nr, nc, testBoard, revealedMap);
-            });
-            change = true;
-          }
-
-          // Condition 2: all adjacent is hidden ==> adjacents are mines ==> flag them
-          if (cell.adjacent == hidden.length + flagged) {
-            // + flagged to account for those already flagged
-            hidden.forEach(([nr, nc]) => {
-              flaggedMap[nr][nc] = true;
-            });
-            change = true;
-          }
-        }
-      }
-    }
-  }
-
-  // Step 4: Evaluate
-  // If revealed count == total safe cells → return true (valid board)
-  // Else → return false (board requires guessing)
-
-  let revealedSafe = 0;
-  let totalSafeCells = size * size - totalMines;
-  for (let r = 0; r < size; r++) {
-    for (let c = 0; c < size; c++) {
-      if (revealedMap[r][c] && testBoard[r][c].mine == false) {
-        revealedSafe++;
-      }
-    }
-  }
-
-  return revealedSafe == totalSafeCells;
-}
 
 // Step 5: Retry logic (outside this function)
 // If validateBoard() returns false, regenerate mines and try again
@@ -694,7 +553,7 @@ board.set(k, createEmptyCell(r, c))
 function ensureNeighbours(r, c) {
 for (let [nr, nc] of getNeighbourCoords(r, c)) {
 ensureCell(nr, nc)
-}
+}}
 
 function createEmptyCell(r, c) {
 return {
@@ -745,15 +604,15 @@ let remaining = neighbour.adjacent - mines
 if (remaining == undecided && undecided > 0) {
 cell.mine = true;
 cell.generated = true
-cell.committed = true
-return false
+// cell.committed = true
+return true
 }}
 
-// otherwise random
-cell.mine = Math.random() < 0.15 // adjustable density
-cell.generated = true
-cell.committed = true
-return cell.mine
+// otherwise stay undecided
+// cell.mine = Math.random() < 0.15 // adjustable density
+// cell.generated = true
+// cell.committed = true
+return null
 }
 
 function computeAdjacent(r, c) {
@@ -768,15 +627,48 @@ let count = 0
 for (let [nr, nc] of cell.neighbours) {
 let n = getCell(nr, nc)
 
-// force decision if still undecided
-if (n.mine == null) {
-decideCell(nr, nc)
+if (n.mine == true) count ++
 }
-if (n.mine == true) count++
-}
+  
 cell.adjacent = count
 return count
 }
+
+function propagateFrom(r, c) {
+let cell = getCell(r, c)
+if (!cell.revealed) return
+if (cell.adjacent == null) return
+
+let mines = 0
+let undecided = []
+
+for (let [nr, nc] of cell.neighbours) {
+let n = getCell(nr, nc)
+if (!n) continue
+
+if (n.mine == true) mines++
+else if (n.mine == null) undecided.push(n)
+}
+let remaining = cell.adjacent - mines
+if (remaining < 0) return
+
+// Rule 1: all remaining are mines
+if (remaining == undecided.length && remaining > 0) {
+undecided.forEach(n => {
+n.mine = true
+n.generated = true
+n.committed = true
+})}
+
+// Rule 2: all remaining safe
+if (remaining == 0 && undecided.length > 0) {
+undecided.forEach(n => {
+n.mine = false
+n.generated = true
+n.committed = true
+})}
+}
+
 
 
 // ==== PREVENT BREAKAGE ====
