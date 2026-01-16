@@ -250,23 +250,34 @@ function checkAnswer(clickedRow, clickedCol, clickedCell) {
   }
 }
 
-function revealCell(clickedRow, clickedCol, clickedCell) {
-  let cell = getCell(clickedRow, clickedCol);
-  if (cell.revealed || cell.flagged) return;
-  cell.revealed = true;
-  clickedCell.classList.add("revealed");
+function revealCell(r, c, cellEl) {
+ensureCell(r, c)
+  let cell = getCell(r, c);
 
-  if (cell.mine) {
-    clickedCell.classList.add("fatal-mine");
-    triggerGameOver(clickedRow, clickedCol);
+  if (cell.revealed || cell.flagged) return;
+
+// step 1: decide this cell
+decideCell(r, c)
+
+  cell.revealed = true;
+  cellEl.classList.add("revealed");
+
+// Step 2: mine check
+  if (cell.mine == true) {
+    cellEl.classList.add("fatal-mine");
+    triggerGameOver(r, c);
     return; // need this cuz after running gameOver(), it will come back to this
   }
-  if (cell.adjacent > 0) {
-    clickedCell.textContent = cell.adjacent;
+
+// step 3: compute number lazily
+let number = computeAdjacent(r, c)
+cell.adjacent = number
+  if (number > 0) {
+    cellEl.textContent = number;
     return;
   }
-  // adjacent == 0 --> cascade
 
+// Step 4: cascade (as per normal)
   for (let [nr, nc] of cell.neighbours) {
     if (getCell(nr, nc).flagged) continue;
 
@@ -680,6 +691,11 @@ if (!board.has(k)) {
 board.set(k, createEmptyCell(r, c))
 }}
 
+function ensureNeighbours(r, c) {
+for (let [nr, nc] of getNeighbourCoords(r, c)) {
+ensureCell(nr, nc)
+}
+
 function createEmptyCell(r, c) {
 return {
 r, 
@@ -740,6 +756,27 @@ cell.committed = true
 return cell.mine
 }
 
+function computeAdjacent(r, c) {
+// can check and commit. CANNOT CHANGE numbers
+let cell = getCell(r, c)
+if (cell.adjacent != null) return cell.adjacent
+
+ensureNeighbours(r, c) 
+
+let count = 0
+
+for (let [nr, nc] of cell.neighbours) {
+let n = getCell(nr, nc)
+
+// force decision if still undecided
+if (n.mine == null) {
+decideCell(nr, nc)
+}
+if (n.mine == true) count++
+}
+cell.adjacent = count
+return count
+}
 
 
 // ==== PREVENT BREAKAGE ====
