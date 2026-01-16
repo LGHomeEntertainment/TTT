@@ -112,8 +112,7 @@ transform: translate(-50%, -50%);
 // ==== GLOBALs + CONSTANTS ====
 
 let size = 10; // start with 10, easier to adjust later
-let totalMines = 10;
-let firstClick = true;
+
 let board = new Map();
 let grid = [];
 let gameOver = false;
@@ -157,52 +156,7 @@ function populateNeighbours() {
 }
 // now each cell knows its neighbours, and can check the specific 8 immediately instead of looking through the whole board
 
-// create the MINES. put within checkanswer
-function generateMines(clickedRow, clickedCol, newMines = totalMines) {
-  totalMines = newMines;
 
-// RESET everything first. *in case* validate board regenerates board due to unsolvability.
-for (let r = 0; r < size; r++) {
-for (let c = 0; c < size; c++) {
-getCell(r, c).mine = false
-getCell(r, c).adjacent = 0
-}}
-
-// then place mines
-  let minesNumber = 0;
-  let mineCol = 0;
-  let mineRow = 0;
-
-  while (minesNumber < totalMines) {
-    mineCol = Math.floor(Math.random() * size);
-    mineRow = Math.floor(Math.random() * size);
-    if (mineCol == clickedCol && mineRow == clickedRow) continue;
-    if (getCell(mineRow, mineCol).mine == true ||
-      isAdjacent(mineRow, mineCol, clickedRow, clickedCol) // if mine or if is adjacent to the cell
-    )
-      continue; // skip!
-
-    getCell(mineRow, mineCol).mine = true; // set the mine flag
-    minesNumber++;
-  }
-  console.log("mines placed");
-
-  // count adjacent once all mines placed
-  // For each cell, loop through its 8 neighbors
-  // If neighbor is in bounds and has a mine, increment adjacent count
-
-  for (let r = 0; r < size; r++) {
-    for (let c = 0; c < size; c++) {
-      let cell = getCell(r, c);
-      let count = 0;
-      for (let [nr, nc] of cell.neighbours) {
-        if (getCell(nr, nc).mine) count++;
-      }
-      cell.adjacent = count;
-    }
-  }
-  console.log("adjacent count completed");
-}
 
 // ==== GAME LOGIC ====
 
@@ -219,18 +173,9 @@ if (cell.revealed == false) {
 }
 
 function checkAnswer(clickedRow, clickedCol, clickedCell) {
-//  let clickedCell = e.target;
-//  let clickedRow = parseInt(clickedCell.dataset.row);
-//  let clickedCol = parseInt(clickedCell.dataset.col);
-//  if (gameOver) return;
-  if (firstClick) {
-    firstClick = false;
     revealCell(clickedRow, clickedCol, clickedCell);
-  } else {
-    revealCell(clickedRow, clickedCol, clickedCell);
-   // checkWin();
   }
-}
+
 
 function revealCell(r, c, cellEl) {
 ensureCell(r, c)
@@ -240,7 +185,7 @@ ensureCell(r, c)
 
 // Rule 1: revealed cell is always safe
 if (cell.mine == null) {
-  cell.mine == false
+  cell.mine = false
   cell.generated = true
   }
 
@@ -281,33 +226,7 @@ revealCell(nr, nc, document.getElementById(`cell-${nr}-${nc}`))
 
 
 
-function triggerGameOver(deadRow, deadCol) {
-gameOver = true
-  for (let r = 0; r < size; r++) {
-    for (let c = 0; c < size; c++) {
-      let cell = getCell(r, c);
-      let cellEl = document.getElementById(`cell-${r}-${c}`);
 
-// mine but not flagged
-      if (cell.mine && !cell.flagged) {
-//        cell.revealed = true;
-//        cellEl.classList.add("mine");
-        cellEl.textContent = "💣"; 
-      }
-
-// flagged but not mine. aka wrong flag
-      if (!cell.mine && cell.flagged) {
-//        cell.revealed = true;
-        cellEl.classList.add("wrong-flag");
-        cellEl.textContent = "🚩"; 
-      }
-
-// correctly flagged mine
-cell.revealed = true
-
-    }
-  }
-}
 
 function resetGame(newSize = size, newMines = totalMines) {
   size = newSize;
@@ -540,8 +459,8 @@ return `${r},${c}`;
 }
 
 function getCell(r, c) {
-let k = key(r, c)
-return board.get(k) || null;
+ensureCell(r, c)
+return board.get(key(r, c));
 }
 
 function ensureCell(r, c) {
@@ -618,19 +537,20 @@ return null
 function computeAdjacent(r, c) {
 // can check and commit. CANNOT CHANGE numbers
 let cell = getCell(r, c)
-if (cell.adjacent != null) return cell.adjacent
-
-ensureNeighbours(r, c) 
-
-let count = 0
 
 for (let [nr, nc] of cell.neighbours) {
-let n = getCell(nr, nc)
-
-if (n.mine == true) count ++
+ensureCell(nr, nc)
 }
-  
-cell.adjacent = count
+// Entropy only if nothing is forced
+resolveEntropy(cell)
+
+let count = 0
+for (let [nr, nc] of cell.neighbours) {
+let n = getCell(nr, nc)
+if (n.mine == true) count++
+}
+// Logical propagation
+propagateFrom(r, c)
 return count
 }
 
@@ -658,6 +578,7 @@ undecided.forEach(n => {
 n.mine = true
 n.generated = true
 n.committed = true
+propagateFrom(n.r, n.c)
 })}
 
 // Rule 2: all remaining safe
@@ -666,8 +587,28 @@ undecided.forEach(n => {
 n.mine = false
 n.generated = true
 n.committed = true
+propagateFrom(n.r, n.c)
 })}
 }
+
+function resolveEntropy(cell) {
+let undecided = cell.neighbours.map(([r, c]) => getCell(r, c)).filter(n => n.mine == null)
+
+if (undecided.length == 0) return
+
+// simple probability for now
+let mineChance = 0.5
+
+undecided.forEach(n => {
+if (Math.random() < mineChance) {
+n.mine = true
+n.generated = true
+n.committed = true
+} else {
+n.mine = false
+n.generated = true
+n.committed = true
+}})}
 
 
 
