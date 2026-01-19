@@ -196,6 +196,17 @@ if (cell.mine == null) {
 cell.adjacent = computeAdjacent(r, c)
 propagateFrom (r, c)
 
+if (cell.adjacent == 0) {
+let undecided = cell.neighbours.map(([r, c]) => getCell(r, c)).filter(n =>n.mime == null)
+
+if (undecided.length > 0) {
+let pick = undecided[Math.floor(Math.random() * undecided.length)]
+pick.mine = true
+pick.generated = true
+pick.committed = true
+}}
+
+
   if (cell.adjacent > 0) {
     cellEl.textContent = cell.adjacent;
     return;
@@ -207,6 +218,9 @@ propagateFrom (r, c)
     let neighbourCell = document.getElementById(`cell-${nr}-${nc}`);
     revealCell(nr, nc, neighbourCell); // CASCADE!!
   }
+if (cell.adjacent == 0 && cell.neighbours.length > 0) {
+// frontier reached
+}
 }
 
 function chordCell(clickedRow, clickedCol) {
@@ -537,20 +551,14 @@ return null
 function computeAdjacent(r, c) {
 // can check and commit. CANNOT CHANGE numbers
 let cell = getCell(r, c)
-
-for (let [nr, nc] of cell.neighbours) {
-ensureCell(nr, nc)
-}
-// Entropy only if nothing is forced
-resolveEntropy(cell)
-
 let count = 0
+
 for (let [nr, nc] of cell.neighbours) {
 let n = getCell(nr, nc)
 if (n.mine == true) count++
 }
-// Logical propagation
-propagateFrom(r, c)
+
+cell.adjacent = count
 return count
 }
 
