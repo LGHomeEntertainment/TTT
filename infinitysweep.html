@@ -110,6 +110,7 @@
 // ==== GLOBALs + CONSTANTS ====
 
 let size = 10;
+let firstClick = true;
 let board = new Map();
 let grid = [];
 let gameOver = false;
@@ -150,7 +151,6 @@ function populateNeighbours() {
   console.log(getCell(0, 0).neighbours);
 }
 
-      
 // ==== GAME LOGIC ====
 
 function handleClicks(r, c, cellEl) {
@@ -185,11 +185,14 @@ function revealCell(r, c, cellEl) {
   cell.revealed = true;
   cellEl.classList.add("revealed");
 
-  resolveEntropy(cell);
+  if (!firstClick) {
+    resolveEntropy(cell);
+  }
 
   cell.adjacent = computeAdjacent(r, c);
   propagateFrom(r, c);
 
+  firstClick = false;
   // if (cell.adjacent == 0) {
   //   let undecided = cell.neighbours
   //     .map(([r, c]) => getCell(r, c))
@@ -273,7 +276,6 @@ function toggleFlag(e) {
   }
 }
 
-      
 // ==== HINT SYSTEM ====
 function revealHint() {
   let move = findGuaranteedMove();
@@ -352,7 +354,6 @@ function highlightCell(r, c) {
   }, 1500);
 }
 
-      
 // ==== UI + INTERACTION ====
 function disableInputs() {
   let cells = document.querySelectorAll("td");
@@ -429,7 +430,6 @@ function customise() {
   resetGame(newSize, newMines);
 }
 
-      
 // ==== BOARD VALIDATION ====
 
 function cloneBoard(board) {
@@ -595,15 +595,13 @@ function propagateFrom(r, c) {
 function resolveEntropy(cell) {
   let undecided = cell.neighbours
     .map(([r, c]) => getCell(r, c))
-    .filter(n => n.mine === null);
+    .filter((n) => n.mine === null);
 
   if (undecided.length === 0) return;
 
   // probability scales with openness
   let chance =
-    undecided.length >= 6 ? 0.15 :
-    undecided.length >= 4 ? 0.20 :
-    0.25;
+    undecided.length >= 6 ? 0.15 : undecided.length >= 4 ? 0.2 : 0.25;
 
   if (Math.random() < chance) {
     let pick = undecided[Math.floor(Math.random() * undecided.length)];
@@ -613,14 +611,12 @@ function resolveEntropy(cell) {
   }
 }
 
-
 // ==== PREVENT BREAKAGE ====
 function assertNeverIndexBoard() {
   throw new Error("do not index board[r][c]. Use getCell()");
 }
 
 board[0] = assertNeverIndexBoard;
-
 
     </script>
   </body>
