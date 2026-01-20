@@ -114,6 +114,8 @@ let firstClick = true;
 let board = new Map();
 let grid = [];
 let gameOver = false;
+let viewRow = 0
+let viewCol = 0
 
 // ==== INITIALISATION + GENERATION ====
 
@@ -425,14 +427,23 @@ function attachListeners() {
       }
     });
   });
+
+document.addEventListener("keydown", e => {
+if (e.key == "ArrowUp") viewRow--
+if (e.key == "ArrowDown") viewRow++
+if (e.key == "ArrowLeft") viewCol--
+if (e.key == "ArrowRight") viewCol++
+renderView()
+}
 }
 
 function onClick(e) {
   if (!e.target.classList.contains("cell")) return;
   let cellEl = e.target;
-  let clickedRow = parseInt(cellEl.dataset.row);
-  let clickedCol = parseInt(cellEl.dataset.col);
-  handleClicks(clickedRow, clickedCol, cellEl);
+  let vr = parseInt(cellEl.dataset.row);
+  let vc = parseInt(cellEl.dataset.col);
+  let { r, c } = viewToWorld(vr, vc)
+  handleClicks(r, c, cellEl);
 }
 
 function customise() {
@@ -631,6 +642,42 @@ function resolveEntropy(cell) {
     pick.committed = true;
   }
 }
+
+// ==== CAMERA VIEW ====
+function viewToWorld(r, c) {
+return {
+r: viewRow + r,
+C: viewCol + c
+}
+}
+
+funtion renderView() {
+// view changes when camera moves
+for (let vr = 0; vr < size; vr++) {
+for (let vc = 0; vc < size; vc++) {
+let el = document.getElementById(`cell-${vr}-${vc}`)
+let { r, c } = viewToWorld(vr, vc)
+let cell = getCell (r, c)
+
+el.className = "cell" // reset visuals
+el.textContent = ""
+
+if (cell.revealed) {
+el.classList.add("revealed")
+}
+
+if (cell.mine == true) {
+el.textContent = "💣"
+} else if (cell.adjacent > 0) {
+el.textContent = cell.adjacent
+}
+
+if (cell.flagged) {
+el.textContent = "🚩"
+}}}}
+
+
+
 
 // ==== PREVENT BREAKAGE ====
 function assertNeverIndexBoard() {
