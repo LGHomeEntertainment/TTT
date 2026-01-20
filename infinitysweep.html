@@ -173,8 +173,17 @@ function revealCell(r, c, cellEl) {
   ensureCell(r, c);
   ensureNeighbours(r, c);
   let cell = getCell(r, c);
-
   if (cell.revealed || cell.flagged) return;
+
+if (cell.mine == true) { 
+gameOver = true
+
+cellEl.classList.add("fatal-mine")
+cellEl.textContent = "💣"
+
+revealAllMines()
+return
+}
 
   // Rule 1: revealed cell is always safe
   if (cell.mine == null) {
@@ -221,6 +230,18 @@ function revealCell(r, c, cellEl) {
   //   // frontier reached
   // }
 }
+
+function revealAllMines() {
+for (let cell of board.values()) {
+if (cell.mine == true) {
+let el = document.getElementById(`${cell.r}-${cell.c}`)
+if (!el) continue
+
+el.textContent =  "💣"
+el.classList.add("mine")
+}}
+}
+
 
 function chordCell(clickedRow, clickedCol) {
   let cell = getCell(clickedRow, clickedCol);
