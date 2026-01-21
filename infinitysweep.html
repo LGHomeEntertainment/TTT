@@ -114,10 +114,10 @@ let firstClick = true;
 let board = new Map();
 let grid = [];
 let gameOver = false;
-let viewRow = 0;
-let viewCol = 0;
-let cameraR = 0
-let cameraC = 0
+// let viewRow = 0;
+// let viewCol = 0;
+let cameraR = 0;
+let cameraC = 0;
 
 // ==== INITIALISATION + GENERATION ====
 
@@ -127,6 +127,7 @@ function initialise() {
   document.getElementById("grid").innerHTML = "";
   generateGrid(size);
   attachListeners();
+  renderCamera();
 }
 
 // visible GRID
@@ -146,48 +147,49 @@ function generateGrid(size) {
   }
 }
 
-function populateNeighbours() {
-  for (let r = 0; r < size; r++) {
-    for (let c = 0; c < size; c++) {
-      getCell(r, c).neighbours = getNeighbourCoords(r, c);
-    }
-  }
-  console.log(getCell(0, 0).neighbours);
-}
+// function populateNeighbours() {
+//   for (let r = 0; r < size; r++) {
+//     for (let c = 0; c < size; c++) {
+//       getCell(r, c).neighbours = getNeighbourCoords(r, c);
+//     }
+//   }
+//   console.log(getCell(0, 0).neighbours);
+// }
 
 // ==== GAME LOGIC ====
 
-function handleClicks(r, c, cellEl) {
-  if (gameOver) return;
-  console.log(board instanceof Map);
-  let cell = getCell(r, c);
+// function handleClicks(r, c, cellEl) {
+//   if (gameOver) return;
+//   console.log(board instanceof Map);
+//   let cell = getCell(r, c);
 
-  if (cell.revealed == false) {
-    checkAnswer(r, c, cellEl);
-  } else {
-    chordCell(r, c);
-  }
-}
+//   if (cell.revealed == false) {
+//     checkAnswer(r, c, cellEl);
+//   } else {
+//     chordCell(r, c);
+//   }
+// }
 
-function checkAnswer(clickedRow, clickedCol, clickedCell) {
-  revealCell(clickedRow, clickedCol, clickedCell);
-}
+// function checkAnswer(clickedRow, clickedCol, clickedCell) {
+//   revealCell(clickedRow, clickedCol, clickedCell);
+// }
 
 function revealCell(r, c) {
   ensureCell(r, c);
-  ensureNeighbours(r, c);
+  // ensureNeighbours(r, c);
   let cell = getCell(r, c);
   if (cell.revealed || cell.flagged) return;
 
-  if (cell.mine == true) {
-    gameOver = true;
+  // if clicked cell is mine
+  // if (cell.mine == true) {
+  //   gameOver = true;
 
-    cellEl.classList.add("fatal-mine");
-    cellEl.textContent = "💣";
+  //   cellEl.classList.add("fatal-mine");
+  //   cellEl.textContent = "💣";
 
-    revealAllMines();
-    return;
-  }
+  //   revealAllMines();
+  //   return;
+  // }
 
   // Rule 1: revealed cell is always safe
   if (cell.mine == null) {
@@ -196,7 +198,7 @@ function revealCell(r, c) {
   }
 
   cell.revealed = true;
-  cellEl.classList.add("revealed");
+  //cellEl.classList.add("revealed");
 
   if (!firstClick) {
     resolveEntropy(cell);
@@ -207,45 +209,49 @@ function revealCell(r, c) {
 
   firstClick = false;
 
-  if (cell.adjacent > 0) {
-    cellEl.textContent = cell.adjacent;
-    return;
-  }
+  // if (cell.adjacent > 0) return;
 
-  for (let [nr, nc] of cell.neighbours) {
-    let neighbourCell = document.getElementById(`cell-${nr}-${nc}`);
-    revealCell(nr, nc, neighbourCell); // CASCADE!!
-  }
-
-}
-
-function revealAllMines() {
-  for (let cell of board.values()) {
-    if (cell.mine == true) {
-      let el = document.getElementById(`${cell.r}-${cell.c}`);
-      if (!el) continue;
-
-      el.textContent = "💣";
-      el.classList.add("mine");
+  if (cell.adjacent == 0) {
+    for (let [nr, nc] of cell.neighbours) {
+      // let n = getCell(nr, nc);
+      // if (!n.revealed && n.adjacent === 0) {
+      revealCell(nr, nc);
     }
+
+    // for (let [nr, nc] of cell.neighbours) {
+    //   let neighbourCell = document.getElementById(`cell-${nr}-${nc}`);
+    //   revealCell(nr, nc, neighbourCell); // CASCADE!!
+    // }
   }
 }
 
-function chordCell(clickedRow, clickedCol) {
-  let cell = getCell(clickedRow, clickedCol);
-  if (!cell.revealed || cell.adjacent == 0) return;
-  let flagged = 0;
-  let hidden = [];
-  for (let [nr, nc] of cell.neighbours) {
-    if (getCell(nr, nc).flagged) flagged++;
-    else if (!getCell(nr, nc).revealed) hidden.push([nr, nc]);
-  }
-  if (flagged == cell.adjacent) {
-    hidden.forEach(([nr, nc]) => {
-      revealCell(nr, nc, document.getElementById(`cell-${nr}-${nc}`));
-    });
-  }
-}
+// function revealAllMines() {
+//   for (let cell of board.values()) {
+//     if (cell.mine == true) {
+//       let el = document.getElementById(`${cell.r}-${cell.c}`);
+//       if (!el) continue;
+
+//       el.textContent = "💣";
+//       el.classList.add("mine");
+//     }
+//   }
+// }
+
+// function chordCell(clickedRow, clickedCol) {
+//   let cell = getCell(clickedRow, clickedCol);
+//   if (!cell.revealed || cell.adjacent == 0) return;
+//   let flagged = 0;
+//   let hidden = [];
+//   for (let [nr, nc] of cell.neighbours) {
+//     if (getCell(nr, nc).flagged) flagged++;
+//     else if (!getCell(nr, nc).revealed) hidden.push([nr, nc]);
+//   }
+//   if (flagged == cell.adjacent) {
+//     hidden.forEach(([nr, nc]) => {
+//       revealCell(nr, nc, document.getElementById(`cell-${nr}-${nc}`));
+//     });
+//   }
+// }
 
 function resetGame(newSize = size, newMines = totalMines) {
   size = newSize;
@@ -267,22 +273,18 @@ function isAdjacent(r, c, clickedRow, clickedCol) {
 }
 
 function toggleFlag(e) {
+  e.preventDefault();
   if (gameOver) return;
   let clickedCell = e.target;
-  e.preventDefault();
-  let clickedRow = parseInt(clickedCell.dataset.row);
-  let clickedCol = parseInt(clickedCell.dataset.col);
-  if (getCell(clickedRow, clickedCol).revealed == true) {
-    return;
-  } else if (getCell(clickedRow, clickedCol).flagged) {
-    getCell(clickedRow, clickedCol).flagged = false;
-    clickedCell.textContent = ""; // no flag
-    clickedCell.classList.remove("flagged");
-  } else {
-    getCell(clickedRow, clickedCol).flagged = true;
-    clickedCell.textContent = "🚩"; // add flag
-    clickedCell.classList.add("flagged");
-  }
+
+  let r = parseInt(clickedCell.dataset.row);
+  let c = parseInt(clickedCell.dataset.col);
+
+  let cell = getCell(cameraR + r, cameraC + c);
+
+  if (cell.revealed) return;
+
+  cell.flagged = !cell.flagged;
 }
 
 // ==== HINT SYSTEM ====
@@ -342,12 +344,8 @@ function getNeighbourCoords(r, c) {
   for (let dr = -1; dr <= 1; dr++) {
     for (let dc = -1; dc <= 1; dc++) {
       if (dr == 0 && dc == 0) continue;
-      let neighbourRow = r + dr;
-      let neighbourCol = c + dc;
-      if (neighbourRow < 0 || neighbourRow >= size) continue;
-      if (neighbourCol < 0 || neighbourCol >= size) continue;
 
-      neighbours.push([neighbourRow, neighbourCol]);
+      neighbours.push([r + dr, c + dc]);
     }
   }
   return neighbours;
@@ -364,12 +362,13 @@ function highlightCell(r, c) {
 }
 
 // ==== UI + INTERACTION ====
-function disableInputs() {
-  let cells = document.querySelectorAll("td");
-  cells.forEach((cell) => {
-    cell.replaceWith(cell.cloneNode(true)); // easiest way to remove all listeners
-  });
-}
+
+// function disableInputs() {
+//   let cells = document.querySelectorAll("td");
+//   cells.forEach((cell) => {
+//     cell.replaceWith(cell.cloneNode(true)); // easiest way to remove all listeners
+//   });
+// }
 
 function attachListeners() {
   // all my listeners
@@ -393,14 +392,6 @@ function attachListeners() {
 
   document.getElementById("applyBtn").addEventListener("click", customise);
 
-  cellEl.addEventListener("click", () => {
-let wr = cameraR + sr
-let wc = cameraC + sc
-
-    revealCell(wr, wc);
-renderCamera()
-  });
-
   // phone long tap
   cells.forEach((cell) => {
     let pressTimer;
@@ -417,32 +408,41 @@ renderCamera()
 
     cell.addEventListener("touchend", (e) => {
       clearTimeout(pressTimer);
-      if (!longPressTriggered) {
-        let r = parseInt(cell.dataset.row);
-        let c = parseInt(cell.dataset.col);
-        let cellData = getCell(r, c);
 
-        handleClicks(r, c, cell);
+      if (!longPressTriggered) {
+        let sr = parseInt(cell.dataset.row);
+        let sc = parseInt(cell.dataset.col);
+
+        let wr = cameraR + sr;
+        let wc = cameraC + sc;
+
+        revealCell(wr, wc);
+        renderCamera();
       }
     });
   });
 
   document.addEventListener("keydown", (e) => {
-    if (e.key == "ArrowUp") viewRow--;
-    if (e.key == "ArrowDown") viewRow++;
-    if (e.key == "ArrowLeft") viewCol--;
-    if (e.key == "ArrowRight") viewCol++;
-    renderView();
+    if (e.key === "ArrowUp" || e.key === "w") cameraR--;
+    if (e.key === "ArrowDown" || e.key === "s") cameraR++;
+    if (e.key === "ArrowLeft" || e.key === "a") cameraC--;
+    if (e.key === "ArrowRight" || e.key === "d") cameraC++;
+
+    renderCamera();
   });
 }
 
 function onClick(e) {
-  if (!e.target.classList.contains("cell")) return;
-  let cellEl = e.target;
-  let vr = parseInt(cellEl.dataset.row);
-  let vc = parseInt(cellEl.dataset.col);
-  let { r, c } = viewToWorld(vr, vc);
-  handleClicks(r, c, cellEl);
+  let sr = parseInt(e.target.dataset.row);
+  let sc = parseInt(e.target.dataset.col);
+
+  let wr = cameraR + sr;
+  let wc = cameraC + sc;
+
+  revealCell(wr, wc);
+  renderCamera();
+  // let { r, c } = viewToWorld(vr, vc);
+  // handleClicks(r, c, cellEl);
 }
 
 function customise() {
@@ -463,26 +463,26 @@ function customise() {
 
 // ==== BOARD VALIDATION ====
 
-function cloneBoard(board) {
-  let testBoard = [];
-  for (let row = 0; row < size; row++) {
-    let rowTest = [];
-    for (let col = 0; col < size; col++) {
-      rowTest.push({ ...getCell(row, col) });
-    }
-    testBoard.push(rowTest);
-  }
-  return testBoard; // only by returning, we can access it in the validate board (). it's not really global though
-}
+// function cloneBoard(board) {
+//   let testBoard = [];
+//   for (let row = 0; row < size; row++) {
+//     let rowTest = [];
+//     for (let col = 0; col < size; col++) {
+//       rowTest.push({ ...getCell(row, col) });
+//     }
+//     testBoard.push(rowTest);
+//   }
+//   return testBoard; // only by returning, we can access it in the validate board (). it's not really global though
+// }
 
-function cascadeReveal(clickedRow, clickedCol, testBoard, revealedMap) {
-  if (revealedMap[clickedRow][clickedCol]) return;
-  revealedMap[clickedRow][clickedCol] = true;
-  if (testBoard[clickedRow][clickedCol].adjacent > 0) return;
-  for (let [nr, nc] of testBoard[clickedRow][clickedCol].neighbours) {
-    cascadeReveal(nr, nc, testBoard, revealedMap); // CASCADE!!
-  }
-}
+// function cascadeReveal(clickedRow, clickedCol, testBoard, revealedMap) {
+//   if (revealedMap[clickedRow][clickedCol]) return;
+//   revealedMap[clickedRow][clickedCol] = true;
+//   if (testBoard[clickedRow][clickedCol].adjacent > 0) return;
+//   for (let [nr, nc] of testBoard[clickedRow][clickedCol].neighbours) {
+//     cascadeReveal(nr, nc, testBoard, revealedMap); // CASCADE!!
+//   }
+// }
 
 // ==== INFINITY ====
 
@@ -577,6 +577,12 @@ function computeAdjacent(r, c) {
 
   for (let [nr, nc] of cell.neighbours) {
     let n = getCell(nr, nc);
+
+    // 🔥 force decision if still unknown
+    if (n.mine === null) {
+      decideCell(nr, nc);
+    }
+
     if (n.mine == true) count++;
   }
 
@@ -643,74 +649,77 @@ function resolveEntropy(cell) {
 }
 
 // ==== CAMERA VIEW ====
-function viewToWorld(r, c) {
-  return {
-    r: viewRow + r,
-    C: viewCol + c,
-  };
-}
+// function viewToWorld(r, c) {
+//   return {
+//     r: viewRow + r,
+//     C: viewCol + c,
+//   };
+// }
 
-function renderView() {
-  // view changes when camera moves
-  for (let vr = 0; vr < size; vr++) {
-    for (let vc = 0; vc < size; vc++) {
-      let el = document.getElementById(`cell-${vr}-${vc}`);
-      let { r, c } = viewToWorld(vr, vc);
-      let cell = getCell(r, c);
+// function renderView() {
+//   // view changes when camera moves
+//   for (let vr = 0; vr < size; vr++) {
+//     for (let vc = 0; vc < size; vc++) {
+//       let el = document.getElementById(`cell-${vr}-${vc}`);
+//       let { r, c } = viewToWorld(vr, vc);
+//       let cell = getCell(r, c);
 
-      el.className = "cell"; // reset visuals
-      el.textContent = "";
+//       el.className = "cell"; // reset visuals
+//       el.textContent = "";
 
-      if (cell.revealed) {
-        el.classList.add("revealed");
-      }
+//       if (cell.revealed) {
+//         el.classList.add("revealed");
+//       }
 
-      if (cell.mine == true) {
-        el.textContent = "💣";
-      } else if (cell.adjacent > 0) {
-        el.textContent = cell.adjacent;
-      }
+//       if (cell.mine == true) {
+//         el.textContent = "💣";
+//       } else if (cell.adjacent > 0) {
+//         el.textContent = cell.adjacent;
+//       }
 
-      if (cell.flagged) {
-        el.textContent = "🚩";
-      }
+//       if (cell.flagged) {
+//         el.textContent = "🚩";
+//       }
+//     }
+//   }
+// }
+
+function renderCamera() {
+  for (let sr = 0; sr < size; sr++) {
+    for (let sc = 0; sc < size; sc++) {
+      let wr = cameraR + sr;
+      let wc = cameraC + sc;
+
+      ensureCell(wr, wc);
+
+      let cell = getCell(wr, wc); // board uses wr/wc
+      let el = document.getElementById(`cell-${sr}-${sc}`); // dOM is sr/sc
+
+      drawCell(el, cell);
     }
   }
 }
 
-function renderCamera() {
-for (let sr = 0; sr < size; sr++) {
-for (let sc = 0; sc < size; sc++) {
-let wr = cameraR + sr
-let wc = cameraC + sc
-
-ensureCell(wr, wc)
-
-let cell = getCell(wr, wc) // board uses wr/wc
-let el = document.getElementById(`cell-${sr}-${sc}`) // dOM is sr/sc
-
-drawCell(el, cell)
-}}}
-
 function drawCell(el, cell) {
-el.className = "cell"
+  el.className = "cell";
+  el.textContent = "";
 
-if (cell.revealed) {
-el.classList.add("revealed")
+  if (cell.revealed) {
+    el.classList.add("revealed");
 
-if (cell.mine) {
-el.textContent = "💣";
-} else if (cell.adjacent > 0) {
-el.textContent = cell.adjacent;
-} else { 
-el.textContent = ""
+    if (cell.mine) {
+      el.textContent = "💣";
+    } else if (cell.adjacent > 0) {
+      el.textContent = cell.adjacent;
+    } else {
+      el.textContent = "";
+    }
+  } else if (cell.flagged) {
+    el.textContent = "🚩";
+  } else {
+    el.textContent = "";
+  }
 }
-} else if (cell.flagged) {
-el.textContent = "🚩";
-} else {
-el.textContent = ""
-}}
-
 
 // ==== PREVENT BREAKAGE ====
 function assertNeverIndexBoard() {
@@ -718,6 +727,7 @@ function assertNeverIndexBoard() {
 }
 
 board[0] = assertNeverIndexBoard;
+
 
 
     </script>
