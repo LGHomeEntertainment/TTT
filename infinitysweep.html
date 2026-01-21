@@ -109,13 +109,15 @@
     <script>
 // ==== GLOBALs + CONSTANTS ====
 
-let size = 15;
+let size = 10;
 let firstClick = true;
 let board = new Map();
 let grid = [];
 let gameOver = false;
 let viewRow = 0;
 let viewCol = 0;
+let cameraR = 0
+let cameraC = 0
 
 // ==== INITIALISATION + GENERATION ====
 
@@ -171,7 +173,7 @@ function checkAnswer(clickedRow, clickedCol, clickedCell) {
   revealCell(clickedRow, clickedCol, clickedCell);
 }
 
-function revealCell(r, c, cellEl) {
+function revealCell(r, c) {
   ensureCell(r, c);
   ensureNeighbours(r, c);
   let cell = getCell(r, c);
@@ -204,18 +206,6 @@ function revealCell(r, c, cellEl) {
   propagateFrom(r, c);
 
   firstClick = false;
-  // if (cell.adjacent == 0) {
-  //   let undecided = cell.neighbours
-  //     .map(([r, c]) => getCell(r, c))
-  //     .filter((n) => n.mine == null);
-
-  //   if (undecided.length > 0) {
-  //     let pick = undecided[Math.floor(Math.random() * undecided.length)];
-  //     pick.mine = true;
-  //     pick.generated = true;
-  //     pick.committed = true;
-  //   }
-  // }
 
   if (cell.adjacent > 0) {
     cellEl.textContent = cell.adjacent;
@@ -223,14 +213,10 @@ function revealCell(r, c, cellEl) {
   }
 
   for (let [nr, nc] of cell.neighbours) {
-    //  if (getCell(nr, nc).flagged) continue;
-
     let neighbourCell = document.getElementById(`cell-${nr}-${nc}`);
     revealCell(nr, nc, neighbourCell); // CASCADE!!
   }
-  // if (cell.adjacent == 0 && cell.neighbours.length > 0) {
-  //   // frontier reached
-  // }
+
 }
 
 function revealAllMines() {
@@ -388,19 +374,32 @@ function disableInputs() {
 function attachListeners() {
   // all my listeners
   let cells = document.querySelectorAll("td");
+
   cells.forEach((cell) => {
     cell.addEventListener("click", onClick); // left click
   });
+
   cells.forEach((cell) => {
     cell.addEventListener("contextmenu", toggleFlag); // right click
   });
+
   document.getElementById("resetBtn").addEventListener("click", () => {
     resetGame(size, totalMines);
   });
+
   document.getElementById("hintBtn").addEventListener("click", () => {
     revealHint();
   });
+
   document.getElementById("applyBtn").addEventListener("click", customise);
+
+  cellEl.addEventListener("click", () => {
+let wr = cameraR + sr
+let wc = cameraC + sc
+
+    revealCell(wr, wc);
+renderCamera()
+  });
 
   // phone long tap
   cells.forEach((cell) => {
@@ -678,6 +677,40 @@ function renderView() {
     }
   }
 }
+
+function renderCamera() {
+for (let sr = 0; sr < size; sr++) {
+for (let sc = 0; sc < size; sc++) {
+let wr = cameraR + sr
+let wc = cameraC + sc
+
+ensureCell(wr, wc)
+
+let cell = getCell(wr, wc) // board uses wr/wc
+let el = document.getElementById(`cell-${sr}-${sc}`) // dOM is sr/sc
+
+drawCell(el, cell)
+}}}
+
+function drawCell(el, cell) {
+el.className = "cell"
+
+if (cell.revealed) {
+el.classList.add("revealed")
+
+if (cell.mine) {
+el.textContent = "💣";
+} else if (cell.adjacent > 0) {
+el.textContent = cell.adjacent;
+} else { 
+el.textContent = ""
+}
+} else if (cell.flagged) {
+el.textContent = "🚩";
+} else {
+el.textContent = ""
+}}
+
 
 // ==== PREVENT BREAKAGE ====
 function assertNeverIndexBoard() {
