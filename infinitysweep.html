@@ -141,7 +141,7 @@ cell.dataset.row = gridRow;
      cell.dataset.col = gridCol;
       gridEl.appendChild(cell)
     }}
-   grid.El.style.setProperty("--grid-size", size)
+   gridEl.style.setProperty("--grid-size", size)
 }
 
 // ==== GAME LOGIC ====
@@ -338,7 +338,7 @@ function highlightCell(r, c) {
 
 function attachListeners() {
   // all my listeners
-  let cells = document.querySelectorAll("td");
+  let cells = document.querySelectorAll(".cell");
 
 // Left click
   cells.forEach((cell) => {
@@ -746,6 +746,13 @@ function drawCell(el, cell) {
   } else {
     el.textContent = "";
   }
+}
+
+function moveCamera(dx, dy) {
+let cellSize = 30 // (set in css)
+cameraC = Math.round(dx / cellSize)
+cameraR = Math.round(dy / cellSize)
+renderCamera()
 }
 
 // ==== PREVENT BREAKAGE ====
