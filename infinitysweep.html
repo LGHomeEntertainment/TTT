@@ -14,6 +14,7 @@
   grid-template-columns: repeat(var(--grid-size), 1fr); /* dynamic columns */
   width: fit-content;
   margin: 20px auto;
+touch-action: none;
 }
 
 /* Each cell */
@@ -21,6 +22,8 @@
   position: relative;
   width: 30px;
   height: 30px;
+  min-width: 30px;
+  min-height: 30px;
   background-color: lightgray;
   border: 1px solid #999;
   padding: 0;
@@ -99,7 +102,7 @@
     <script>
 // ==== GLOBALs + CONSTANTS ====
 
-let size = 10;
+let viewSize = 15;
 let firstClick = true;
 let board = new Map();
 let grid = [];
@@ -119,7 +122,7 @@ document.addEventListener("DOMContentLoaded", initialise);
 
 function initialise() {
   document.getElementById("grid").innerHTML = "";
-  generateGrid(size);
+  generateGrid(viewSize);
   attachListeners();
   renderCamera();
 }
@@ -265,15 +268,11 @@ let n = getCell(nr, nc)
    }
 
 
-function resetGame(newSize = size, newMines = totalMines) {
-  size = newSize;
-  totalMines = newMines;
+function resetGame() {
   document.getElementById("feedback").textContent = "";
   board.clear();
-  //  generateBoard(size);
-  //  populateNeighbours();
   document.getElementById("grid").innerHTML = "";
-  generateGrid(size);
+  generateGrid(viewSize);
   firstClick = true;
   gameOver = false;
   attachListeners();
@@ -292,8 +291,8 @@ function revealHint() {
 }
 
 function findGuaranteedMove() {
-  for (let r = 0; r < size; r++) {
-    for (let c = 0; c < size; c++) {
+  for (let r = 0; r < viewSize; r++) {
+    for (let c = 0; c < viewSize; c++) {
       let cell = getCell(r, c);
 
       if (!cell.revealed || cell.adjacent == 0) continue;
@@ -373,7 +372,7 @@ function attachListeners() {
   });
 
   document.getElementById("resetBtn").addEventListener("click", () => {
-    resetGame(size, totalMines);
+    resetGame();
   });
 
   document.getElementById("hintBtn").addEventListener("click", () => {
@@ -503,14 +502,15 @@ chordCell(wr, wc)
 
 
 function getCellFromScreen(x, y) {
-let rect = grid.getBoundingClientRect()
+let el = document.getElementFromPoint(x, y)
+if (!el || !el.classList.contains("cell")) return null
 
-let gridX = x - rect.left
-let gridY = y - rect.top
+let sr = parseInt(el.dataset.row)
+let sc = parseInt(el.dataset.col)
+let wr = cameraR + sr
+let wc = cameraC + sc
 
-let col = Math.floor((gridX - cameraX) / cellSize)
-let row = Math.floor((gridY - cameraY) / cellSize)
-return getCell(row, col)
+return getCell(wr, wc)
 }
 
 
@@ -738,8 +738,8 @@ function resolveEntropy(cell) {
 // }
 
 function renderCamera() {
-  for (let sr = 0; sr < size; sr++) {
-    for (let sc = 0; sc < size; sc++) {
+  for (let sr = 0; sr < viewSize; sr++) {
+    for (let sc = 0; sc < viewSize; sc++) {
       let wr = cameraR + sr;
       let wc = cameraC + sc;
 
