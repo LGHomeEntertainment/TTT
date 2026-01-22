@@ -104,10 +104,13 @@ let firstClick = true;
 let board = new Map();
 let grid = [];
 let gameOver = false;
-// let viewRow = 0;
-// let viewCol = 0;
 let cameraR = 0;
 let cameraC = 0;
+let touchStartX = 0;
+let touchStartY = 0;
+let touchMoved = false
+let longPressTimer = null
+let drag_threshold = 12 // px
 
 // ==== INITIALISATION + GENERATION ====
 
@@ -363,19 +366,10 @@ function attachListeners() {
   // all my listeners
   let cells = document.querySelectorAll("td");
 
+// Left click
   cells.forEach((cell) => {
-    cell.addEventListener("click", onClick); // left click
+    cell.addEventListener("click", onClick); 
   });
-
-  cells.forEach((cell) => {
-    cell.addEventListener("contextmenu", (e) => {
-e.preventDefault()
-let sr = parseInt(cell.dataset.row)
-let sc = parseInt(cell.dataset.col)
-
-toggleFlag(sr, sc); // right click
-  });
-})
 
   document.getElementById("resetBtn").addEventListener("click", () => {
     resetGame(size, totalMines);
@@ -385,8 +379,18 @@ toggleFlag(sr, sc); // right click
     revealHint();
   });
 
+// Right click
+  cells.forEach((cell) => {
+    cell.addEventListener("contextmenu", (e) => {
+e.preventDefault()
+let sr = parseInt(cell.dataset.row)
+let sc = parseInt(cell.dataset.col)
 
-  // phone long tap
+toggleFlag(sr, sc); 
+  });
+})
+
+  // Phone long tap
   cells.forEach((cell) => {
     let timer = null
 
@@ -409,6 +413,7 @@ let sr = parseInt(cell.dataset.row);
 )
   }); 
 
+// Camera movement
   document.addEventListener("keydown", (e) => {
     if (e.key === "ArrowUp" || e.key === "w") cameraR--;
     if (e.key === "ArrowDown" || e.key === "s") cameraR++;
@@ -425,11 +430,13 @@ function onClick(e) {
 
   let wr = cameraR + sr;
   let wc = cameraC + sc;
-
+let cell = getCell(wr, wc)
+if (cell.revealed) {
+chordCell(wr, wc)
+} else {
   revealCell(wr, wc);
+}
   renderCamera();
-  // let { r, c } = viewToWorld(vr, vc);
-  // handleClicks(r, c, cellEl);
 }
 
 
