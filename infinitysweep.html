@@ -720,8 +720,9 @@ function renderCamera() {
       ensureCell(wr, wc);
 
       let cell = getCell(wr, wc); // board uses wr/wc
-      let el = document.getElementById(`cell-${sr}-${sc}`); // dOM is sr/sc
+      let el = document.querySelector(`.cell[data-row="${sr}"][data-col="${sc}"]`) // dOM is sr/sc
 
+if (!el) continue
       drawCell(el, cell);
     }
   }
