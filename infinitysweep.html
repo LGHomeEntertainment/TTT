@@ -86,9 +86,9 @@ touch-action: none;
   <body>
     <h1>SS</h1>
 
-    <table id="grid">
+    <div id="grid">
       <!-- JS will generate rows and cells -->
-    </table>
+    </div>
 
     <div>
       <p id="feedback"></p>
@@ -129,48 +129,22 @@ function initialise() {
 
 // visible GRID
 function generateGrid(size) {
-  grid = [];
+let gridEl = document.getElementById("grid")
+gridEl.innerHTML = ""
+
   for (let gridRow = 0; gridRow < size; gridRow++) {
-    let tr = document.createElement("tr");
+    // let tr = document.createElement("tr");
     for (let gridCol = 0; gridCol < size; gridCol++) {
-      let td = document.createElement("td");
-      td.classList.add("cell");
-      td.dataset.row = gridRow;
-      td.dataset.col = gridCol;
-      td.id = `cell-${gridRow}-${gridCol}`;
-      tr.appendChild(td);
-    }
-    document.getElementById("grid").appendChild(tr);
-  }
+let cell = document.createElement("div")
+cell.className = "cell"
+cell.dataset.row = gridRow;
+     cell.dataset.col = gridCol;
+      gridEl.appendChild(cell)
+    }}
+   grid.El.style.setProperty("--grid-size", size)
 }
 
-// function populateNeighbours() {
-//   for (let r = 0; r < size; r++) {
-//     for (let c = 0; c < size; c++) {
-//       getCell(r, c).neighbours = getNeighbourCoords(r, c);
-//     }
-//   }
-//   console.log(getCell(0, 0).neighbours);
-// }
-
 // ==== GAME LOGIC ====
-
-// function handleClicks(r, c, cellEl) {
-//   if (gameOver) return;
-//   console.log(board instanceof Map);
-//   let cell = getCell(r, c);
-
-//   if (cell.revealed == false) {
-//     checkAnswer(r, c, cellEl);
-//   } else {
-//     chordCell(r, c);
-//   }
-// }
-
-// function checkAnswer(clickedRow, clickedCol, clickedCell) {
-//   revealCell(clickedRow, clickedCol, clickedCell);
-// }
-
 function revealCell(r, c) {
   ensureCell(r, c);
   // ensureNeighbours(r, c);
