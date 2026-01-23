@@ -99,6 +99,9 @@ touch-action: none;
       <button id="hintBtn">Hint</button>
       <button id="resetBtn">Start a new game</button>
     </div>
+<p id="revealed">Revealed: </p>
+    <p id="deaths">Dead cells: </p>
+    <p id="integrity">Integrity: 100%</p>
 
     <script>
 // ==== GLOBALs + CONSTANTS ====
@@ -119,6 +122,8 @@ let isCameraMode = false
 let dragAccumX = 0
 let dragAccumY = 0 // so that not every small movement will cause camera to move
 
+let deathCount = 0 
+let revealedCount = 0
 
 // ==== INITIALISATION + GENERATION ====
 
@@ -154,13 +159,18 @@ function revealCell(r, c) {
   let cell = getCell(r, c);
   if (cell.revealed || cell.flagged) return;
 
-  // Rule 1: revealed cell is always safe
+// if still undecided, then just guarantee safe
   if (cell.mine == null) {
     cell.mine = false;
     cell.generated = true;
   }
 
   cell.revealed = true;
+revealedCount++
+
+if (cell.mine == true) {
+registerDeath(cell)
+}
 
   if (!firstClick) {
     resolveEntropy(cell);
@@ -171,9 +181,10 @@ function revealCell(r, c) {
 
   firstClick = false;
 
+// cascade
   if (cell.adjacent == 0) {
     for (let [nr, nc] of cell.neighbours) {
-      revealCell(nr, nc);
+      revealCell(nr, nc); 
     }
   }
 }
@@ -219,6 +230,23 @@ function resetGame() {
   attachListeners();
 }
 
+function registerDeath(cell) {
+if (cell.dead) return // prevent double count
+cell.dead = true
+deathCount++
+return deathCount
+}
+
+function updateStats {
+let integrity = 100
+
+if (revealedCount > 0) {
+integrity = Math.round((1 - deathCount / revealedCount) * 100)
+}
+document.getElementById("revealed").textContent = `Revealed: ${revealedCount}`
+document.getElementById("deaths").textContent = `Dead cells: ${deathCount}`
+document.getElementById("integrity").textContent = `Integrity: ${integrity}%`
+}
 
 // ==== HINT SYSTEM ====
 function revealHint() {
@@ -294,15 +322,8 @@ function highlightCell(r, c) {
   }, 1500);
 }
 
+      
 // ==== UI + INTERACTION ====
-
-// function disableInputs() {
-//   let cells = document.querySelectorAll("td");
-//   cells.forEach((cell) => {
-//     cell.replaceWith(cell.cloneNode(true)); // easiest way to remove all listeners
-//   });
-// }
-
 function attachListeners() {
   // all my listeners
   let cells = document.querySelectorAll(".cell");
@@ -483,7 +504,7 @@ function createEmptyCell(r, c) {
     adjacent: null,
     flagged: false,
     neighbours: getNeighbourCoords(r, c),
-
+    dead: false,
     committed: false, // mine is final
     generated: false, // whether mine has been decided
   };
@@ -638,6 +659,7 @@ function drawCell(el, cell) {
     el.classList.add("revealed");
 
     if (cell.mine) {
+      cell.dead = true
       el.textContent = "💣";
       el.style.backgroundColor = "red"
     } else if (cell.adjacent > 0) {
