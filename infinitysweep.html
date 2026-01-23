@@ -48,6 +48,7 @@ touch-action: none;
 
 .cell.fatal-mine {
   background-color: red;
+  content: "💣"
 }
 
 /* Flagged cell */
@@ -102,7 +103,7 @@ touch-action: none;
     <script>
 // ==== GLOBALs + CONSTANTS ====
 
-let viewSize = 15;
+let viewSize = 12;
 let firstClick = true;
 let board = new Map();
 let grid = [];
@@ -150,20 +151,8 @@ cell.dataset.row = gridRow;
 // ==== GAME LOGIC ====
 function revealCell(r, c) {
   ensureCell(r, c);
-  // ensureNeighbours(r, c);
   let cell = getCell(r, c);
   if (cell.revealed || cell.flagged) return;
-
-  // if clicked cell is mine
-  // if (cell.mine == true) {
-  //   gameOver = true;
-
-  //   cellEl.classList.add("fatal-mine");
-  //   cellEl.textContent = "💣";
-
-  //   revealAllMines();
-  //   return;
-  // }
 
   // Rule 1: revealed cell is always safe
   if (cell.mine == null) {
@@ -172,7 +161,6 @@ function revealCell(r, c) {
   }
 
   cell.revealed = true;
-  //cellEl.classList.add("revealed");
 
   if (!firstClick) {
     resolveEntropy(cell);
@@ -183,25 +171,14 @@ function revealCell(r, c) {
 
   firstClick = false;
 
-  // if (cell.adjacent > 0) return;
-
   if (cell.adjacent == 0) {
     for (let [nr, nc] of cell.neighbours) {
-      // let n = getCell(nr, nc);
-      // if (!n.revealed && n.adjacent === 0) {
       revealCell(nr, nc);
     }
-
-    // for (let [nr, nc] of cell.neighbours) {
-    //   let neighbourCell = document.getElementById(`cell-${nr}-${nc}`);
-    //   revealCell(nr, nc, neighbourCell); // CASCADE!!
-    // }
   }
 }
 
 function toggleFlag(sr, sc) {
-//  e.preventDefault();
-//  if (gameOver) return;
 let wr = cameraR + sr
 let wc = cameraC + sc
 
@@ -212,19 +189,7 @@ let cell = getCell(wr, wc)
 renderCamera()
 }
 
-// function revealAllMines() {
-//   for (let cell of board.values()) {
-//     if (cell.mine == true) {
-//       let el = document.getElementById(`${cell.r}-${cell.c}`);
-//       if (!el) continue;
-
-//       el.textContent = "💣";
-//       el.classList.add("mine");
-//     }
-//   }
-// }
-
- function chordCell(r, c) {
+function chordCell(r, c) {
    let cell = getCell(r, c);
 
    if (!cell.revealed || cell.adjacent == 0 || cell.adjacent == null) return;
@@ -235,7 +200,7 @@ renderCamera()
    for (let [nr, nc] of cell.neighbours) {
 let n = getCell(nr, nc)
 
-     if (n.flagged) flagged++;
+     if (n.flagged || n.mine == true) flagged++;
      else if (!n.revealed) hidden.push([nr, nc]);
   }
    if (flagged == cell.adjacent) {
@@ -243,7 +208,6 @@ let n = getCell(nr, nc)
      revealCell(nr, nc);
      }); }
    }
-
 
 function resetGame() {
   document.getElementById("feedback").textContent = "";
@@ -367,9 +331,6 @@ toggleFlag(sr, sc);
   });
 })
 
-
-
-
 // Grid movement (for mobile camera)
 let grid = document.getElementById("grid")
 
@@ -449,8 +410,6 @@ isCameraMode = false
 { passive: false }
 )
 
-
-
 // Camera movement
   document.addEventListener("keydown", (e) => {
     if (e.key === "ArrowUp" || e.key === "w") cameraR--;
@@ -491,29 +450,6 @@ return getCell(wr, wc)
 }
 
 
-// ==== BOARD VALIDATION ====
-
-// function cloneBoard(board) {
-//   let testBoard = [];
-//   for (let row = 0; row < size; row++) {
-//     let rowTest = [];
-//     for (let col = 0; col < size; col++) {
-//       rowTest.push({ ...getCell(row, col) });
-//     }
-//     testBoard.push(rowTest);
-//   }
-//   return testBoard; // only by returning, we can access it in the validate board (). it's not really global though
-// }
-
-// function cascadeReveal(clickedRow, clickedCol, testBoard, revealedMap) {
-//   if (revealedMap[clickedRow][clickedCol]) return;
-//   revealedMap[clickedRow][clickedCol] = true;
-//   if (testBoard[clickedRow][clickedCol].adjacent > 0) return;
-//   for (let [nr, nc] of testBoard[clickedRow][clickedCol].neighbours) {
-//     cascadeReveal(nr, nc, testBoard, revealedMap); // CASCADE!!
-//   }
-// }
-
 // ==== INFINITY ====
 
 function key(r, c) {
@@ -544,7 +480,6 @@ function createEmptyCell(r, c) {
     c,
     mine: null, // null/true/false
     revealed: false,
-    // number: null,
     adjacent: null,
     flagged: false,
     neighbours: getNeighbourCoords(r, c),
@@ -593,10 +528,6 @@ function decideCell(r, c) {
     }
   }
 
-  // otherwise stay undecided
-  // cell.mine = Math.random() < 0.15 // adjustable density
-  // cell.generated = true
-  // cell.committed = true
   return null;
 }
 
@@ -678,41 +609,8 @@ function resolveEntropy(cell) {
   }
 }
 
-// ==== CAMERA VIEW ====
-// function viewToWorld(r, c) {
-//   return {
-//     r: viewRow + r,
-//     C: viewCol + c,
-//   };
-// }
 
-// function renderView() {
-//   // view changes when camera moves
-//   for (let vr = 0; vr < size; vr++) {
-//     for (let vc = 0; vc < size; vc++) {
-//       let el = document.getElementById(`cell-${vr}-${vc}`);
-//       let { r, c } = viewToWorld(vr, vc);
-//       let cell = getCell(r, c);
-
-//       el.className = "cell"; // reset visuals
-//       el.textContent = "";
-
-//       if (cell.revealed) {
-//         el.classList.add("revealed");
-//       }
-
-//       if (cell.mine == true) {
-//         el.textContent = "💣";
-//       } else if (cell.adjacent > 0) {
-//         el.textContent = cell.adjacent;
-//       }
-
-//       if (cell.flagged) {
-//         el.textContent = "🚩";
-//       }
-//     }
-//   }
-// }
+// ==== CAMERA VIEW ===
 
 function renderCamera() {
   for (let sr = 0; sr < viewSize; sr++) {
@@ -734,12 +632,14 @@ if (!el) continue
 function drawCell(el, cell) {
   el.className = "cell";
   el.textContent = "";
+  el.style.backgroundColor = "";
 
   if (cell.revealed) {
     el.classList.add("revealed");
 
     if (cell.mine) {
       el.textContent = "💣";
+      el.style.backgroundColor = "red"
     } else if (cell.adjacent > 0) {
       el.textContent = cell.adjacent;
     } else {
@@ -775,14 +675,6 @@ if (moveX != 0 || moveY != 0) {
 renderCamera()
 }
 }
-
-// ==== PREVENT BREAKAGE ====
-function assertNeverIndexBoard() {
-  throw new Error("do not index board[r][c]. Use getCell()");
-}
-
-board[0] = assertNeverIndexBoard;
-
 
 
     </script>
