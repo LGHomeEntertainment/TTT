@@ -108,7 +108,7 @@ cursor: default;
 <script>
 
 let selectedCell = null
-
+let playerBoard = []
 
 // 1. Generate a solved Sudoku board
 function generateSolvedSudoku() {
@@ -163,7 +163,9 @@ function makePuzzle(board, blanks = 40) {
       removed++;
     }
   }
-  return puzzle;
+playerBoard = puzzle.map(row => [...row]);
+return playerBoard;
+return puzzle;
 }
 
 // 3. Render the board in HTML
@@ -202,7 +204,6 @@ selectedCell = div
   });
 }
 
-
 // 4. Run everything
 const solved = generateSolvedSudoku();
 const puzzle = makePuzzle(solved, 40);
@@ -214,9 +215,16 @@ document.querySelectorAll("#number-pad button").forEach(btn => {
 btn.addEventListener("click", () => {
 if (!selectedCell) return
 if (btn.dataset.clear) { 
+let r = selectedCell.dataset.row
+let c = selectedCell.dataset.col
+playerBoard[r][c] = 0
 selectedCell.textContent = ""
 return 
 }
+// selectedCell.textContent = btn.textContent
+let r = selectedCell.dataset.row
+let c = selectedCell.dataset.col
+playerBoard[r][c] = Number(btn.textContent);
 selectedCell.textContent = btn.textContent
 })
 })
