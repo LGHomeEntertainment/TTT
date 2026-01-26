@@ -84,7 +84,7 @@ cursor: default;
   </head>
   <body>
     
- <h1>Sudoku Puzzle</h1>
+ <h1>SP</h1>
   <div id="sudoku-board" class="grid"></div>
 
 <div id="number-pad"> 
@@ -225,11 +225,11 @@ selectedCell = div
 }
 
 // 4. Run everything
-const solved = generateSolvedSudoku();
-let puzzleBoard = makePuzzle(solvedBoard, 40)
-playerBoard = puzzleBoard.map(row => [...row]);
-renderBoard(puzzle);
-console.table(puzzle);
+// const solved = generateSolvedSudoku();
+// let puzzleBoard = makePuzzle(solvedBoard, 40)
+// playerBoard = puzzleBoard.map(row => [...row]);
+// renderBoard(puzzle);
+// console.table(puzzle);
 
 function attachListeners() {
 document.querySelectorAll("#number-pad button").forEach(btn => { 
@@ -250,13 +250,14 @@ playerBoard[r][c] = num;
 selectedCell.textContent = num
 checkCell(r, c)
 })
+})
+  
 document.getElementById("resetBtn").addEventListener("click", () => {
     resetRound();
   });
 document.getElementById("fullResetBtn").addEventListener("click", () => {
     newGame();
-  });
-}
+})}
 
 function checkCell(r, c) {
 if (playerBoard[r][c] != solvedBoard[r][c]) {
