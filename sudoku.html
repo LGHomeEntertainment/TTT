@@ -34,6 +34,10 @@ cursor: pointer;
 user-select: none;
 }
 
+.cell.error {
+color: red;
+}
+
 /* thicker box borders */
 .cell:nth-child(3n):not(:nth-child(9n)) {
 border-right: 2px solid #000;
@@ -101,24 +105,27 @@ cursor: default;
     </div>
 
     <div>
-      <button id="resetBtn">Start a new game</button>
+      <button id="resetBtn">Start over</button>
+      <button id="fullResetBtn">Start a new game</button>
     </div>
 
 
 <script>
 
 let selectedCell = null
-let playerBoard = []
+let playerBoard = [] // what player inputs
+let puzzleBoard = [] // initial grid
+let solvedBoard = [] // solution
 
 
 document.addEventListener("DOMContentLoaded", initialise);
 
 function initialise() {
-  document.getElementById("grid").innerHTML = "";
-  generateSolvedSudoku()
-fillBoard(board)
-makePuzzle(board, blanks = 40)
-renderBoard(board)
+//  document.getElementById("grid").innerHTML = "";
+solvedBoard = generateSolvedSudoku()
+puzzleBoard = makePuzzle(solvedBoard, 40)
+playerBoard = puzzleBoard.map(row => [...row])
+renderBoard(puzzleBoard, playerBoard)
   attachListeners();
 }
 
@@ -132,6 +139,7 @@ function generateSolvedSudoku() {
     }
     const boxRow = Math.floor(row / 3) * 3;
     const boxCol = Math.floor(col / 3) * 3;
+
     for (let r = 0; r < 3; r++) {
       for (let c = 0; c < 3; c++) {
         if (board[boxRow + r][boxCol + c] === num) return false;
@@ -145,10 +153,11 @@ function generateSolvedSudoku() {
       for (let col = 0; col < 9; col++) {
         if (board[row][col] === 0) {
           const nums = [1,2,3,4,5,6,7,8,9].sort(() => Math.random() - 0.5);
+
           for (let num of nums) {
             if (isValid(board, row, col, num)) {
               board[row][col] = num;
-              if (fillBoard(board)) return true;
+              if (fillBoard()) return true;
               board[row][col] = 0;
             }
           }
@@ -159,23 +168,23 @@ function generateSolvedSudoku() {
     return true;
   }
 
-  fillBoard(board);
+  fillBoard();
   return board;
 }
 
 // 2. Remove numbers to create a puzzle
 function makePuzzle(board, blanks = 40) {
-  const puzzleBoard = board.map(row => [...row]);
+  const puzzle = board.map(row => [...row]);
   let removed = 0;
   while (removed < blanks) {
     const r = Math.floor(Math.random() * 9);
     const c = Math.floor(Math.random() * 9);
-    if (puzzleBoard[r][c] !== 0) {
-      puzzleBoard[r][c] = 0;
+    if (puzzle[r][c] !== 0) {
+      puzzle[r][c] = 0;
       removed++;
     }
   }
-return puzzleBoard;
+return puzzle;
 }
 
 
@@ -185,27 +194,25 @@ function renderBoard(puzzleBoard, playerBoard) {
 
   const container = document.getElementById("sudoku-board");
   container.innerHTML = "";
-  board.forEach((row, rIndex) => {
-    row.forEach((cell, cIndex) => {
+
+  puzzleBoard.forEach((row, r) => {
+    row.forEach((cell, c) => {
       const div = document.createElement("div");
       div.className = "cell";
-//      div.textContent = cell === 0 ? "" : cell;
 
-let value = playerBoard[rIndex][cIndex]
-if (puzzleBoard[rIndex][cIndex] != 0) {
-div.textContent = value;
+div.dataset.row = r
+div.dataset.col = c
+
+if (cell != 0) { 
+div.textContent = cell
 div.classList.add("fixed")
 } else {
+let value = playerBoard[r][c]
 div.textContent = value == 0 ? "" : value
 }
 
-      // ✅ Add position info
-      div.dataset.row = rIndex;
-      div.dataset.col = cIndex;
-
       // ✅ Attach click listener
       div.addEventListener("click", () => {
-        console.log(`Clicked cell: Row ${rIndex}, Col ${cIndex}`);
 if (div.classList.contains("fixed")) return;
 document.querySelectorAll(".cell").forEach(c => c.classList.remove("selected"))
 div.classList.add("selected")
@@ -228,33 +235,56 @@ function attachListeners() {
 document.querySelectorAll("#number-pad button").forEach(btn => { 
 btn.addEventListener("click", () => {
 if (!selectedCell) return
+
+let r = Number(selectedCell.dataset.row)
+let c = Number(selectedCell.dataset.col)
+
 if (btn.dataset.clear) { 
-let r = selectedCell.dataset.row
-let c = selectedCell.dataset.col
 playerBoard[r][c] = 0
 selectedCell.textContent = ""
 return 
 }
-// selectedCell.textContent = btn.textContent
-let r = selectedCell.dataset.row
-let c = selectedCell.dataset.col
-playerBoard[r][c] = Number(btn.textContent);
-selectedCell.textContent = btn.textContent
+
+let num = Number(btn.textContent)
+playerBoard[r][c] = num;
+selectedCell.textContent = num
+checkCell(r, c)
 })
-checkBoard(r, c)
-})
+document.getElementById("resetBtn").addEventListener("click", () => {
+    resetRound();
+  });
+document.getElementById("fullResetBtn").addEventListener("click", () => {
+    newGame();
+  });
 }
 
-function checkBoard(r, c) {
-if (playerBoard[r][c] != board[r][c]) {
-// add class list to turn text red to show error
-// return
-} 
+function checkCell(r, c) {
+if (playerBoard[r][c] != solvedBoard[r][c]) {
+ playerBoard[r][c].classList.add("error")
+ return
+} else if (playerBoard[r][c] == solvedBoard[r][c]) {
+playerBoard[r][c].classList.remove("error")
+return
+}
+
 if (puzzleBoard. // no empty && no error) { 
-// win
+document.getElementById("feedback").textContent = "You win!"
 }
 }
 
+function resetRound() {
+playerBoard = puzzleBoard.map(row => [...row])
+return
+}
+
+function newGame() {
+document.getElementById("grid").innerHTML = "";
+solvedBoard = generateSolvedSudoku()
+puzzleBoard = makePuzzle(solvedBoard, 40)
+playerBoard = puzzleBoard.map(row => [...row])
+renderBoard(puzzleBoard, playerBoard)
+attachListeners();
+}
 
 </script>
 
