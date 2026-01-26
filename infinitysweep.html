@@ -165,24 +165,24 @@ function generateSolvedSudoku() {
 
 // 2. Remove numbers to create a puzzle
 function makePuzzle(board, blanks = 40) {
-  const puzzle = board.map(row => [...row]);
+  const puzzleBoard = board.map(row => [...row]);
   let removed = 0;
   while (removed < blanks) {
     const r = Math.floor(Math.random() * 9);
     const c = Math.floor(Math.random() * 9);
-    if (puzzle[r][c] !== 0) {
-      puzzle[r][c] = 0;
+    if (puzzleBoard[r][c] !== 0) {
+      puzzleBoard[r][c] = 0;
       removed++;
     }
   }
-playerBoard = puzzle.map(row => [...row]);
-return playerBoard;
-return puzzle;
+return puzzleBoard;
 }
+
 
 // 3. Render the board in HTML
 
-function renderBoard(board) {
+function renderBoard(puzzleBoard, playerBoard) {
+
   const container = document.getElementById("sudoku-board");
   container.innerHTML = "";
   board.forEach((row, rIndex) => {
@@ -191,11 +191,12 @@ function renderBoard(board) {
       div.className = "cell";
 //      div.textContent = cell === 0 ? "" : cell;
 
-if (cell != 0) {
-div.textContent = cell;
+let value = playerBoard[rIndex][cIndex]
+if (puzzleBoard[rIndex][cIndex] != 0) {
+div.textContent = value;
 div.classList.add("fixed")
 } else {
-div.textContent = ""
+div.textContent = value == 0 ? "" : value
 }
 
       // ✅ Add position info
@@ -218,7 +219,8 @@ selectedCell = div
 
 // 4. Run everything
 const solved = generateSolvedSudoku();
-const puzzle = makePuzzle(solved, 40);
+let puzzleBoard = makePuzzle(solvedBoard, 40)
+playerBoard = puzzleBoard.map(row => [...row]);
 renderBoard(puzzle);
 console.table(puzzle);
 
