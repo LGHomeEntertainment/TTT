@@ -1,12 +1,32 @@
-<!DOCTYPE html>
+<!doctype html>
 <!-- To Infinity and Beyond! in chunks -->
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <title>Infinity SS</title>
+<style>
+    body {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  margin: 0;
+  padding-top: 20px;
+  font-family: sans-serif;
+}
 
-    <style>
-      /* Container for the grid */
+#game-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#viewport {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 #grid {
   display: grid;
   border-collapse: collapse;
@@ -14,7 +34,14 @@
   grid-template-columns: repeat(var(--grid-size), 1fr); /* dynamic columns */
   width: fit-content;
   margin: 20px auto;
-touch-action: none;
+  transform-origin: center;
+  margin-bottom: 12px;
+}
+
+.controls {
+  margin-top: 10px;
+  display: flex;
+  gap: 10px;
 }
 
 /* Each cell */
@@ -22,8 +49,6 @@ touch-action: none;
   position: relative;
   width: 30px;
   height: 30px;
-  min-width: 30px;
-  min-height: 30px;
   background-color: lightgray;
   border: 1px solid #999;
   padding: 0;
@@ -48,7 +73,6 @@ touch-action: none;
 
 .cell.fatal-mine {
   background-color: red;
-  content: "💣"
 }
 
 /* Flagged cell */
@@ -67,44 +91,29 @@ touch-action: none;
   color: blue;
   font-size: 20px;
 }
-
-/* Hint cell */
-.hint {
-  outline: 3px solid yellow;
-  animation: pulse 0.4s infinite alternate;
-}
-
-@keyframes pulse {
-  from {
-    transform: scale(1);
-  }
-  to {
-    transform: scale(1.1);
-  }
-}
   </style>
   </head>
   <body>
-    <h1>SS</h1>
+    <div id="game-container">
+      <h1>SS</h1>
 
-    <div id="grid">
-      <!-- JS will generate rows and cells -->
-    </div>
+      <div id="viewport">
+        <div id="grid">
+          <!-- JS will generate rows and cells -->
+        </div>
 
-    <div>
-      <p id="feedback"></p>
+        <div>
+          <p id="feedback"></p>
+          <p id="revealed">Revealed:</p>
+          <p id="deaths">Dead cells:</p>
+          <p id="integrity">Integrity:</p>
+          <button id="resetBtn">Start a new game</button>
+        </div>
+      </div>
     </div>
-
-    <div>
-      <button id="hintBtn">Hint</button>
-      <button id="resetBtn">Start a new game</button>
-    </div>
-<p id="revealed">Revealed: </p>
-    <p id="deaths">Dead cells: </p>
-    <p id="integrity">Integrity: 100%</p>
 
     <script>
-// ==== GLOBALs + CONSTANTS ====
+      // ==== GLOBALs + CONSTANTS ====
 
 let viewSize = 12;
 let firstClick = true;
@@ -115,15 +124,21 @@ let cameraR = 0;
 let cameraC = 0;
 let startX = 0;
 let startY = 0;
-let touchMoved = false
-let touchTimer = null
-let isCameraMode = false
+let touchMoved = false;
+let touchTimer = null;
+let isCameraMode = false;
 
-let dragAccumX = 0
-let dragAccumY = 0 // so that not every small movement will cause camera to move
+let camera = {
+  x: 0,
+  y: 0,
+  scale: 1,
+};
 
-let deathCount = 0 
-let revealedCount = 0
+let dragAccumX = 0;
+let dragAccumY = 0; // so that not every small movement will cause camera to move
+
+let deathCount = 0;
+let revealedCount = 0;
 
 // ==== INITIALISATION + GENERATION ====
 
@@ -131,6 +146,7 @@ document.addEventListener("DOMContentLoaded", initialise);
 
 function initialise() {
   document.getElementById("grid").innerHTML = "";
+  loadGame();
   generateGrid(viewSize);
   attachListeners();
   renderCamera();
@@ -138,19 +154,20 @@ function initialise() {
 
 // visible GRID
 function generateGrid(size) {
-let gridEl = document.getElementById("grid")
-gridEl.innerHTML = ""
+  let gridEl = document.getElementById("grid");
+  gridEl.innerHTML = "";
 
   for (let gridRow = 0; gridRow < size; gridRow++) {
     // let tr = document.createElement("tr");
     for (let gridCol = 0; gridCol < size; gridCol++) {
-let cell = document.createElement("div")
-cell.className = "cell"
-cell.dataset.row = gridRow;
-     cell.dataset.col = gridCol;
-      gridEl.appendChild(cell)
-    }}
-   gridEl.style.setProperty("--grid-size", size)
+      let cell = document.createElement("div");
+      cell.className = "cell";
+      cell.dataset.row = gridRow;
+      cell.dataset.col = gridCol;
+      gridEl.appendChild(cell);
+    }
+  }
+  gridEl.style.setProperty("--grid-size", size);
 }
 
 // ==== GAME LOGIC ====
@@ -159,18 +176,19 @@ function revealCell(r, c) {
   let cell = getCell(r, c);
   if (cell.revealed || cell.flagged) return;
 
-// if still undecided, then just guarantee safe
+  // if still undecided, then just guarantee safe
   if (cell.mine == null) {
     cell.mine = false;
     cell.generated = true;
   }
 
   cell.revealed = true;
-revealedCount++
+  revealedCount++;
+  updateStats();
 
-if (cell.mine == true) {
-registerDeath(cell)
-}
+  if (cell.mine == true) {
+    registerDeath(cell);
+  }
 
   if (!firstClick) {
     resolveEntropy(cell);
@@ -181,47 +199,55 @@ registerDeath(cell)
 
   firstClick = false;
 
-// cascade
+  // cascade
   if (cell.adjacent == 0) {
     for (let [nr, nc] of cell.neighbours) {
-      revealCell(nr, nc); 
+      revealCell(nr, nc);
     }
   }
+  saveGame();
 }
 
 function toggleFlag(sr, sc) {
-let wr = cameraR + sr
-let wc = cameraC + sc
+  let wr = cameraR + sr;
+  let wc = cameraC + sc;
 
-let cell = getCell(wr, wc)
+  let cell = getCell(wr, wc);
   if (cell.revealed) return;
 
   cell.flagged = !cell.flagged;
-renderCamera()
+  renderCamera();
+  saveGame();
 }
 
 function chordCell(r, c) {
-   let cell = getCell(r, c);
+  let cell = getCell(r, c);
 
-   if (!cell.revealed || cell.adjacent == 0 || cell.adjacent == null) return;
- 
+  if (!cell.revealed || cell.adjacent == 0 || cell.adjacent == null) return;
+
   let flagged = 0;
   let hidden = [];
 
-   for (let [nr, nc] of cell.neighbours) {
-let n = getCell(nr, nc)
+  for (let [nr, nc] of cell.neighbours) {
+    let n = getCell(nr, nc);
 
-     if (n.flagged || n.mine == true) flagged++;
-     else if (!n.revealed) hidden.push([nr, nc]);
+    if (n.flagged || (n.mine && n.revealed)) flagged++;
+    else if (!n.revealed) hidden.push([nr, nc]);
   }
-   if (flagged == cell.adjacent) {
-     hidden.forEach(([nr, nc]) => {
-     revealCell(nr, nc);
-     }); }
-   }
+  if (flagged == cell.adjacent) {
+    hidden.forEach(([nr, nc]) => {
+      revealCell(nr, nc);
+    });
+  }
+}
 
 function resetGame() {
   document.getElementById("feedback").textContent = "";
+  document.getElementById("revealed").textContent = "Revealed:";
+  document.getElementById("deaths").textContent = "Dead cells:";
+  document.getElementById("integrity").textContent = "Integrity:";
+  deathCount = 0;
+  revealedCount = 0;
   board.clear();
   document.getElementById("grid").innerHTML = "";
   generateGrid(viewSize);
@@ -231,72 +257,22 @@ function resetGame() {
 }
 
 function registerDeath(cell) {
-if (cell.dead) return // prevent double count
-cell.dead = true
-deathCount++
-return deathCount
+  if (cell.dead) return; // prevent double count
+  cell.dead = true;
+  deathCount++;
+  updateStats();
 }
 
-function updateStats {
-let integrity = 100
+function updateStats() {
+  let integrity = 100;
 
-if (revealedCount > 0) {
-integrity = Math.round((1 - deathCount / revealedCount) * 100)
-}
-document.getElementById("revealed").textContent = `Revealed: ${revealedCount}`
-document.getElementById("deaths").textContent = `Dead cells: ${deathCount}`
-document.getElementById("integrity").textContent = `Integrity: ${integrity}%`
-}
-
-// ==== HINT SYSTEM ====
-function revealHint() {
-  let move = findGuaranteedMove();
-  if (!move) {
-    document.getElementById("feedback").textContent =
-      "No guaranteed safe move.";
-    return;
+  if (revealedCount > 0) {
+    integrity = Math.floor((1 - deathCount / revealedCount) * 100);
   }
-  highlightCell(move.r, move.c);
-}
-
-function findGuaranteedMove() {
-  for (let r = 0; r < viewSize; r++) {
-    for (let c = 0; c < viewSize; c++) {
-      let cell = getCell(r, c);
-
-      if (!cell.revealed || cell.adjacent == 0) continue;
-
-      let hidden = [];
-      let flagged = 0;
-
-      for (let [nr, nc] of cell.neighbours) {
-        let n = getCell(nr, nc);
-        if (n.flagged) flagged++;
-        else if (!n.revealed) hidden.push([nr, nc]);
-      }
-
-      if (hidden.length == 0) continue;
-
-      // guaranteed safe
-      if (flagged == cell.adjacent) {
-        return {
-          r: hidden[0][0],
-          c: hidden[0][1],
-          type: "safe",
-        };
-      }
-
-      // guaranteed mine
-      if (flagged + hidden.length == cell.adjacent) {
-        return {
-          r: hidden[0][0],
-          c: hidden[0][1],
-          type: "mine",
-        };
-      }
-    }
-  }
-  return null; // no forced move
+  document.getElementById("revealed").textContent =
+    `Revealed: ${revealedCount}`;
+  document.getElementById("deaths").textContent = `Dead cells: ${deathCount}`;
+  document.getElementById("integrity").textContent = `Integrity: ${integrity}%`;
 }
 
 function getNeighbourCoords(r, c) {
@@ -312,126 +288,120 @@ function getNeighbourCoords(r, c) {
   return neighbours;
 }
 
-function highlightCell(r, c) {
-  let cellElement = document.getElementById(`cell-${r}-${c}`);
-  cellElement.classList.add("hint");
-
-  // Remove highlight after short delay
-  setTimeout(() => {
-    cellElement.classList.remove("hint");
-  }, 1500);
-}
-
-      
 // ==== UI + INTERACTION ====
 function attachListeners() {
   // all my listeners
   let cells = document.querySelectorAll(".cell");
 
-// Left click
+  // Left click
   cells.forEach((cell) => {
-    cell.addEventListener("click", onClick); 
+    cell.addEventListener("click", onClick);
   });
 
   document.getElementById("resetBtn").addEventListener("click", () => {
     resetGame();
   });
 
-  document.getElementById("hintBtn").addEventListener("click", () => {
-    revealHint();
-  });
-
-// Right click
+  // Right click
   cells.forEach((cell) => {
     cell.addEventListener("contextmenu", (e) => {
-e.preventDefault()
-let sr = parseInt(cell.dataset.row)
-let sc = parseInt(cell.dataset.col)
+      e.preventDefault();
+      let sr = parseInt(cell.dataset.row);
+      let sc = parseInt(cell.dataset.col);
 
-toggleFlag(sr, sc); 
+      toggleFlag(sr, sc);
+    });
   });
-})
 
-// Grid movement (for mobile camera)
-let grid = document.getElementById("grid")
+  // Grid movement (for mobile camera)
+  let grid = document.getElementById("grid");
 
-// touchstart
-grid.addEventListener("touchstart", (e) => {
-if (e.touches.length == 2) {
-// camera mode
-isCameraMode = true
-touchMoved = false
+  // touchstart
+  grid.addEventListener(
+    "touchstart",
+    (e) => {
+      if (e.touches.length == 2) {
+        // camera mode
+        isCameraMode = true;
+        touchMoved = false;
 
-startX = e.touches[0].clientX
-startY = e.touches[0].clientY
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
 
-return
-}
+        return;
+      }
 
-if (e.touches.length == 1) {
-isCameraMode = false
-touchMoved = false
+      if (e.touches.length == 1) {
+        isCameraMode = false;
+        touchMoved = false;
 
-let touch = e.touches[0]
-startX = touch.clientX
-startY = touch.clientY
+        let touch = e.touches[0];
+        startX = touch.clientX;
+        startY = touch.clientY;
 
-// long press = flag
-touchTimer = setTimeout(() => {
-let cell = getCellFromScreen(touch.clientX, touch.clientY)
-if (cell) {
-toggleFlag(cell.r, cell.c)
-}}, 450)
-}},
-{ passive: false }
-)
+        // long press = flag
+        touchTimer = setTimeout(() => {
+          let cell = getCellFromScreen(touch.clientX, touch.clientY);
+          if (cell) {
+            toggleFlag(cell.r, cell.c);
+          }
+        }, 450);
+      }
+    },
+    { passive: false },
+  );
 
-// touchmove
-grid.addEventListener("touchmove", (e) => {
-touchMoved = true
+  // touchmove
+  grid.addEventListener(
+    "touchmove",
+    (e) => {
+      touchMoved = true;
 
-if (touchTimer) {
-clearTimeout(touchTimer)
-touchTimer = null
-}
+      if (touchTimer) {
+        clearTimeout(touchTimer);
+        touchTimer = null;
+      }
 
-// Only 2 fingers move camera
-if (isCameraMode && e.touches.length == 2) {
-let dx = e.touches[0].clientX - startX
-let dy = e.touches[0].clientY - startY
+      // Only 2 fingers move camera
+      if (isCameraMode && e.touches.length == 2) {
+        let dx = e.touches[0].clientX - startX;
+        let dy = e.touches[0].clientY - startY;
 
-moveCamera(dx, dy)
+        moveCamera(dx, dy);
 
-startX = e.touches[0].clientX
-startY = e.touches[0].clientY
-}
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+      }
 
-e.preventDefault()
-}, 
-{ passive: false }
-)
+      e.preventDefault();
+    },
+    { passive: false },
+  );
 
-// touchend
-grid.addEventListener("touchend", (e) => {
-if (touchTimer) {
-clearTimeout(touchTimer)
-touchTimer = null
-}
+  // touchend
+  grid.addEventListener(
+    "touchend",
+    (e) => {
+      if (touchTimer) {
+        clearTimeout(touchTimer);
+        touchTimer = null;
+      }
 
-// single tap --> reveal
-if (!touchMoved && !isCameraMode) {
-let touch = e.changedTouches[0]
-let cell = getCellFromScreen(touch.clientX, touch.clientY)
+      // single tap --> reveal
+      if (!touchMoved && !isCameraMode) {
+        let touch = e.changedTouches[0];
+        let cell = getCellFromScreen(touch.clientX, touch.clientY);
 
-if (cell) {
-revealCell(cell.r, cell.c)
-}}
-isCameraMode = false
-},
-{ passive: false }
-)
+        if (cell) {
+          revealCell(cell.r, cell.c);
+        }
+      }
+      isCameraMode = false;
+    },
+    { passive: false },
+  );
 
-// Camera movement
+  // Camera movement
   document.addEventListener("keydown", (e) => {
     if (e.key === "ArrowUp" || e.key === "w") cameraR--;
     if (e.key === "ArrowDown" || e.key === "s") cameraR++;
@@ -448,28 +418,26 @@ function onClick(e) {
 
   let wr = cameraR + sr;
   let wc = cameraC + sc;
-let cell = getCell(wr, wc)
-if (cell.revealed) {
-chordCell(wr, wc)
-} else {
-  revealCell(wr, wc);
-}
+  let cell = getCell(wr, wc);
+  if (cell.revealed) {
+    chordCell(wr, wc);
+  } else {
+    revealCell(wr, wc);
+  }
   renderCamera();
 }
 
-
 function getCellFromScreen(x, y) {
-let el = document.getElementFromPoint(x, y)
-if (!el || !el.classList.contains("cell")) return null
+  let el = document.getElementFromPoint(x, y);
+  if (!el || !el.classList.contains("cell")) return null;
 
-let sr = parseInt(el.dataset.row)
-let sc = parseInt(el.dataset.col)
-let wr = cameraR + sr
-let wc = cameraC + sc
+  let sr = parseInt(el.dataset.row);
+  let sc = parseInt(el.dataset.col);
+  let wr = cameraR + sr;
+  let wc = cameraC + sc;
 
-return getCell(wr, wc)
+  return getCell(wr, wc);
 }
-
 
 // ==== INFINITY ====
 
@@ -630,7 +598,6 @@ function resolveEntropy(cell) {
   }
 }
 
-
 // ==== CAMERA VIEW ===
 
 function renderCamera() {
@@ -642,9 +609,11 @@ function renderCamera() {
       ensureCell(wr, wc);
 
       let cell = getCell(wr, wc); // board uses wr/wc
-      let el = document.querySelector(`.cell[data-row="${sr}"][data-col="${sc}"]`) // dOM is sr/sc
+      let el = document.querySelector(
+        `.cell[data-row="${sr}"][data-col="${sc}"]`,
+      ); // dOM is sr/sc
 
-if (!el) continue
+      if (!el) continue;
       drawCell(el, cell);
     }
   }
@@ -659,9 +628,9 @@ function drawCell(el, cell) {
     el.classList.add("revealed");
 
     if (cell.mine) {
-      cell.dead = true
+      cell.dead = true;
       el.textContent = "💣";
-      el.style.backgroundColor = "red"
+      el.style.backgroundColor = "red";
     } else if (cell.adjacent > 0) {
       el.textContent = cell.adjacent;
     } else {
@@ -675,29 +644,60 @@ function drawCell(el, cell) {
 }
 
 function moveCamera(dx, dy) {
-let cellSize = 30 // (set in css)
+  let cellSize = 30; // (set in css)
 
-dragAccumX += dx
-dragAccumY += dy
+  dragAccumX += dx;
+  dragAccumY += dy;
 
-let moveX = Math.trunc(dragAccumX / cellSize)
-let moveY = Math.trunc(dragAccumY / cellSize)
+  let moveX = Math.trunc(dragAccumX / cellSize);
+  let moveY = Math.trunc(dragAccumY / cellSize);
 
-if (moveX != 0) {
-cameraC -= moveX
-dragAccumX -= moveX * cellSize
+  if (moveX != 0) {
+    cameraC -= moveX;
+    dragAccumX -= moveX * cellSize;
+  }
+
+  if (moveY != 0) {
+    cameraR -= moveY;
+    dragAccumY -= moveY * cellSize;
+  }
+
+  if (moveX != 0 || moveY != 0) {
+    renderCamera();
+  }
 }
 
-if (moveY != 0) {
-cameraR -= moveY
-dragAccumY -= moveY * cellSize
+// ==== SAVE GAME ====
+function saveGame() {
+  const data = {
+    cells: Array.from(board.entries()),
+    revealedCount,
+    deathCount,
+    firstClick,
+  };
+
+  localStorage.setItem("infiniteSweeperSave", JSON.stringify(data));
 }
 
-if (moveX != 0 || moveY != 0) {
-renderCamera()
-}
+function loadGame() {
+  const raw = localStorage.getItem("infiniteSweeperSave");
+  if (!raw) return;
+
+  const data = JSON.parse(raw);
+
+  board = new Map(data.cells);
+  revealedCount = data.revealedCount;
+  deathCount = data.deathCount;
+  firstClick = data.firstClick;
+
+  renderCamera();
+  updateStats();
 }
 
+function setZoom(z) {
+  camera.scale = Math.max(0.4, Math.min(2.5, z));
+  grid.style.transform = `translate(${camera.x}px, ${camera.y}px) scale(${camera.scale})`;
+}
 
     </script>
   </body>
