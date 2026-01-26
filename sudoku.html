@@ -157,7 +157,7 @@ function generateSolvedSudoku() {
           for (let num of nums) {
             if (isValid(board, row, col, num)) {
               board[row][col] = num;
-              if (fillBoard()) return true;
+              if (fillBoard(board)) return true;
               board[row][col] = 0;
             }
           }
@@ -168,7 +168,7 @@ function generateSolvedSudoku() {
     return true;
   }
 
-  fillBoard();
+  fillBoard(board);
   return board;
 }
 
@@ -262,17 +262,15 @@ document.getElementById("fullResetBtn").addEventListener("click", () => {
 function checkCell(r, c) {
 if (playerBoard[r][c] != solvedBoard[r][c]) {
  selectedCell.classList.add("error")
- return
 } else if (playerBoard[r][c] == solvedBoard[r][c]) {
 selectedCell.classList.remove("error")
-return
 }
 checkWin()
 }
 
 function checkWin() {
 for (let r = 0; r < 9; r++) {
-for (let c = 0; c < 0; c++) {
+for (let c = 0; c < 9; c++) {
 
 // still empty
 if (playerBoard[r][c] == 0) return
