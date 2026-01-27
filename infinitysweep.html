@@ -632,7 +632,7 @@ function resolveEntropy(cell) {
 
 // ==== CAMERA VIEW ===
 
-function xrenderCameraa() {
+function renderCamera() {
   for (let sr = 0; sr < viewSize; sr++) {
     for (let sc = 0; sc < viewSize; sc++) {
       let wr = cameraR + sr;
@@ -650,15 +650,6 @@ function xrenderCameraa() {
     }
   }
 }
-
-function renderCamera() {
-let radius = getViewRadius()
-
-for (let r = cameraR - radius; r <= cameraR + radius; r++) {
-for (let c = cameraC - radius; c <= cameraC + radius; c++) {
-drawCell(r, c)
-}}}
-
 
 function drawCell(el, cell) {
   el.className = "cell";
@@ -735,26 +726,32 @@ function loadGame() {
 }
 
 let worldEl;
+document.addEventListener("DOMContentLoaded", () => {
 worldEl = document.getElementById("world");
+
+let slider = document.getElementById("zoomSlider")
+slider.addEventListener("input", () => {
+setZoom(slider.value / 100)
+})
+})
 
 function setZoom(z) {
   camera.scale = clamp(z, 0.5, 2.2);
-  worldEl.style.transform = `translate(${camera.x}px, ${camera.y}px) scale(${camera.scale})`;
+//  worldEl.style.transform = `translate(${camera.x}px, ${camera.y}px) scale(${camera.scale})`;
 //  gridEl.style.transformOrigin = "center center";
+applyCameraTransform()
 }
 
-function updateCamera() {
-worldEl.style.transform = `translate(${camera.x}px, ${camera.y}px) scale(${camera.scale})`;
+function applyCameraTransform() {
+worldEl.style.transform = `scale(${camera.scale})`;
 }
 
 function clamp(v, min, max) {
-return Math.random(min, Math.min(max, v))
+return Math.max(min, Math.min(max, v))
 }
 
 let baseView = 12
-function getViewRadius() {
-return Math.floor(baseView / camera.scale)
-}
+
 
 
     </script>
