@@ -101,7 +101,15 @@
         <div id="grid">
           <!-- JS will generate rows and cells -->
         </div>
-
+        <div id="zoom-ui">
+          <input
+          type="range"
+          min="50"
+          max="220"
+          value="100"
+          id="zoomSlider"
+          />
+        </div>
         <div>
           <p id="feedback"></p>
           <p id="revealed">Revealed:</p>
@@ -134,6 +142,11 @@ let camera = {
   scale: 1,
 };
 let gridEl;
+
+let slider = document.getElementById("zoomSlider")
+slider.addEventListener("input", () => {
+setZoom(slider.value / 100)
+})
 
 let dragAccumX = 0;
 let dragAccumY = 0; // so that not every small movement will cause camera to move
@@ -697,9 +710,9 @@ function loadGame() {
 }
 
 function setZoom(z) {
-  camera.scale = Math.max(0.5, Math.min(2.2, z));
-  gridEl.style.transform = `scale(${camera.scale})`;
-  gridEl.style.transformOrigin = "center center";
+  camera.scale = clamp(z, 0.5, 2.2);
+  gridEl.style.transform = `translate(${camera.x}px, ${camera.y}px) scale(${camera.scale})`;
+//  gridEl.style.transformOrigin = "center center";
 }
 
 
