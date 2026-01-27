@@ -206,7 +206,17 @@ function generateGrid(size) {
 function revealCell(r, c) {
   ensureCell(r, c);
   let cell = getCell(r, c);
+
   if (cell.revealed || cell.flagged) return;
+
+// first click is free
+if (!cell.revealed && firstClick) {
+// allow
+} else {
+// frontier rule
+if (!hasRevealedNeighbour(r, c)) {
+return
+}
 
   // if still undecided, then just guarantee safe
   if (cell.mine == null) {
@@ -505,7 +515,7 @@ function createEmptyCell(r, c) {
     flagged: false,
     neighbours: getNeighbourCoords(r, c),
     dead: false,
-    committed: false, // mine is final
+    committed: false, // cell status is final
     generated: false, // whether mine has been decided
   };
 }
@@ -522,6 +532,14 @@ function countNeighbourState(r, c) {
     else if (n.mine == null) undecided++;
   }
   return { mines, undecided };
+}
+
+function hasRevealedNeighbour(r, c) {
+for (let [nr, nc] of getNeighbourCoords(r, c)) {
+let n = getCell(nr, nc)
+if (n.revealed) return true;
+}
+return false;
 }
 
 function decideCell(r, c) {
@@ -749,8 +767,6 @@ worldEl.style.transform = `scale(${camera.scale})`;
 function clamp(v, min, max) {
 return Math.max(min, Math.min(max, v))
 }
-
-let baseView = 12
 
 
 
