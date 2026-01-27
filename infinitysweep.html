@@ -4,8 +4,9 @@
   <head>
     <meta charset="UTF-8" />
     <title>Infinity SS</title>
+
 <style>
-    body {
+  body {
   display: flex;
   justify-content: center;
   align-items: flex-start;
@@ -23,18 +24,12 @@
 
 #viewport {
   width: 420px;
-  height: 520px;
-border: 2px solid #000;
-overflow: hidden;
-position: relative;
+  height: 420px;
+  overflow: hidden;
+  position: relative;
 }
 
-#world {
-position: absolute;
-left: 0;
-top: 0;
-transform-origin: 0 0;
-}
+
 
 #grid {
   position: relative;
@@ -101,41 +96,32 @@ transform-origin: 0 0;
   color: blue;
   font-size: 20px;
 }
-  </style>
+
+</style>  
   </head>
   <body>
     <div id="game-container">
       <h1>SS</h1>
 
       <div id="viewport">
-<div id="world">
-        <div id="grid">
-          <!-- JS will generate rows and cells -->
-        </div>
-</div>
-    </div>
-        <div id="zoom-ui">
-          <input
-          type="range"
-          min="50"
-          max="220"
-          value="100"
-          id="zoomSlider"
-          />
-        </div>
-        <div>
-          <p id="feedback"></p>
-          <p id="revealed">Revealed:</p>
-          <p id="deaths">Dead cells:</p>
-          <p id="integrity">Integrity:</p>
-          <button id="resetBtn">Start a new game</button>
-        </div>
+          <div id="grid">
+            <!-- JS will generate rows and cells -->
+          </div>
       </div>
-
-
+      <div id="zoom-ui">
+        <input type="range" min="50" max="220" value="100" id="zoomSlider" />
+      </div>
+      <div>
+        <p id="feedback"></p>
+        <p id="revealed">Revealed:</p>
+        <p id="deaths">Dead cells:</p>
+        <p id="integrity">Integrity:</p>
+        <button id="resetBtn">Start a new game</button>
+      </div>
+    </div>
 
     <script>
-// ==== GLOBALs + CONSTANTS ====
+      // ==== GLOBALs + CONSTANTS ====
 
 let viewSize = 12;
 let firstClick = true;
@@ -150,11 +136,6 @@ let touchMoved = false;
 let touchTimer = null;
 let isCameraMode = false;
 
-let camera = {
-  x: 0,
-  y: 0,
-  scale: 1,
-};
 let gridEl;
 
 let dragAccumX = 0;
@@ -170,18 +151,21 @@ document.addEventListener("DOMContentLoaded", initialise);
 function initialise() {
   gridEl = document.getElementById("grid");
   gridEl.innerHTML = "";
-  let slider = document.getElementById("zoomSlider")
-  slider.addEventListener("input", () => {
-    camera.scale = slider.value / 100
-updateCamera()
-   
-// setZoom(slider.value / 100)
-  })
+
   document.getElementById("grid").innerHTML = "";
   loadGame();
   generateGrid(viewSize);
   attachListeners();
   renderCamera();
+
+const zoomSlider = document.getElementById("zoomSlider");
+
+zoomSlider.oninput = () => {
+  viewSize = parseInt(zoomSlider.value);
+  generateGrid(viewSize);
+  attachListeners();
+  renderCamera();
+};
 }
 
 // visible GRID
@@ -209,14 +193,15 @@ function revealCell(r, c) {
 
   if (cell.revealed || cell.flagged) return;
 
-// first click is free
-if (!cell.revealed && firstClick) {
-// allow
-} else {
-// frontier rule
-if (!hasRevealedNeighbour(r, c)) {
-return
-}
+  // first click is free
+  if (!cell.revealed && firstClick) {
+    // allow
+  } else {
+    // frontier rule
+    if (!hasRevealedNeighbour(r, c)) {
+      return;
+    }
+  }
 
   // if still undecided, then just guarantee safe
   if (cell.mine == null) {
@@ -470,6 +455,8 @@ function onClick(e) {
 }
 
 function getCellFromScreen(x, y) {
+  console.log(document);
+
   let el = document.getElementFromPoint(x, y);
   if (!el || !el.classList.contains("cell")) return null;
 
@@ -535,11 +522,11 @@ function countNeighbourState(r, c) {
 }
 
 function hasRevealedNeighbour(r, c) {
-for (let [nr, nc] of getNeighbourCoords(r, c)) {
-let n = getCell(nr, nc)
-if (n.revealed) return true;
-}
-return false;
+  for (let [nr, nc] of getNeighbourCoords(r, c)) {
+    let n = getCell(nr, nc);
+    if (n.revealed) return true;
+  }
+  return false;
 }
 
 function decideCell(r, c) {
@@ -742,34 +729,6 @@ function loadGame() {
   renderCamera();
   updateStats();
 }
-
-let worldEl;
-document.addEventListener("DOMContentLoaded", () => {
-worldEl = document.getElementById("world");
-
-let slider = document.getElementById("zoomSlider")
-slider.addEventListener("input", () => {
-setZoom(slider.value / 100)
-})
-})
-
-function setZoom(z) {
-  camera.scale = clamp(z, 0.5, 2.2);
-//  worldEl.style.transform = `translate(${camera.x}px, ${camera.y}px) scale(${camera.scale})`;
-//  gridEl.style.transformOrigin = "center center";
-applyCameraTransform()
-}
-
-function applyCameraTransform() {
-worldEl.style.transform = `scale(${camera.scale})`;
-}
-
-function clamp(v, min, max) {
-return Math.max(min, Math.min(max, v))
-}
-
-
-
     </script>
   </body>
 </html>
