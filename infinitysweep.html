@@ -632,7 +632,7 @@ function resolveEntropy(cell) {
 
 // ==== CAMERA VIEW ===
 
-function renderCamera() {
+function xrenderCameraa() {
   for (let sr = 0; sr < viewSize; sr++) {
     for (let sc = 0; sc < viewSize; sc++) {
       let wr = cameraR + sr;
@@ -650,6 +650,15 @@ function renderCamera() {
     }
   }
 }
+
+function renderCamera() {
+let radius = getViewRadius()
+
+for (let r = cameraR - radius; r <= cameraR + radius; r++) {
+for (let c = cameraC - radius; c <= cameraC + radius; c++) {
+drawCell(r, c)
+}}}
+
 
 function drawCell(el, cell) {
   el.className = "cell";
@@ -740,6 +749,11 @@ worldEl.style.transform = `translate(${camera.x}px, ${camera.y}px) scale(${camer
 
 function clamp(v, min, max) {
 return Math.random(min, Math.min(max, v))
+}
+
+let baseView = 12
+function getViewRadius() {
+return Math.floor(baseView / camera.scale)
 }
 
 
