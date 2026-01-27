@@ -22,8 +22,9 @@
 }
 
 #viewport {
-  width: 100vw;
-  height: 100vh;
+  width: 420px;
+  height: 520px;
+border: 2px solid #000;
 overflow: hidden;
 position: relative;
 }
@@ -111,6 +112,8 @@ transform-origin: 0 0;
         <div id="grid">
           <!-- JS will generate rows and cells -->
         </div>
+</div>
+    </div>
         <div id="zoom-ui">
           <input
           type="range"
@@ -128,8 +131,8 @@ transform-origin: 0 0;
           <button id="resetBtn">Start a new game</button>
         </div>
       </div>
-</div>
-    </div>
+
+
 
     <script>
 // ==== GLOBALs + CONSTANTS ====
@@ -169,7 +172,10 @@ function initialise() {
   gridEl.innerHTML = "";
   let slider = document.getElementById("zoomSlider")
   slider.addEventListener("input", () => {
-    setZoom(slider.value / 100)
+    camera.scale = slider.value / 100
+updateCamera()
+   
+// setZoom(slider.value / 100)
   })
   document.getElementById("grid").innerHTML = "";
   loadGame();
@@ -726,6 +732,10 @@ function setZoom(z) {
   camera.scale = clamp(z, 0.5, 2.2);
   worldEl.style.transform = `translate(${camera.x}px, ${camera.y}px) scale(${camera.scale})`;
 //  gridEl.style.transformOrigin = "center center";
+}
+
+function updateCamera() {
+worldEl.style.transform = `translate(${camera.x}px, ${camera.y}px) scale(${camera.scale})`;
 }
 
 function clamp(v, min, max) {
