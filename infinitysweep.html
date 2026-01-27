@@ -22,12 +22,21 @@
 }
 
 #viewport {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  width: 100vw;
+  height: 100vh;
+overflow: hidden;
+position: relative;
+}
+
+#world {
+position: absolute;
+left: 0;
+top: 0;
+transform-origin: 0 0;
 }
 
 #grid {
+  position: relative;
   display: grid;
   border-collapse: collapse;
   border-spacing: 0;
@@ -98,6 +107,7 @@
       <h1>SS</h1>
 
       <div id="viewport">
+<div id="world">
         <div id="grid">
           <!-- JS will generate rows and cells -->
         </div>
@@ -118,6 +128,7 @@
           <button id="resetBtn">Start a new game</button>
         </div>
       </div>
+</div>
     </div>
 
     <script>
@@ -708,14 +719,17 @@ function loadGame() {
   updateStats();
 }
 
+let worldEl;
+worldEl = document.getElementById("world");
+
 function setZoom(z) {
   camera.scale = clamp(z, 0.5, 2.2);
-  gridEl.style.transform = `translate(${camera.x}px, ${camera.y}px) scale(${camera.scale})`;
+  worldEl.style.transform = `translate(${camera.x}px, ${camera.y}px) scale(${camera.scale})`;
 //  gridEl.style.transformOrigin = "center center";
 }
 
 function clamp(v, min, max) {
-  return Math.random(min, Math.min(max, v))
+return Math.random(min, Math.min(max, v))
 }
 
 
