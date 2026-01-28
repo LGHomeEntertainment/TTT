@@ -1,12 +1,11 @@
 <!doctype html>
-<!-- To Infinity and Beyond! in chunks -->
+<!-- To Infinity and Beyond! adding difficulty -->
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <title>Infinity SS</title>
-
 <style>
-  body {
+    body {
   display: flex;
   justify-content: center;
   align-items: flex-start;
@@ -23,16 +22,12 @@
 }
 
 #viewport {
-  width: 420px;
-  height: 420px;
-  overflow: hidden;
-  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-
-
 #grid {
-  position: relative;
   display: grid;
   border-collapse: collapse;
   border-spacing: 0;
@@ -96,33 +91,34 @@
   color: blue;
   font-size: 20px;
 }
-
-</style>  
+  </style>
   </head>
   <body>
     <div id="game-container">
       <h1>SS</h1>
 
       <div id="viewport">
-          <div id="grid">
-            <!-- JS will generate rows and cells -->
-          </div>
-      </div>
-      <div>
-        <p id="feedback"></p>
-        <p id="revealed">Revealed:</p>
-        <p id="deaths">Dead cells:</p>
-        <p id="integrity">Integrity:</p>
-        <button id="resetBtn">Start a new game</button>
+        <div id="grid">
+          <!-- JS will generate rows and cells -->
+        </div>
+
+        <div>
+          <p id="feedback"></p>
+          <p id="revealed">Revealed:</p>
+          <p id="deaths">Dead cells:</p>
+          <p id="integrity">Integrity:</p>
+          <button id="resetBtn">Start a new game</button>
+        </div>
       </div>
     </div>
 
     <script>
+      // ==== GLOBALs + CONSTANTS ====
 
-// ==== GLOBALs + CONSTANTS ====
 let viewSize = 12;
 let firstClick = true;
 let board = new Map();
+let grid = [];
 let gameOver = false;
 let cameraR = 0;
 let cameraC = 0;
@@ -132,24 +128,22 @@ let touchMoved = false;
 let touchTimer = null;
 let isCameraMode = false;
 
-let gridEl;
-
 let dragAccumX = 0;
 let dragAccumY = 0; // so that not every small movement will cause camera to move
 
 let deathCount = 0;
 let revealedCount = 0;
 
+// let danger = revealedCount / 500
+// let mineChance = 0.02 + danger * 0.08
+
 // ==== INITIALISATION + GENERATION ====
 
 document.addEventListener("DOMContentLoaded", initialise);
 
 function initialise() {
-  gridEl = document.getElementById("grid");
-  gridEl.innerHTML = "";
-
   document.getElementById("grid").innerHTML = "";
- // loadGame();
+  loadGame();
   generateGrid(viewSize);
   attachListeners();
   renderCamera();
@@ -177,21 +171,12 @@ function generateGrid(size) {
 function revealCell(r, c) {
   ensureCell(r, c);
   let cell = getCell(r, c);
-
   if (cell.revealed || cell.flagged) return;
 
-  // first click is free
-  if (!cell.revealed && firstClick) {
-    // allow
-  } else {
-    // frontier rule
-    if (!hasRevealedNeighbour(r, c)) {
-      return;
-    }
-  }
-
-  if (!firstClick) {
-    resolveEntropy(cell);
+  // if still undecided, then just guarantee safe
+  if (cell.mine == null) {
+    cell.mine = false;
+    cell.generated = true;
   }
 
   cell.revealed = true;
@@ -202,7 +187,9 @@ function revealCell(r, c) {
     registerDeath(cell);
   }
 
-
+  if (!firstClick) {
+    resolveEntropy(cell);
+  }
 
   cell.adjacent = computeAdjacent(r, c);
   propagateFrom(r, c);
@@ -215,7 +202,7 @@ function revealCell(r, c) {
       revealCell(nr, nc);
     }
   }
-//  saveGame();
+  saveGame();
 }
 
 function toggleFlag(sr, sc) {
@@ -227,7 +214,7 @@ function toggleFlag(sr, sc) {
 
   cell.flagged = !cell.flagged;
   renderCamera();
-//  saveGame();
+  saveGame();
 }
 
 function chordCell(r, c) {
@@ -299,32 +286,117 @@ function getNeighbourCoords(r, c) {
 }
 
 // ==== UI + INTERACTION ====
-document.addEventListener("contextmenu", e => e.preventDefault());
-
 function attachListeners() {
   // all my listeners
   let cells = document.querySelectorAll(".cell");
+
+  // Left click
+  cells.forEach((cell) => {
+    cell.addEventListener("click", onClick);
+  });
 
   document.getElementById("resetBtn").addEventListener("click", () => {
     resetGame();
   });
 
-cells.addEventListener("mousedown", (e) => {
-e.preventDefault()
-let sr = parseInt(cell.dataset.row)
-let sc = parseInt(cell.dataset.col)
+  // Right click
+  cells.forEach((cell) => {
+    cell.addEventListener("contextmenu", (e) => {
+      e.preventDefault();
+      let sr = parseInt(cell.dataset.row);
+      let sc = parseInt(cell.dataset.col);
 
-let wr = cameraR + sr
-let wc = cameraC + sc
+      toggleFlag(sr, sc);
+    });
+  });
 
-if (e.button == 0) {
-handleInput("reveal", wr, wc)
-}
+  // Grid movement (for mobile camera)
+  let grid = document.getElementById("grid");
 
-if (e.button == 2) {
-handleInput("flag", wr, wc)
-}
-})
+  // touchstart
+  grid.addEventListener(
+    "touchstart",
+    (e) => {
+      if (e.touches.length == 2) {
+        // camera mode
+        isCameraMode = true;
+        touchMoved = false;
+
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+
+        return;
+      }
+
+      if (e.touches.length == 1) {
+        isCameraMode = false;
+        touchMoved = false;
+
+        let touch = e.touches[0];
+        startX = touch.clientX;
+        startY = touch.clientY;
+
+        // long press = flag
+        touchTimer = setTimeout(() => {
+          let cell = getCellFromScreen(touch.clientX, touch.clientY);
+          if (cell) {
+            toggleFlag(cell.r, cell.c);
+          }
+        }, 450);
+      }
+    },
+    { passive: false },
+  );
+
+  // touchmove
+  grid.addEventListener(
+    "touchmove",
+    (e) => {
+      touchMoved = true;
+
+      if (touchTimer) {
+        clearTimeout(touchTimer);
+        touchTimer = null;
+      }
+
+      // Only 2 fingers move camera
+      if (isCameraMode && e.touches.length == 2) {
+        let dx = e.touches[0].clientX - startX;
+        let dy = e.touches[0].clientY - startY;
+
+        moveCamera(dx, dy);
+
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+      }
+
+      e.preventDefault();
+    },
+    { passive: false },
+  );
+
+  // touchend
+  grid.addEventListener(
+    "touchend",
+    (e) => {
+      if (touchTimer) {
+        clearTimeout(touchTimer);
+        touchTimer = null;
+      }
+
+      // single tap --> reveal
+      if (!touchMoved && !isCameraMode) {
+        let touch = e.changedTouches[0];
+        let cell = getCellFromScreen(touch.clientX, touch.clientY);
+
+        if (cell) {
+          revealCell(cell.r, cell.c);
+        }
+      }
+      isCameraMode = false;
+    },
+    { passive: false },
+  );
 
   // Camera movement
   document.addEventListener("keydown", (e) => {
@@ -335,49 +407,25 @@ handleInput("flag", wr, wc)
 
     renderCamera();
   });
-
-let grid = document.getElementById("grid");
-
-grid.addEventListener("click", (e) => {
-if (!e.target.classList.contains("cell")) return;
-
-let sr = parseInt(cell.dataset.row)
-let sc = parseInt(cell.dataset.col)
-
-let wr = cameraR + sr
-let wc = cameraC + sc
-revealCell(wr, wc)
-renderCamera()
-})
-
 }
 
-function handleInput(type, r, c) {
-let cell = getCell(r, c)
+function onClick(e) {
+  let sr = parseInt(e.target.dataset.row);
+  let sc = parseInt(e.target.dataset.col);
 
-if (gameOver) return;
-
-if (type == "flag") {
-if (!cell.revealed) {
-cell.flagged = !cell.flagged
+  let wr = cameraR + sr;
+  let wc = cameraC + sc;
+  let cell = getCell(wr, wc);
+  if (cell.revealed) {
+    chordCell(wr, wc);
+  } else {
+    revealCell(wr, wc);
+  }
+  renderCamera();
 }
-renderCamera()
-// saveGame()
-return
-}
-
-if (type = "reveal") {
-if (cell.revealed) {
-chordCell(r, c)
-} else {
-revealCell(r, c)
-}
-renderCamera()
-// saveGame()
-}}
 
 function getCellFromScreen(x, y) {
-  let el = document.elementFromPoint(x, y);
+  let el = document.getElementFromPoint(x, y);
   if (!el || !el.classList.contains("cell")) return null;
 
   let sr = parseInt(el.dataset.row);
@@ -422,7 +470,7 @@ function createEmptyCell(r, c) {
     flagged: false,
     neighbours: getNeighbourCoords(r, c),
     dead: false,
-    committed: false, // cell status is final
+    committed: false, // mine is final
     generated: false, // whether mine has been decided
   };
 }
@@ -439,14 +487,6 @@ function countNeighbourState(r, c) {
     else if (n.mine == null) undecided++;
   }
   return { mines, undecided };
-}
-
-function hasRevealedNeighbour(r, c) {
-  for (let [nr, nc] of getNeighbourCoords(r, c)) {
-    let n = getCell(nr, nc);
-    if (n.revealed) return true;
-  }
-  return false;
 }
 
 function decideCell(r, c) {
@@ -537,57 +577,26 @@ function propagateFrom(r, c) {
 }
 
 function resolveEntropy(cell) {
-let depth = frontierDepth(cell.r, cell.c)
-
-let base = 
-  depth <= 1 ? 0 :
-  depth == 2 ? 0.15 : 
-  depth == 3 ? 0.25 : 
-  depth == 4 ? 0.35 :
-  0.45;
-
   let undecided = cell.neighbours
     .map(([r, c]) => getCell(r, c))
     .filter((n) => n.mine === null);
 
   if (undecided.length === 0) return;
 
-let rolls = depth >= 4 ? 2 : 1;
-
   // probability scales with openness
-//  let chance = undecided.length >= 6 ? 0.15 : undecided.length >= 4 ? 0.2 : 0.25;
+  let chance =
+    undecided.length >= 6 ? 0.15 : undecided.length >= 4 ? 0.2 : 0.25;
+
+let rolls = 1 + Math.floor(Math.random() * 3)
 
 for (let i = 0; i < rolls; i++) {
-  if (Math.random() < base) {
+  if (Math.random() < chance) {
     let pick = undecided[Math.floor(Math.random() * undecided.length)];
     pick.mine = true;
     pick.generated = true;
     pick.committed = true;
-  }
+  }}
 }
-}
-
-function frontierDepth(r, c, max = 4) {
-let visited = new Set()
-let queue = [[r, c, 0]]
-
-while (queue.length) {
-let [cr, cc, d] = queue.shift()
-let k = key(cr, cc)
-if (visited.has(k)) continue
-visited.add(k)
-
-let cell = getCell(cr, cc)
-if (cell.revealed) return d
-
-if (d >= max) continue;
-
-for (let [nr, nc] of getNeighbourCoords(cr, cc)) {
-queue.push([nr, nc, d + 1])
-}}
-return max + 1
-}
-
 
 // ==== CAMERA VIEW ===
 
@@ -619,6 +628,7 @@ function drawCell(el, cell) {
     el.classList.add("revealed");
 
     if (cell.mine) {
+      cell.dead = true;
       el.textContent = "💣";
       el.style.backgroundColor = "red";
     } else if (cell.adjacent > 0) {
@@ -683,6 +693,9 @@ function loadGame() {
   renderCamera();
   updateStats();
 }
+
+
+
     </script>
   </body>
 </html>
