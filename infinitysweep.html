@@ -108,9 +108,6 @@
             <!-- JS will generate rows and cells -->
           </div>
       </div>
-      <div id="zoom-ui">
-        <input type="range" min="50" max="220" value="100" id="zoomSlider" />
-      </div>
       <div>
         <p id="feedback"></p>
         <p id="revealed">Revealed:</p>
@@ -122,7 +119,6 @@
 
     <script>
       // ==== GLOBALs + CONSTANTS ====
-
 let viewSize = 12;
 let firstClick = true;
 let board = new Map();
@@ -157,15 +153,6 @@ function initialise() {
   generateGrid(viewSize);
   attachListeners();
   renderCamera();
-
-const zoomSlider = document.getElementById("zoomSlider");
-
-zoomSlider.oninput = () => {
-  viewSize = parseInt(zoomSlider.value);
-  generateGrid(viewSize);
-  attachListeners();
-  renderCamera();
-};
 }
 
 // visible GRID
@@ -455,9 +442,7 @@ function onClick(e) {
 }
 
 function getCellFromScreen(x, y) {
-  console.log(document);
-
-  let el = document.getElementFromPoint(x, y);
+  let el = document.elementFromPoint(x, y);
   if (!el || !el.classList.contains("cell")) return null;
 
   let sr = parseInt(el.dataset.row);
@@ -617,23 +602,57 @@ function propagateFrom(r, c) {
 }
 
 function resolveEntropy(cell) {
+let depth = frontierDepth(cell.r, cell.c)
+
+let base = 
+  depth <= 1 ? 0 :
+  depth == 2 ? 0.15 : 
+  depth == 3 ? 0.25 : 
+  depth == 4 ? 0.35 :
+  0.45;
+
   let undecided = cell.neighbours
     .map(([r, c]) => getCell(r, c))
     .filter((n) => n.mine === null);
 
   if (undecided.length === 0) return;
 
-  // probability scales with openness
-  let chance =
-    undecided.length >= 6 ? 0.15 : undecided.length >= 4 ? 0.2 : 0.25;
+let rolls = depth >= 4 ? 2 : 1;
 
-  if (Math.random() < chance) {
+  // probability scales with openness
+//  let chance = undecided.length >= 6 ? 0.15 : undecided.length >= 4 ? 0.2 : 0.25;
+
+for (let i = 0; i < rolls; i++) {
+  if (Math.random() < base) {
     let pick = undecided[Math.floor(Math.random() * undecided.length)];
     pick.mine = true;
     pick.generated = true;
     pick.committed = true;
   }
 }
+}
+
+function frontierDepth(r, c, max = 4) {
+let visited = new Set()
+let queue = [[r, c, 0]]
+
+while (queue.length) {
+let [cr, cc, d] = queue.shift()
+let k = key(cr, cc)
+if (visited.has(k)) continue
+visited.add(k)
+
+let cell = getCell(cr, cc)
+if (cell.revealed) return d
+
+if (d >= max) continue;
+
+for (let [nr, nc] of getNeighbourCoords(cr, cc)) {
+queue.push([nr, nc, d + 1])
+}}
+return max + 1
+}
+
 
 // ==== CAMERA VIEW ===
 
