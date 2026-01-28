@@ -190,12 +190,6 @@ function revealCell(r, c) {
     }
   }
 
-  // if still undecided, then just guarantee safe
-  if (cell.mine == null) {
-    cell.mine = false;
-    cell.generated = true;
-  }
-
   cell.revealed = true;
   revealedCount++;
   updateStats();
