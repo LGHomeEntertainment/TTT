@@ -191,7 +191,11 @@ function revealCell(r, c) {
     resolveEntropy(cell);
   }
 
+let spawned = trySpawnHighNumber(cell)
+
+if (!spawned) {
   cell.adjacent = computeAdjacent(r, c);
+}
   propagateFrom(r, c);
 
   firstClick = false;
@@ -597,6 +601,49 @@ for (let i = 0; i < rolls; i++) {
     pick.committed = true;
   }}
 }
+
+function trySpawnHighNumber(cell) {
+// only on fresh territory, including firstClick (so that neighbours have not been generated)
+let neighbours = cell.neighbours.map(([r, c]) => getCell(r, c))
+
+//if any neighbour already revealed --> ABORT
+if (neighbours.some(n => n.revealed)) return false
+
+let undecided = neighbours.filter(n => n.mine == null)
+if (undecided.length < 5) return false
+
+// very rare rolls
+let roll = Math.random()
+let target = null
+
+if (roll < 0.001 && undecided.length >= 7) {
+target = 7
+} else if (roll < 0.006 && undecided.length >= 6) {
+target = 6
+} else if (roll <0.02 && undecided.length >= 5) {
+target = 5
+}
+
+if (!target) return false
+
+// pick exact mines
+shuffleArray(undecided)
+
+for (let i = 0; i < target; i++) {
+let n = undecided[i]
+n.mine = true
+n.generated = true
+n.committed = true
+}
+cell.adjacent = target
+return true 
+}
+
+function shuffleArray(arr) {
+for (let i = arr.length - 1; i > 0; i++) {
+let j = Math.floor(Math.random() * (i + 1))
+[arr[i], arr[j]] = [arr[j], arr[i]]
+}}
 
 // ==== CAMERA VIEW ===
 
