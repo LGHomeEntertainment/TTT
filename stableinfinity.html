@@ -4,9 +4,8 @@
   <head>
     <meta charset="UTF-8" />
     <title>Infinity SS</title>
-
 <style>
-  body {
+    body {
   display: flex;
   justify-content: center;
   align-items: flex-start;
@@ -23,16 +22,12 @@
 }
 
 #viewport {
-  width: 420px;
-  height: 420px;
-  overflow: hidden;
-  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-
-
 #grid {
-  position: relative;
   display: grid;
   border-collapse: collapse;
   border-spacing: 0;
@@ -96,29 +91,30 @@
   color: blue;
   font-size: 20px;
 }
-
-</style>  
+  </style>
   </head>
   <body>
     <div id="game-container">
       <h1>SS</h1>
 
       <div id="viewport">
-          <div id="grid">
-            <!-- JS will generate rows and cells -->
-          </div>
-      </div>
-      <div>
-        <p id="feedback"></p>
-        <p id="revealed">Revealed:</p>
-        <p id="deaths">Dead cells:</p>
-        <p id="integrity">Integrity:</p>
-        <button id="resetBtn">Start a new game</button>
+        <div id="grid">
+          <!-- JS will generate rows and cells -->
+        </div>
+
+        <div>
+          <p id="feedback"></p>
+          <p id="revealed">Revealed:</p>
+          <p id="deaths">Dead cells:</p>
+          <p id="integrity">Integrity:</p>
+          <button id="resetBtn">Start a new game</button>
+        </div>
       </div>
     </div>
 
     <script>
       // ==== GLOBALs + CONSTANTS ====
+
 let viewSize = 12;
 let firstClick = true;
 let board = new Map();
@@ -132,8 +128,6 @@ let touchMoved = false;
 let touchTimer = null;
 let isCameraMode = false;
 
-let gridEl;
-
 let dragAccumX = 0;
 let dragAccumY = 0; // so that not every small movement will cause camera to move
 
@@ -145,9 +139,6 @@ let revealedCount = 0;
 document.addEventListener("DOMContentLoaded", initialise);
 
 function initialise() {
-  gridEl = document.getElementById("grid");
-  gridEl.innerHTML = "";
-
   document.getElementById("grid").innerHTML = "";
   loadGame();
   generateGrid(viewSize);
@@ -177,18 +168,7 @@ function generateGrid(size) {
 function revealCell(r, c) {
   ensureCell(r, c);
   let cell = getCell(r, c);
-
   if (cell.revealed || cell.flagged) return;
-
-  // first click is free
-  if (!cell.revealed && firstClick) {
-    // allow
-  } else {
-    // frontier rule
-    if (!hasRevealedNeighbour(r, c)) {
-      return;
-    }
-  }
 
   // if still undecided, then just guarantee safe
   if (cell.mine == null) {
@@ -442,7 +422,7 @@ function onClick(e) {
 }
 
 function getCellFromScreen(x, y) {
-  let el = document.elementFromPoint(x, y);
+  let el = document.getElementFromPoint(x, y);
   if (!el || !el.classList.contains("cell")) return null;
 
   let sr = parseInt(el.dataset.row);
@@ -487,7 +467,7 @@ function createEmptyCell(r, c) {
     flagged: false,
     neighbours: getNeighbourCoords(r, c),
     dead: false,
-    committed: false, // cell status is final
+    committed: false, // mine is final
     generated: false, // whether mine has been decided
   };
 }
@@ -504,14 +484,6 @@ function countNeighbourState(r, c) {
     else if (n.mine == null) undecided++;
   }
   return { mines, undecided };
-}
-
-function hasRevealedNeighbour(r, c) {
-  for (let [nr, nc] of getNeighbourCoords(r, c)) {
-    let n = getCell(nr, nc);
-    if (n.revealed) return true;
-  }
-  return false;
 }
 
 function decideCell(r, c) {
@@ -650,6 +622,7 @@ function drawCell(el, cell) {
     el.classList.add("revealed");
 
     if (cell.mine) {
+      cell.dead = true;
       el.textContent = "💣";
       el.style.backgroundColor = "red";
     } else if (cell.adjacent > 0) {
@@ -714,6 +687,9 @@ function loadGame() {
   renderCamera();
   updateStats();
 }
+
+
+
     </script>
   </body>
 </html>
