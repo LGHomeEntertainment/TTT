@@ -190,6 +190,10 @@ function revealCell(r, c) {
     }
   }
 
+  if (!firstClick) {
+    resolveEntropy(cell);
+  }
+
   cell.revealed = true;
   revealedCount++;
   updateStats();
@@ -198,9 +202,7 @@ function revealCell(r, c) {
     registerDeath(cell);
   }
 
-  if (!firstClick) {
-    resolveEntropy(cell);
-  }
+
 
   cell.adjacent = computeAdjacent(r, c);
   propagateFrom(r, c);
