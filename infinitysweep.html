@@ -22,7 +22,9 @@
 }
 
 #viewport {
-  display: flex;
+  display: absolute;
+  width: 430px;
+  height: 430px;
   flex-direction: column;
   align-items: center;
 }
@@ -104,6 +106,7 @@
 
         <div>
 <button id="zoomOutBtn">-</button>
+<button id="zoomInBtn">+</button>
           <p id="feedback"></p>
           <p id="revealed">Revealed:</p>
           <p id="deaths">Dead cells:</p>
@@ -303,6 +306,12 @@ function attachListeners() {
 
   document.getElementById("zoomOutBtn").addEventListener("click", () => {
 viewSize += 2
+generateGrid(viewSize)
+renderCamera()
+  });
+
+  document.getElementById("zoomInBtn").addEventListener("click", () => {
+viewSize = Math.max(6, viewSize - 2)
 generateGrid(viewSize)
 renderCamera()
   });
