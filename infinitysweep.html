@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- Slow Reveal No Entropy -->
+<!-- The Broken Frontier -->
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -47,8 +47,8 @@
 /* Each cell */
 .cell {
   position: relative;
-  width: 30px;
-  height: 30px;
+  width: var(--cell-size);
+  height: var(--cell-size);
   background-color: lightgray;
   border: 1px solid #999;
   padding: 0;
@@ -96,12 +96,14 @@
   <body>
     <div id="game-container">
       <h1>SS</h1>
+<p>How much can you reveal before you die</p>
       <div id="viewport">
         <div id="grid">
           <!-- JS will generate rows and cells -->
         </div>
 
         <div>
+<button id="zoomOutBtn">-</button>
           <p id="feedback"></p>
           <p id="revealed">Revealed:</p>
           <p id="deaths">Dead cells:</p>
@@ -117,6 +119,7 @@
 // ==== GLOBALs + CONSTANTS ====
 
 let viewSize = 12;
+let cellSize = 30;
 let firstClick = true;
 let board = new Map();
 let grid = [];
@@ -135,8 +138,6 @@ let dragAccumY = 0; // so that not every small movement will cause camera to mov
 let deathCount = 0;
 let revealedCount = 0;
 
-let danger = Math.min(revealedCount / 800, 1);
-let mineChance = 0.1 + danger * 0.15;
 
 // ==== INITIALISATION + GENERATION ====
 
@@ -147,6 +148,7 @@ function initialise() {
   loadGame();
   generateGrid(viewSize);
   attachListeners();
+  applyZoom();
   renderCamera();
 }
 
@@ -298,6 +300,11 @@ function attachListeners() {
 
   document.getElementById("resetBtn").addEventListener("click", () => {
     resetGame();
+  });
+
+  document.getElementById("zoomOutBtn").addEventListener("click", () => {
+    cellSize = Math.max(14, cellSize - 2)
+applyZoom() 
   });
 
   // Right click
@@ -618,6 +625,10 @@ function renderCamera() {
   }
 }
 
+function applyZoom() {
+document.documentElement.style.setProperty("--cell-size", cellSize + "px")
+}
+
 function drawCell(el, cell) {
   el.className = "cell";
   el.textContent = "";
@@ -643,7 +654,7 @@ function drawCell(el, cell) {
 }
 
 function moveCamera(dx, dy) {
-  let cellSize = 30; // (set in css)
+//  let cellSize = 30; // (set in css)
 
   dragAccumX += dx;
   dragAccumY += dy;
