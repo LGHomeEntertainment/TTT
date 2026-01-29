@@ -47,8 +47,8 @@
 /* Each cell */
 .cell {
   position: relative;
-  width: var(--cell-size);
-  height: var(--cell-size);
+  width: 30px;
+  height: 30px;
   background-color: lightgray;
   border: 1px solid #999;
   padding: 0;
@@ -96,7 +96,7 @@
   <body>
     <div id="game-container">
       <h1>SS</h1>
-<p>How much can you reveal before you die</p>
+
       <div id="viewport">
         <div id="grid">
           <!-- JS will generate rows and cells -->
@@ -148,7 +148,6 @@ function initialise() {
   loadGame();
   generateGrid(viewSize);
   attachListeners();
-  applyZoom();
   renderCamera();
 }
 
@@ -303,8 +302,9 @@ function attachListeners() {
   });
 
   document.getElementById("zoomOutBtn").addEventListener("click", () => {
-    cellSize = Math.max(14, cellSize - 2)
-applyZoom() 
+viewSize += 2
+generateGrid(viewSize)
+renderCamera()
   });
 
   // Right click
@@ -625,10 +625,6 @@ function renderCamera() {
   }
 }
 
-function applyZoom() {
-document.documentElement.style.setProperty("--cell-size", cellSize + "px")
-}
-
 function drawCell(el, cell) {
   el.className = "cell";
   el.textContent = "";
@@ -703,8 +699,6 @@ function loadGame() {
   renderCamera();
   updateStats();
 }
-
-
 
     </script>
   </body>
