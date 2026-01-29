@@ -241,6 +241,7 @@ function chordCell(r, c) {
 }
 
 function resetGame() {
+localStorage.removeItem("infiniteSweeperSave");
   document.getElementById("feedback").textContent = "";
   document.getElementById("revealed").textContent = "Revealed:";
   document.getElementById("deaths").textContent = "Dead cells:";
@@ -252,11 +253,6 @@ cameraR = 0
 cameraC = 0
 dragAccumX = 0 
 dragAccumY = 0
-startX = 0;
-startY = 0;
-touchMoved = false;
-touchTimer = null;
-isCameraMode = false;
 
   document.getElementById("grid").innerHTML = "";
   generateGrid(viewSize);
