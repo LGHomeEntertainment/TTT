@@ -248,11 +248,17 @@ function resetGame() {
   deathCount = 0;
   revealedCount = 0;
   board.clear();
+cameraR = 0
+cameraC = 0
+dragAccumX = 0 
+dragAccumY = 0
+
   document.getElementById("grid").innerHTML = "";
   generateGrid(viewSize);
   firstClick = true;
   gameOver = false;
   attachListeners();
+renderCamera()
 }
 
 function registerDeath(cell) {
