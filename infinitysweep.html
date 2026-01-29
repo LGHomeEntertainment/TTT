@@ -22,22 +22,19 @@
 }
 
 #viewport {
-  display: absolute;
   width: 430px;
   height: 430px;
-  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  justify-content: center;
   align-items: center;
 }
 
 #grid {
   display: grid;
-  border-collapse: collapse;
-  border-spacing: 0;
   grid-template-columns: repeat(var(--grid-size), 1fr); /* dynamic columns */
   width: fit-content;
-  margin: 20px auto;
-  transform-origin: center;
-  margin-bottom: 12px;
 }
 
 .controls {
