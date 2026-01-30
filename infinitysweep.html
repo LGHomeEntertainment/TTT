@@ -22,22 +22,27 @@
 }
 
 #viewport {
-  width: 50vw;
-  height: 50vh;
+  width: 90vw;
+max-width: 430px;
+  height: 90vh;
+max-height: 430px;
   overflow: hidden;
+border-radius: 12px;
   position: relative;
 background: #111;
 }
 
 #camera {
 position: absolute;
-transform-origin: center center;
+top: 50%;
+left: 50%;
+transform-origin: 0 0;
 }
 
 #grid {
   display: grid;
-  grid-template-columns: repeat(var(--grid-size), 1fr); /* dynamic columns */
-  width: fit-content;
+  /* grid-template-columns: repeat(var(--grid-size), 1fr); /* dynamic columns */
+  width: fit-content; */
 }
 
 .controls {
@@ -153,7 +158,8 @@ function initialise() {
   document.getElementById("grid").innerHTML = "";
 //  loadGame();
   generateGrid(viewSize);
-  attachListeners();
+  attachGlobalListeners();
+  attachGridListeners();
   renderCamera();
 }
 
@@ -317,7 +323,16 @@ function getNeighbourCoords(r, c) {
 }
 
 // ==== UI + INTERACTION ====
-function attachListeners() {
+function  attachGlobalListeners() {
+  document.getElementById("resetBtn").onclick = resetGame;
+  document.getElementById("zoomOutBtn").onclick = zoomOut;
+  document.getElementById("zoomInBtn").onclick = zoomIn;
+
+   document.addEventListener("keydown", keyboardKeys);
+};
+
+
+function attachGridListeners() {
   // all my listeners
   let cells = document.querySelectorAll(".cell");
 
@@ -326,21 +341,7 @@ function attachListeners() {
     cell.addEventListener("click", onClick);
   });
 
-  document.getElementById("resetBtn").addEventListener("click", () => {
-    resetGame();
-  });
 
-  document.getElementById("zoomOutBtn").addEventListener("click", () => {
-viewSize += 2
-generateGrid(viewSize)
-renderCamera()
-  });
-
-  document.getElementById("zoomInBtn").addEventListener("click", () => {
-viewSize = Math.max(6, viewSize - 2)
-generateGrid(viewSize)
-renderCamera()
-  });
 
   // Right click
   cells.forEach((cell) => {
@@ -440,17 +441,35 @@ renderCamera()
     },
     { passive: false },
   );
+}
 
   // Camera movement
-  document.addEventListener("keydown", (e) => {
+function keyboardKeys() {
     if (e.key === "ArrowUp" || e.key === "w") cameraR--;
     if (e.key === "ArrowDown" || e.key === "s") cameraR++;
     if (e.key === "ArrowLeft" || e.key === "a") cameraC--;
     if (e.key === "ArrowRight" || e.key === "d") cameraC++;
-
-    renderCamera();
   });
-}
+
+function zoomOut() {
+viewSize += 2
+generateGrid(viewSize)
+attachGridListeners()
+renderCamera()
+  });
+
+function zoomIn() {
+viewSize = Math.max(6, viewSize - 2)
+generateGrid(viewSize)
+attachGridListeners()
+renderCamera()
+  });
+
+  document.getElementById("zoomInBtn").addEventListener("click", () => {
+viewSize = Math.max(6, viewSize - 2)
+generateGrid(viewSize)
+renderCamera()
+  });
 
 function onClick(e) {
   let sr = parseInt(e.target.dataset.row);
@@ -645,7 +664,7 @@ let camX = 0
 let camY = 0
 
 function renderCamera() {
-camera.style.transform = `translate.(${camX}px, ${camY}px) scale(${zoom})`;
+camera.style.transform = `translate(-50%, 50%) translate(${camX}px, ${camY}px) scale(${zoom})`;
 
   for (let sr = 0; sr < viewSize; sr++) {
     for (let sc = 0; sc < viewSize; sc++) {
