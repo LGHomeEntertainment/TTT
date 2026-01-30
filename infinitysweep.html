@@ -626,14 +626,21 @@ function renderCamera() {
       let wr = cameraR + sr;
       let wc = cameraC + sc;
 
-      ensureCell(wr, wc);
+  //    ensureCell(wr, wc);
 
-      let cell = getCell(wr, wc); // board uses wr/wc
+ //     let cell = getCell(wr, wc); // board uses wr/wc
+let cell = board.get(key(wr, wc))
+
       let el = document.querySelector(
         `.cell[data-row="${sr}"][data-col="${sc}"]`,
       ); // dOM is sr/sc
 
-      if (!el) continue;
+      if (!el) { // unknown void
+el.className = "cell"
+el.textContent = ""
+el.style.backgroundColor = "#bbb;
+continue;
+}
       drawCell(el, cell);
     }
   }
