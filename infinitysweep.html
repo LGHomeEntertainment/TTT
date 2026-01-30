@@ -34,8 +34,8 @@ background: #111;
 
 #camera {
 position: absolute;
-top: 50%;
-left: 50%;
+top: 0;
+left: 0;
 transform-origin: 0 0;
 }
 
@@ -659,9 +659,19 @@ let camX = 0
 let camY = 0
 
 function renderCamera() {
-camera.style.transform = `translate(-50%, 50%) translate(${camX}px, ${camY}px) scale(${zoom})`;
+let viewport = document.getElementById("viewport")
 
-  for (let sr = 0; sr < viewSize; sr++) {
+let vw = viewport.clientWidth
+let vh = viewport.clientHeight
+
+let gridPx = viewSize* cellSize * zoom
+
+let centerX = (vw - gridPx) / 2
+let centerY = (vh - gridPx) / 2
+
+camera.style.transform = `translate(${centerX + camX}px, ${centerY + camY}px) scale(${zoom})`;
+
+ for (let sr = 0; sr < viewSize; sr++) {
     for (let sc = 0; sc < viewSize; sc++) {
       let wr = cameraR + sr;
       let wc = cameraC + sc;
