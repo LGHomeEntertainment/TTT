@@ -635,7 +635,9 @@ let cell = board.get(key(wr, wc))
         `.cell[data-row="${sr}"][data-col="${sc}"]`,
       ); // dOM is sr/sc
 
-      if (!el) { // unknown void
+ if (!el) continue;
+
+      if (!cell) { // unknown void
 el.className = "cell"
 el.textContent = ""
 el.style.backgroundColor = "#bbb";
