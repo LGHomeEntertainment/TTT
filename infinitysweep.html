@@ -170,6 +170,7 @@ function generateGrid(size) {
   gridEl.style.setProperty("--grid-size", size);
 }
 
+
 // ==== GAME LOGIC ====
 function revealCell(r, c) {
   ensureCell(r, c);
@@ -182,7 +183,20 @@ function revealCell(r, c) {
   //  cell.generated = true;
  // }
 
+if (!cell.generated && cell.mine == null) {
+cell.mine = false;
+ cell.generated = true;
+}
+
   cell.revealed = true;
+
+for (let [nr, nc] of getNeighbourCoords(r , c)) {
+let n = getCell(nr, nc)
+if (!n.generated && n.mine == null) {
+n.mine = Math.random() < 0.18
+n.generated = true
+}}
+
   revealedCount++;
   updateStats();
 
@@ -517,7 +531,7 @@ function decideCell(r, c) {
   ensureCell(r, c);
   let cell = getCell(r, c);
 
-  if (cell.generated) return cell.mine;
+  if (cell.generated && cell.mine != null) return cell.mine;
 
   // check constraints from neighbours
   for (let [nr, nc] of getNeighbourCoords(r, c)) {
@@ -532,7 +546,7 @@ function decideCell(r, c) {
     // if all remaining must be mines --> forced mine
     if (remaining == undecided && undecided > 0) {
       cell.mine = true;
-      cell.generated = true;
+    //  cell.generated = true;
       // cell.committed = true
       return true;
     }
@@ -550,7 +564,7 @@ function computeAdjacent(r, c) {
     let n = getCell(nr, nc);
 
     // 🔥 force decision if still unknown
-    if (n.mine === null && !n.generated) {
+    if (n.mine === null) {
       decideCell(nr, nc);
     }
 
@@ -630,8 +644,8 @@ function renderCamera() {
 
   //    ensureCell(wr, wc);
 
- //     let cell = getCell(wr, wc); // board uses wr/wc
-let cell = board.get(key(wr, wc))
+      let cell = getCell(wr, wc); // board uses wr/wc
+// let cell = board.get(key(wr, wc))
 
       let el = document.querySelector(
         `.cell[data-row="${sr}"][data-col="${sc}"]`,
@@ -648,12 +662,12 @@ el.textContent = cell.adjacent
 el.textContent = ""
 }}
 
-      if (!cell) { // unknown void
-el.className = "cell"
-el.textContent = ""
-el.style.backgroundColor = "#bbb";
-continue;
-}
+//      if (!cell) { // unknown void
+// el.className = "cell"
+// el.textContent = ""
+// el.style.backgroundColor = "#bbb";
+// continue;
+// }
       drawCell(el, cell);
     }
   }
