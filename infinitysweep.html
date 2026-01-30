@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- The Broken Frontier -->
+<!-- Infinity Explorer -->
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -100,18 +100,19 @@
         <div id="grid">
           <!-- JS will generate rows and cells -->
         </div>
-
-        <div>
+    </div>
+        <div class="controls">
 <button id="zoomOutBtn">-</button>
 <button id="zoomInBtn">+</button>
-          <p id="feedback"></p>
+
           <p id="revealed">Revealed:</p>
           <p id="deaths">Dead cells:</p>
           <p id="integrity">Integrity:</p>
+
           <button id="resetBtn">Start a new game</button>
         </div>
       </div>
-    </div>
+
 
     <script>
       // ==== GLOBALs + CONSTANTS ====
@@ -200,7 +201,7 @@ function revealCell(r, c) {
 
   // cascade
   if (cell.adjacent == 0) {
-    for (let [nr, nc] of cell.neighbours) {
+    for (let [nr, nc] of getNeighbourCoords(r, c)) {
       revealCell(nr, nc);
     }
   }
@@ -227,7 +228,7 @@ function chordCell(r, c) {
   let flagged = 0;
   let hidden = [];
 
-  for (let [nr, nc] of cell.neighbours) {
+  for (let [nr, nc] of getNeighbourCoords(r, c)) {
     let n = getCell(nr, nc);
 
     if (n.flagged || (n.mine && n.revealed)) flagged++;
@@ -489,7 +490,7 @@ function createEmptyCell(r, c) {
     revealed: false,
     adjacent: null,
     flagged: false,
-    neighbours: getNeighbourCoords(r, c),
+    neighbours: null,
     dead: false,
     committed: false, // mine is final
     generated: false, // whether mine has been decided
@@ -517,7 +518,7 @@ function decideCell(r, c) {
   if (cell.generated) return cell.mine;
 
   // check constraints from neighbours
-  for (let [nr, nc] of cell.neighbours) {
+  for (let [nr, nc] of getNeighbourCoords(r, c)) {
     let neighbour = getCell(nr, nc);
     if (!neighbour) continue;
     if (!neighbour.revealed) continue;
@@ -543,7 +544,7 @@ function computeAdjacent(r, c) {
   let cell = getCell(r, c);
   let count = 0;
 
-  for (let [nr, nc] of cell.neighbours) {
+  for (let [nr, nc] of getNeighbourCoords(r, c)) {
     let n = getCell(nr, nc);
 
     // 🔥 force decision if still unknown
@@ -566,7 +567,7 @@ function propagateFrom(r, c) {
   let mines = 0;
   let undecided = [];
 
-  for (let [nr, nc] of cell.neighbours) {
+  for (let [nr, nc] of getNeighbourCoords(r, c)) {
     let n = getCell(nr, nc);
     if (!n) continue;
 
@@ -598,7 +599,7 @@ function propagateFrom(r, c) {
 }
 
 function resolveEntropy(cell) {
-  let undecided = cell.neighbours
+  let undecided = getNeighbourCoords(r, c)
     .map(([r, c]) => getCell(r, c))
     .filter((n) => n.mine === null);
 
