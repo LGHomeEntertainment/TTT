@@ -146,7 +146,7 @@ document.addEventListener("DOMContentLoaded", initialise);
 
 function initialise() {
   document.getElementById("grid").innerHTML = "";
-  loadGame();
+//  loadGame();
   generateGrid(viewSize);
   attachListeners();
   renderCamera();
@@ -205,7 +205,7 @@ function revealCell(r, c) {
       revealCell(nr, nc);
     }
   }
-  saveGame();
+  // saveGame();
 }
 
 function toggleFlag(sr, sc) {
@@ -217,7 +217,7 @@ function toggleFlag(sr, sc) {
 
   cell.flagged = !cell.flagged;
   renderCamera();
-  saveGame();
+ //  saveGame();
 }
 
 function chordCell(r, c) {
@@ -661,6 +661,10 @@ function drawCell(el, cell) {
   el.className = "cell";
   el.textContent = "";
   el.style.backgroundColor = "";
+
+if (cell.revealed && cell.adjacent == null && !cell.mine) {
+cell.adjacent = computeAdjacent(cell.r, cell.c)
+}
 
   if (cell.revealed) {
     el.classList.add("revealed");
