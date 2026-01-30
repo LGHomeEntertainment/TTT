@@ -177,10 +177,10 @@ function revealCell(r, c) {
   if (cell.revealed || cell.flagged) return;
 
   // if still undecided, then just guarantee safe
-  if (cell.mine == null) {
-    cell.mine = false;
-    cell.generated = true;
-  }
+ // if (cell.mine == null) {
+  //  cell.mine = false;
+  //  cell.generated = true;
+ // }
 
   cell.revealed = true;
   revealedCount++;
@@ -194,7 +194,9 @@ function revealCell(r, c) {
  //   resolveEntropy(cell);
   }
 
+if (cell.adjacent == null) {
   cell.adjacent = computeAdjacent(r, c);
+}
   propagateFrom(r, c);
 
   firstClick = false;
@@ -548,7 +550,7 @@ function computeAdjacent(r, c) {
     let n = getCell(nr, nc);
 
     // 🔥 force decision if still unknown
-    if (n.mine === null) {
+    if (n.mine === null && !n.generated) {
       decideCell(nr, nc);
     }
 
