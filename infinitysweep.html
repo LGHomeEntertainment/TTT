@@ -687,14 +687,14 @@ camera.style.transform = `translate(${centerX + camX}px, ${centerY + camY}px) sc
 
  if (!el) continue;
 
-if (cell.revealed) {
-el.classList.add("revealed")
+// if (cell.revealed) {
+// el.classList.add("revealed")
 
-if (cell.adjacent > 0) {
-el.textContent = cell.adjacent
-} else {
-el.textContent = ""
-}}
+// if (cell.adjacent > 0) {
+// el.textContent = cell.adjacent
+// } else {
+// el.textContent = ""
+// }}
 
 //      if (!cell) { // unknown void
 // el.className = "cell"
@@ -708,30 +708,31 @@ el.textContent = ""
 }
 
 function drawCell(el, cell) {
-  el.className = "cell";
+ // el.className = "cell";
+el.classList.remove("revealed", "flagged", "mine")
   el.textContent = "";
   el.style.backgroundColor = "";
 
-if (cell.revealed && cell.adjacent == null && !cell.mine) {
-cell.adjacent = computeAdjacent(cell.r, cell.c)
-}
+// if (cell.revealed && cell.adjacent == null && !cell.mine) {
+// cell.adjacent = computeAdjacent(cell.r, cell.c)
+// }
 
   if (cell.revealed) {
     el.classList.add("revealed");
 
     if (cell.mine) {
-      cell.dead = true;
+   //   cell.dead = true;
       el.textContent = "💣";
       el.style.backgroundColor = "red";
     } else if (cell.adjacent > 0) {
       el.textContent = cell.adjacent;
-    } else {
-      el.textContent = "";
-    }
+   // } else {
+   //   el.textContent = "";
+  //  }
   } else if (cell.flagged) {
     el.textContent = "🚩";
-  } else {
-    el.textContent = "";
+//  } else {
+ //   el.textContent = "";
   }
 }
 
