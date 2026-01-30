@@ -155,7 +155,7 @@ let revealedCount = 0;
 document.addEventListener("DOMContentLoaded", initialise);
 
 function initialise() {
-  document.getElementById("grid").innerHTML = "";
+//  document.getElementById("grid").innerHTML = "";
 //  loadGame();
   generateGrid(viewSize);
   attachGlobalListeners();
@@ -444,32 +444,27 @@ function attachGridListeners() {
 }
 
   // Camera movement
-function keyboardKeys() {
+function keyboardKeys(e) {
     if (e.key === "ArrowUp" || e.key === "w") cameraR--;
     if (e.key === "ArrowDown" || e.key === "s") cameraR++;
     if (e.key === "ArrowLeft" || e.key === "a") cameraC--;
     if (e.key === "ArrowRight" || e.key === "d") cameraC++;
-  });
+renderCamera()  
+};
 
 function zoomOut() {
 viewSize += 2
 generateGrid(viewSize)
 attachGridListeners()
 renderCamera()
-  });
+  };
 
 function zoomIn() {
 viewSize = Math.max(6, viewSize - 2)
 generateGrid(viewSize)
 attachGridListeners()
 renderCamera()
-  });
-
-  document.getElementById("zoomInBtn").addEventListener("click", () => {
-viewSize = Math.max(6, viewSize - 2)
-generateGrid(viewSize)
-renderCamera()
-  });
+  };
 
 function onClick(e) {
   let sr = parseInt(e.target.dataset.row);
