@@ -41,7 +41,7 @@ transform-origin: 0 0;
 
 #grid {
   display: grid;
-  grid-template-columns: repeat(var(--grid-size), 1fr); /* dynamic columns */
+  grid-template-columns: repeat(var(--grid-size), var(--cell-size)); /* dynamic columns */
   grid-auto-rows: var(--cell-size);
   width: fit-content; 
 }
@@ -671,7 +671,7 @@ let viewport = document.getElementById("viewport")
 let vw = viewport.clientWidth
 let vh = viewport.clientHeight
 
-let gridPx = viewSize* cellSize * zoom
+let gridPx = viewSize* cellSize
 
 let centerX = (vw - gridPx) / 2
 let centerY = (vh - gridPx) / 2
