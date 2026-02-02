@@ -40,9 +40,8 @@ transform-origin: 0 0;
 
 #grid {
   display: grid;
- /* grid-template-columns: repeat(var(--grid-size), var(--cell-size)); /* dynamic columns */
-  grid-auto-rows: var(--cell-size);
-  width: fit-content; */
+  grid-auto-rows: 30px;
+  width: fit-content; 
 }
 
 .controls {
@@ -133,7 +132,7 @@ let viewSize = 12;
 let cellSize = 30;
 let firstClick = true;
 let board = new Map();
-let grid = [];
+let gridEl = document.getElementById("grid");
 let gameOver = false;
 let cameraR = 0;
 let cameraC = 0;
@@ -168,7 +167,7 @@ console.log("cell count: ", document.querySelectorAll(".cell").length)
 
 // visible GRID
 function errorgenerateGrid(size) {
-  let gridEl = document.getElementById("grid");
+  
   gridEl.innerHTML = "";
 
 // document.documentElement.style.setProperty("--cell-size", cellSize + "px");
@@ -190,9 +189,9 @@ function errorgenerateGrid(size) {
 
 // visible GRID
 function generateGrid(size) {
-  grid.innerHTML = "";
+  gridEl.innerHTML = "";
 
-grid.style.gridTemplateColumns = `repeat(${size}, ${cellSize}px)`;
+gridEl.style.gridTemplateColumns = `repeat(${size}, ${cellSize}px)`;
 
   for (let gridRow = 0; gridRow < size; gridRow++) {
     // let tr = document.createElement("tr");
@@ -700,7 +699,7 @@ let gridPx = viewSize* cellSize
 let centerX = (vw - gridPx) / 2
 let centerY = (vh - gridPx) / 2
 
-// camera.style.transform = `translate(${centerX + camX}px, ${centerY + camY}px) scale(${zoom})`;
+camera.style.transform = `translate(${centerX + camX}px, ${centerY + camY}px) scale(${zoom})`;
 
  for (let sr = 0; sr < viewSize; sr++) {
     for (let sc = 0; sc < viewSize; sc++) {
