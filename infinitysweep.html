@@ -161,6 +161,7 @@ function initialise() {
 //  document.getElementById("grid").innerHTML = "";
 //  loadGame();
   generateGrid(viewSize);
+console.log("cell count: ", document.querySelectorAll(".cell").length)
   attachGlobalListeners();
   attachGridListeners();
   renderCamera();
@@ -185,7 +186,6 @@ document.documentElement.style.setProperty("--cell-size", cellSize + "px");
       gridEl.appendChild(cell);
     }
   }
-
 }
 
 
@@ -666,6 +666,13 @@ let camX = 0
 let camY = 0
 
 function renderCamera() {
+
+let test = document.querySelector('.cell[data-row="0"][data-col="0"]');
+if (test) {
+test.style.background = "lime"
+test.textContent = "X"
+}
+
 let viewport = document.getElementById("viewport")
 
 let vw = viewport.clientWidth
@@ -741,7 +748,7 @@ el.classList.remove("revealed", "flagged", "mine")
 //  } else {
  //   el.textContent = "";
   }
-}
+}}
 
 function moveCamera(dx, dy) {
 //  let cellSize = 30; // (set in css)
