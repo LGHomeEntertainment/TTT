@@ -476,18 +476,20 @@ renderCamera()
 };
 
 function zoomOut() {
-viewSize += 2
-generateGrid(viewSize)
-attachGridListeners()
-renderCamera()
-  };
+cellSize = Math.max(12, cellSize - 2)
+regenerateView()
+};
 
 function zoomIn() {
-viewSize = Math.max(6, viewSize - 2)
-generateGrid(viewSize)
-attachGridListeners()
-renderCamera()
-  };
+cellSize = Math.max(60, cellSize + 2)
+regenerateView()
+};
+
+function regenerateView() {
+  generateGrid(viewSize)
+  attachGridListeners()
+  renderCamera()
+}
 
 function onClick(e) {
   let sr = parseInt(e.target.dataset.row);
@@ -699,7 +701,7 @@ let gridPx = viewSize* cellSize
 let centerX = (vw - gridPx) / 2
 let centerY = (vh - gridPx) / 2
 
-camera.style.transform = `translate(${centerX + camX}px, ${centerY + camY}px) scale(${zoom})`;
+camera.style.transform = `translate(${centerX}px, ${centerY}px)`;
 
  for (let sr = 0; sr < viewSize; sr++) {
     for (let sc = 0; sc < viewSize; sc++) {
