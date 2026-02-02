@@ -41,8 +41,9 @@ transform-origin: 0 0;
 
 #grid {
   display: grid;
-  /* grid-template-columns: repeat(var(--grid-size), 1fr); /* dynamic columns */
-  width: fit-content; */
+  grid-template-columns: repeat(var(--grid-size), 1fr); /* dynamic columns */
+  grid-auto-rows: var(--cell-size);
+  width: fit-content; 
 }
 
 .controls {
@@ -149,6 +150,8 @@ let dragAccumY = 0; // so that not every small movement will cause camera to mov
 let deathCount = 0;
 let revealedCount = 0;
 
+let camera = document.getElementById("camera")
+
 
 // ==== INITIALISATION + GENERATION ====
 
@@ -168,6 +171,10 @@ function generateGrid(size) {
   let gridEl = document.getElementById("grid");
   gridEl.innerHTML = "";
 
+document.documentElement.style.setProperty("--cell-size", cellSize + "px");
+
+  gridEl.style.setProperty("--grid-size", size);
+
   for (let gridRow = 0; gridRow < size; gridRow++) {
     // let tr = document.createElement("tr");
     for (let gridCol = 0; gridCol < size; gridCol++) {
@@ -178,7 +185,7 @@ function generateGrid(size) {
       gridEl.appendChild(cell);
     }
   }
-  gridEl.style.setProperty("--grid-size", size);
+
 }
 
 
