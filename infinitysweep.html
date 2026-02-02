@@ -4,7 +4,9 @@
   <head>
     <meta charset="UTF-8" />
     <title>Infinity SS</title>
+
 <style>
+
     body {
   display: flex;
   justify-content: center;
@@ -22,14 +24,11 @@
 }
 
 #viewport {
-  width: 90vw;
-max-width: 430px;
-  height: 90vh;
-max-height: 430px;
-  overflow: hidden;
-border-radius: 12px;
   position: relative;
-background: #111;
+  width: 430px;
+  height: 430px;
+  overflow: hidden;
+  background: black;
 }
 
 #camera {
@@ -41,9 +40,9 @@ transform-origin: 0 0;
 
 #grid {
   display: grid;
-  grid-template-columns: repeat(var(--grid-size), var(--cell-size)); /* dynamic columns */
+ /* grid-template-columns: repeat(var(--grid-size), var(--cell-size)); /* dynamic columns */
   grid-auto-rows: var(--cell-size);
-  width: fit-content; 
+  width: fit-content; */
 }
 
 .controls {
