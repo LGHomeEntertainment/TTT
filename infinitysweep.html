@@ -167,11 +167,11 @@ console.log("cell count: ", document.querySelectorAll(".cell").length)
 }
 
 // visible GRID
-function generateGrid(size) {
+function errorgenerateGrid(size) {
   let gridEl = document.getElementById("grid");
   gridEl.innerHTML = "";
 
-document.documentElement.style.setProperty("--cell-size", cellSize + "px");
+// document.documentElement.style.setProperty("--cell-size", cellSize + "px");
 
   gridEl.style.setProperty("--grid-size", size);
 
@@ -187,6 +187,24 @@ document.documentElement.style.setProperty("--cell-size", cellSize + "px");
   }
 }
 
+
+// visible GRID
+function generateGrid(size) {
+  grid.innerHTML = "";
+
+grid.style.gridTemplateColumns = `repeat(${size}, ${cellSize}px)`;
+
+  for (let gridRow = 0; gridRow < size; gridRow++) {
+    // let tr = document.createElement("tr");
+    for (let gridCol = 0; gridCol < size; gridCol++) {
+      let cell = document.createElement("div");
+      cell.className = "cell";
+      cell.dataset.row = gridRow;
+      cell.dataset.col = gridCol;
+      gridEl.appendChild(cell);
+    }
+  }
+}
 
 // ==== GAME LOGIC ====
 function revealCell(r, c) {
