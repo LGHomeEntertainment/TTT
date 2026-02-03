@@ -341,7 +341,8 @@ function comparePicks() {
 
 function playGame() {
 if (playerPicks.length == 0) return;
-if (roundsUpgrade = false) {
+if (!roundsUpgrade) {
+resetBoard()
 singleRound()
 } else {
 multipleRounds()
@@ -351,8 +352,9 @@ multipleRounds()
 function singleRound() {
   gameRunning = true;
   disableInputs();
-generateWinners()
-comparePicks()
+generateWinners(() => {
+      comparePicks();
+})
 return
 }
 
@@ -419,7 +421,7 @@ function attachListeners() {
   enableInputs();
 
   // play!
-  document.getElementById("playBtn").addEventListener("click", multipleRounds);
+  document.getElementById("playBtn").addEventListener("click", playGame);
 
   document.getElementById("clearBtn").addEventListener("click", clearPicks);
 }
