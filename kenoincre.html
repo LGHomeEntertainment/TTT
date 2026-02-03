@@ -238,7 +238,7 @@ let playerMoney = 0;
 let bet = 1;
 let gameRunning = false;
 let generatedNumbers = [];
-let currentRound = 1;
+let roundsUpgrade = false; // just one upgrade to continuous. then it allows for round interval upgrades
 let roundInterval = 4000; // each subsequent upgrade is -50. floor is 2000? 1000?
 let drawInterval = 1000; // each subsequent upgrade is -50. floor is 200
 
@@ -339,6 +339,41 @@ function comparePicks() {
   updateMoneyDisplay();
 }
 
+function playGame() {
+if (playerPicks.length == 0) return;
+if (roundsUpgrade = false) {
+singleRound()
+} else {
+multipleRounds()
+}}
+
+
+function singleRound() {
+  gameRunning = true;
+  disableInputs();
+generateWinners()
+comparePicks()
+return
+}
+
+function multipleRounds() {
+if (playerPicks.length == 0) return;
+gameRunning = true;
+  disableInputs();
+    updateMoneyDisplay();
+    resetBoard();
+generateWinners(() => {
+      comparePicks();
+      setTimeout(playNextRound, roundInterval); // pause between rounds
+    });
+  
+  playNextRound();
+}
+
+
+
+
+
 
 
 function resetBoard() {
@@ -383,21 +418,13 @@ function enableInputs() {
 function attachListeners() {
   enableInputs();
 
-  let betBtns = document.querySelectorAll(".changeBet");
-  betBtns.forEach((btn) => {
-    btn.addEventListener("click", adjustBet);
-  });
-
-  let roundBtns = document.querySelectorAll(".changeRounds");
-  roundBtns.forEach((btn) => {
-    btn.addEventListener("click", adjustRounds);
-  });
-
   // play!
   document.getElementById("playBtn").addEventListener("click", multipleRounds);
 
   document.getElementById("clearBtn").addEventListener("click", clearPicks);
 }
+
+
 
 // ==== PAYOUT TABLE ====
 let payoutTable = {
