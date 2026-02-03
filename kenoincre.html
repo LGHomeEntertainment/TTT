@@ -238,9 +238,14 @@ let playerMoney = 0;
 let bet = 1;
 let gameRunning = false;
 let generatedNumbers = [];
+
+
+// ==== UPGRADES ====
 let roundsUpgrade = false; // just one upgrade to continuous. then it allows for round interval upgrades
-let roundInterval = 4000; // each subsequent upgrade is -50. floor is 2000? 1000?
+let roundInterval = 3000; // each subsequent upgrade is -50. floor is 1000?
 let drawInterval = 1000; // each subsequent upgrade is -50. floor is 200
+// let autopick = false; // player can choose own 10 numbers, or toggle on or off for auto pick 10 numbers for every round? or make it asshole-y and first upgrade is autopick but it's for every round, then next one is to keep the numbers from the previous round. 
+
 
 // ==== SOUNDS ====
 const sfxDraw = new Audio("sounds/draw.ogg");
@@ -248,8 +253,8 @@ const sfxHit  = new Audio("sounds/hit.ogg");
 const sfxWin  = new Audio("sounds/win.wav");
 const sfxLose = new Audio("sounds/lose.wav");
 
-// ==== INITIALISATION + GENERATION OF STUFF ====
 
+// ==== INITIALISATION + GENERATION OF STUFF ====
 document.addEventListener("DOMContentLoaded", initialise);
 
 function initialise() {
@@ -259,7 +264,6 @@ function initialise() {
 
 
 // ==== GAME LOGIC ====
-
 // player picking numbers. numbers are circled.
 function toggleCell(e) {
   if (gameRunning) return;
@@ -371,11 +375,6 @@ generateWinners(() => {
   
   playNextRound();
 }
-
-
-
-
-
 
 
 function resetBoard() {
