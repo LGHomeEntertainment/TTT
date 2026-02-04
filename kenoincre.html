@@ -182,15 +182,15 @@ td.cell.picked::before {
 
       <div id="ui-panels">
         <!-- UPGRADES -->
-        <section id="upgradesPanel" class="panel hidden">
+        <section id="upgradesPanel" class="panel">
           <h2>Upgrades</h2>
 
-          <button class="upgrade-btn" id="upgradeDrawSpeed">
+          <button class="upgradeDrawSpeed-btn" id="upgradeDrawSpeed">
             Faster Draw Speed
             <span class="cost">$100</span>
           </button>
 
-          <button class="upgrade-btn" id="upgradeAutoPlay">
+          <button class="upgradeAutoPlay-btn" id="upgradeAutoPlay">
             Autoplay
             <span class="cost">$1,000</span>
           </button>
@@ -221,7 +221,7 @@ td.cell.picked::before {
 // ==== GLOBALs + CONSTANTS ====
 
 let playerPicks = [];
-let playerMoney = 0;
+// let playerMoney = 0;
 let bet = 1;
 let gameRunning = false;
 let generatedNumbers = [];
@@ -235,14 +235,26 @@ let baseDrawInterval = 1000
 let drawnNumbers = 10 // ++, max 20? increases the chance of winning
 let boardSize = 80 // -10 per upgrade, to 40? keep drawnnumbers as well? then much higher chance of winning
 
+
+
 // ==== AUTOMATION ====
 let roundsUpgrade = false; // just one upgrade to continuous. then it allows for round interval upgrades
 // let autoPick = false; // player can choose own 10 numbers, or toggle on or off for auto pick 10 numbers for every round? or make it asshole-y and first upgrade is autopick but it's for every round, then next one is to keep the numbers from the previous round. 
 // let autoCollect = false; // collects the round's currencyB
 
+let upgrade_defs = {
+autoPlay: {
+type: "boolean",
+cost: 1000,
+},
+};
+
+
 // ==== NOTES ====
-// currencyA = winning $, unlocks upgrades
+// currencyA = winning $, unlocks upgrades. updated as gameState.currency.money
 // currencyB = points? for automation. can be autocollected
+// currencyC = gold? for prestiging
+
 
 // ==== SOUNDS ====
 const sfxDraw = new Audio("sounds/draw.ogg");
@@ -285,16 +297,16 @@ table.appendChild(tr)
 // Keeps all status. Read and write to this, calculate based on this
  const gameState = {
   currency: {
-     money: playerMoney,
+     money: 0,
      prestige: 0,
    },
 
   upgrades: {
     autoPlay: false,
-    autoPick: false,
+ //   autoPick: false,
     fasterDraw: 0,     // level, not ms
-    fasterRounds: 0,  // level
-    ballsDrawn: 10,    // starts at 10, upgrades increase
+ //   fasterRounds: 0,  // level
+//    ballsDrawn: 10,    // starts at 10, upgrades increase
     boardSize: 80,
    },
 
@@ -308,7 +320,26 @@ function getDrawInterval() {
 return Math.max(200, baseDrawInterval - gameState.upgrades.fasterDraw * 50) // upgrades to keep as a level so every level is -50
 }
 
-// ==== GAME LOGIC ====
+
+// ==== BUYING UPGRADES ====
+function buyAutoPlay() {
+let cost = upgrade_defs.autoPlay.cost
+
+if (gameState.upgrades.autoPlay) return // either hide the button or change colour and disable it later
+if (gameState.currency.money < cost) return
+
+gameState.currency.money -= cost
+gameState.upgrades.autoPlay = true
+
+roundsUpgrade = true
+
+updateMoneyDisplay()
+saveGame()
+}
+
+
+
+// ==== GAME LOGIC (pure Keno) ====
 // player picking numbers. numbers are circled.
 function toggleCell(e) {
   if (gameRunning) return;
@@ -356,7 +387,7 @@ function generateWinners(onFinish) {
       }
       count++;
     }
-    setTimeout(generateNext, getDrawInterval);
+    setTimeout(generateNext, getDrawInterval());
   }
   generateNext(); // first one to start off the chain
 }
@@ -384,7 +415,7 @@ function comparePicks() {
   }
   // Update feedback in HTML
   document.getElementById("feedback").textContent = feedbackText;
-  playerMoney += winnings;
+  gameState.currency.money += winnings;
   updateMoneyDisplay();
 }
 
@@ -433,7 +464,7 @@ function resetBoard() {
 function updateMoneyDisplay() {
   document.getElementById(
     "moneyDisplay"
-  ).textContent = `Money: $${playerMoney.toLocaleString()}`;
+  ).textContent = `Money: $${gameState.currency.money.toLocaleString()}`;
 }
 
 function clearPicks() {
@@ -469,7 +500,11 @@ function attachListeners() {
 
   document.getElementById("clearBtn").addEventListener("click", clearPicks);
   document.getElementById("debugResetBtn").addEventListener("click", hardReset);
+
+// buttons for upgrades
+  document.getElementById("upgradeAutoPlay-btn").addEventListener("click", buyAutoPlay);
     
+
 }
 
 
@@ -490,39 +525,8 @@ let payoutTable = {
 
     // ==== SAVE GAME ====
 function saveGame() {
-const saveData = {
-  // version: 1,
-  currency: { money: playerMoney },
-  upgrades: {}
-};
-
-  localStorage.setItem("KenoIncrementalSave", JSON.stringify(saveData));
+  localStorage.setItem("KenoIncrementalSave", JSON.stringify(gameState));
 }
-
-// Example save. add on each new global constant when added in globals. 
-// const saveData = {
-//   version: 1,
-
-//   currency: {
-//     money: playerMoney,
-//     prestige: 0,
-//   },
-
-//   upgrades: {
-//     autoPlay: false,
-//     autoPick: false,
-//     fasterDraw: 0,     // level, not ms
-//     fasterRounds: 0,  // level
-//     ballsDrawn: 10,    // starts at 10, upgrades increase
-//     boardSize: 80,
-//   },
-
-//   stats: {
-//     totalRounds: 0,
-//     totalWins: 0,
-//   }
-// };
-
 
 
 function loadGame() {
@@ -531,8 +535,11 @@ function loadGame() {
 
   const data = JSON.parse(raw);
 
-  gameState = data 
-  generategrid(boardSize)
+Object.assign(gameState.currency, data.currency ?? {})
+Object.assign(gameState.upgrades, data.upgrades ?? {})
+
+  applyUpgrades()
+//  generategrid(boardSize)
   updateMoneyDisplay();
 }
 
