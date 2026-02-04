@@ -227,119 +227,133 @@ let bet = 1;
 let gameRunning = false;
 let generatedNumbers = [];
 
-
 // ==== UPGRADABLES ==== (those in brackets are KIV)
 let winningMultiplier = 1; // each next one is 2x
 let roundInterval = 3000; // each subsequent upgrade is -50. floor is 1000?
 //let drawInterval = 1000; // each subsequent upgrade is -50. floor is 200
-let baseDrawInterval = 1000
-let drawnNumbers = 10 // ++, max 20? increases the chance of winning
-let boardSize = 80 // -10 per upgrade, to 40? keep drawnnumbers as well? then much higher chance of winning
-
-
+let baseDrawInterval = 1000;
+let drawnNumbers = 10; // ++, max 20? increases the chance of winning
+let boardSize = 80; // -10 per upgrade, to 40? keep drawnnumbers as well? then much higher chance of winning
 
 // ==== AUTOMATION ====
-let roundsUpgrade = false; // just one upgrade to continuous. then it allows for round interval upgrades
-// let autoPick = false; // player can choose own 10 numbers, or toggle on or off for auto pick 10 numbers for every round? or make it asshole-y and first upgrade is autopick but it's for every round, then next one is to keep the numbers from the previous round. 
+// let roundsUpgrade (now autoPlay) = false; // just one upgrade to continuous. then it allows for round interval upgrades
+// let autoPick = false; // player can choose own 10 numbers, or toggle on or off for auto pick 10 numbers for every round? or make it asshole-y and first upgrade is autopick but it's for every round, then next one is to keep the numbers from the previous round.
 // let autoCollect = false; // collects the round's currencyB
 
+// all the upgrades. Do not use let for every single upgrade
 let upgrade_defs = {
-autoPlay: {
-type: "boolean",
-cost: 10,
-},
+  autoPlay: {
+    type: "boolean", // can only be true or false
+    cost: 1,
+  },
+  fasterDraw: {
+    type: "level", // best to have a formula or something to scale up difficulty later
+    baseCost: 10,
+    costScaling: 1.5, // optional, but nice
+    maxLevel: 20,
+  },
 };
-
 
 // ==== NOTES ====
 // currencyA = winning $, unlocks upgrades. updated as gameState.currency.money
 // currencyB = points? for automation. can be autocollected
 // currencyC = gold? for prestiging
 
-
 // ==== SOUNDS ====
 const sfxDraw = new Audio("sounds/draw.ogg");
-const sfxHit  = new Audio("sounds/hit.ogg");
-const sfxWin  = new Audio("sounds/win.wav");
+const sfxHit = new Audio("sounds/hit.ogg");
+const sfxWin = new Audio("sounds/win.wav");
 const sfxLose = new Audio("sounds/lose.wav");
-
 
 // ==== INITIALISATION + GENERATION OF STUFF ====
 document.addEventListener("DOMContentLoaded", initialise);
 
 function initialise() {
   loadGame();
-  generateGrid(boardSize)
+  generateGrid(boardSize);
   attachListeners();
   updateMoneyDisplay();
 }
 
 function generateGrid(boardSize) {
-let table = document.getElementById("table")
-table.innerHTML = ""
+  let table = document.getElementById("table");
+  table.innerHTML = "";
 
-for (let i = 1; i <= boardSize; i++) {
-const td = document.createElement("div")
-// const td = document.createElement("td")
-td.className = "cell"
-td.id = "cell" + i
-td.textContent = i
-table.appendChild(td)
+  for (let i = 1; i <= boardSize; i++) {
+    const td = document.createElement("div");
+    // const td = document.createElement("td")
+    td.className = "cell";
+    td.id = "cell" + i;
+    td.textContent = i;
+    table.appendChild(td);
+  }
+  enableInputs();
 }
-enableInputs()
-}
 
-
-// ==== GAME STATE ==== 
+// ==== GAME STATE ====
 // Keeps all status. Read and write to this, calculate based on this
- const gameState = {
+const gameState = {
   currency: {
-     money: 0,
-     prestige: 0,
-   },
+    money: 0,
+    prestige: 0,
+  },
 
   upgrades: {
     autoPlay: false,
- //   autoPick: false,
-    fasterDraw: 0,     // level, not ms
- //   fasterRounds: 0,  // level
-//    ballsDrawn: 10,    // starts at 10, upgrades increase
+    //   autoPick: false,
+    fasterDraw: 0, // level, not ms
+    //   fasterRounds: 0,  // level
+    //    ballsDrawn: 10,    // starts at 10, upgrades increase
     boardSize: 80,
-   },
+  },
 
-//  stats: {
-//     totalRounds: 0,
-//    totalWins: 0,
-//  }
- };
+  //  stats: {
+  //     totalRounds: 0,
+  //    totalWins: 0,
+  //  }
+};
 
 function applyUpgrades() {
-roundsUpgrade = gameState.upgrades.autoPlay == true
+  roundsUpgrade = gameState.upgrades.autoPlay == true;
 }
 
 function getDrawInterval() {
-return Math.max(200, baseDrawInterval - gameState.upgrades.fasterDraw * 50) // upgrades to keep as a level so every level is -50
+  return Math.max(200, baseDrawInterval - gameState.upgrades.fasterDraw * 50); // upgrades to keep as a level so every level is -50
 }
-
 
 // ==== BUYING UPGRADES ====
 function buyAutoPlay() {
-let cost = upgrade_defs.autoPlay.cost
+  let cost = upgrade_defs.autoPlay.cost;
 
-if (gameState.upgrades.autoPlay) return // either hide the button or change colour and disable it later
-if (gameState.currency.money < cost) return
+  if (gameState.upgrades.autoPlay) return; // either hide the button or change colour and disable it later
+  if (gameState.currency.money < cost) return;
 
-gameState.currency.money -= cost
-gameState.upgrades.autoPlay = true
+  gameState.currency.money -= cost;
+  gameState.upgrades.autoPlay = true;
 
-roundsUpgrade = true
-applyUpgrades()
+  roundsUpgrade = true;
+  applyUpgrades();
 
-updateMoneyDisplay()
-saveGame()
+  updateMoneyDisplay();
+  saveGame();
 }
 
+function buyFasterDraw() {
+  let def = upgrade_defs.fasterDraw;
+  let level = gameState.upgrades.fasterDraw;
 
+  if (level >= def.maxLevel) return; // instead of this, should change to check after buying. then disable if it is maxed
+
+  const cost = Math.floor(def.baseCost * Math.pow(def.costScaling, level));
+
+  if (gameState.currency.money < cost) return;
+
+  gameState.currency.money -= cost;
+  gameState.upgrades.fasterDraw++;
+
+  updateMoneyDisplay();
+  saveGame();
+}
 
 // ==== GAME LOGIC (pure Keno) ====
 // player picking numbers. numbers are circled.
@@ -422,38 +436,36 @@ function comparePicks() {
 }
 
 function playGame() {
-if (playerPicks.length == 0) return;
-if (!roundsUpgrade) {
-resetBoard()
-singleRound()
-} else {
-multipleRounds()
-}}
-
+  if (gameRunning && !roundsUpgrade) return;
+  if (playerPicks.length == 0) return;
+  if (!roundsUpgrade) {
+    resetBoard();
+    singleRound();
+  } else {
+    multipleRounds();
+  }
+}
 
 function singleRound() {
   gameRunning = true;
   disableInputs();
-generateWinners(() => {
-      comparePicks();
-})
-return
+  generateWinners(() => {
+    comparePicks();
+  });
+  return;
 }
 
 function multipleRounds() {
-if (playerPicks.length == 0) return;
-gameRunning = true;
+  if (playerPicks.length == 0) return;
+  gameRunning = true;
   disableInputs();
-    updateMoneyDisplay();
-    resetBoard();
-generateWinners(() => {
-      comparePicks();
-      setTimeout(playGame, roundInterval); // pause between rounds
-    });
-  
-  playGame();
+  updateMoneyDisplay();
+  resetBoard();
+  generateWinners(() => {
+    comparePicks();
+    setTimeout(playGame, roundInterval); // pause between rounds
+  });
 }
-
 
 function resetBoard() {
   let cells = document.querySelectorAll(".cell");
@@ -464,9 +476,8 @@ function resetBoard() {
 }
 
 function updateMoneyDisplay() {
-  document.getElementById(
-    "moneyDisplay"
-  ).textContent = `Money: $${gameState.currency.money.toLocaleString()}`;
+  document.getElementById("moneyDisplay").textContent =
+    `Money: $${gameState.currency.money.toLocaleString()}`;
 }
 
 function clearPicks() {
@@ -503,12 +514,11 @@ function attachListeners() {
   document.getElementById("clearBtn").addEventListener("click", clearPicks);
   document.getElementById("debugResetBtn").addEventListener("click", hardReset);
 
-// buttons for upgrades
-  document.getElementById("upgradeAutoPlay").addEventListener("click", buyAutoPlay);
-   
+  // buttons for upgrades
+  document
+    .getElementById("upgradeAutoPlay")
+    .addEventListener("click", buyAutoPlay);
 }
-
-
 
 // ==== PAYOUT TABLE ====
 let payoutTable = {
@@ -523,6 +533,7 @@ let payoutTable = {
   9: [0, 2, 5, 10, 70, 200, 1000, 10000, 50000],
   10: [1, 2, 3, 10, 50, 500, 5000, 10000, 50000, 100000],
 };
+
 
     // ==== SAVE GAME ====
 function saveGame() {
