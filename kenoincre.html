@@ -285,7 +285,9 @@ td.className = "cell"
 td.id = "cell" + i
 td.textContent = i
 table.appendChild(td)
-}}
+}
+enableInputs()
+}
 
 
 // ==== GAME STATE ==== 
@@ -481,13 +483,13 @@ function clearPicks() {
 function disableInputs() {
   document.getElementById("clearBtn").removeEventListener("click", clearPicks);
 
-  document.querySelectorAll("td.cell").forEach((cell) => {
+  document.querySelectorAll(".cell").forEach((cell) => {
     cell.removeEventListener("click", toggleCell);
   });
 }
 
 function enableInputs() {
-  document.querySelectorAll("td.cell").forEach((cell) => {
+  document.querySelectorAll(".cell").forEach((cell) => {
     cell.addEventListener("click", toggleCell);
   });
 }
@@ -519,7 +521,7 @@ let payoutTable = {
   7: [0, 3, 10, 25, 150, 1000, 5000],
   8: [0, 2, 7, 20, 200, 500, 1000, 10000],
   9: [0, 2, 5, 10, 70, 200, 1000, 10000, 50000],
-  10: [0, 1.5, 3, 10, 50, 500, 5000, 10000, 50000, 100000],
+  10: [1, 2, 3, 10, 50, 500, 5000, 10000, 50000, 100000],
 };
 
     // ==== SAVE GAME ====
