@@ -6,7 +6,7 @@
 
     <style>
 /* Container for the grid */
-#grid {
+#table {
   display: grid;
   border-collapse: collapse;
   border-spacing: 0;
@@ -186,12 +186,12 @@ td.cell.picked::before {
         <section id="upgradesPanel" class="panel">
           <h2>Upgrades</h2>
 
-          <button class="upgradeDrawSpeed-btn" id="upgradeDrawSpeed">
+          <button class="upgrade-btn" id="upgradeDrawSpeed">
             Faster Draw Speed
             <span class="cost">$100</span>
           </button>
 
-          <button class="upgradeAutoPlay-btn" id="upgradeAutoPlay">
+          <button class="upgrade-btn" id="upgradeAutoPlay">
             Autoplay
             <span class="cost">$1,000</span>
           </button>
@@ -246,7 +246,7 @@ let roundsUpgrade = false; // just one upgrade to continuous. then it allows for
 let upgrade_defs = {
 autoPlay: {
 type: "boolean",
-cost: 1000,
+cost: 10,
 },
 };
 
@@ -280,7 +280,8 @@ table.innerHTML = ""
 
 let count = 1
 while (count <= boardSize) {
-const tr = document.createElement("tr")
+const tr = document.createElement("div")
+tr.style.display = "contents"
 
 for (let i = 0; i < 10 && count <= boardSize; i++) {
 const td = document.createElement("td")
@@ -337,6 +338,7 @@ gameState.currency.money -= cost
 gameState.upgrades.autoPlay = true
 
 roundsUpgrade = true
+applyUpgrades()
 
 updateMoneyDisplay()
 saveGame()
@@ -451,10 +453,10 @@ gameRunning = true;
     resetBoard();
 generateWinners(() => {
       comparePicks();
-      setTimeout(playNextRound, roundInterval); // pause between rounds
+      setTimeout(playGame, roundInterval); // pause between rounds
     });
   
-  playNextRound();
+  playGame();
 }
 
 
@@ -507,7 +509,7 @@ function attachListeners() {
   document.getElementById("debugResetBtn").addEventListener("click", hardReset);
 
 // buttons for upgrades
-  document.getElementById("upgradeAutoPlay-btn").addEventListener("click", buyAutoPlay);
+  document.getElementById("upgradeAutoPlay").addEventListener("click", buyAutoPlay);
    
 }
 
