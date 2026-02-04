@@ -10,7 +10,7 @@
   display: grid;
   border-collapse: collapse;
   border-spacing: 0;
-  grid-template-columns: repeat(var(--grid-size), 1fr); /* dynamic columns */
+  grid-template-columns: repeat(10, 30px); 
   width: fit-content;
   margin: 20px auto;
 }
@@ -278,20 +278,13 @@ function generateGrid(boardSize) {
 let table = document.getElementById("table")
 table.innerHTML = ""
 
-let count = 1
-while (count <= boardSize) {
-const tr = document.createElement("div")
-tr.style.display = "contents"
-
-for (let i = 0; i < 10 && count <= boardSize; i++) {
-const td = document.createElement("td")
+for (let i = 1; i <= boardSize; i++) {
+const td = document.createElement("div")
+// const td = document.createElement("td")
 td.className = "cell"
-td.id = "cell" + count
-td.textContent = count
-tr.appendChild(td)
-count++
-}
-table.appendChild(tr)
+td.id = "cell" + i
+td.textContent = i
+table.appendChild(td)
 }}
 
 
