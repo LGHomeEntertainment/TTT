@@ -316,6 +316,10 @@ table.appendChild(tr)
 //  }
  };
 
+function applyUpgrades() {
+roundsUpgrade = gameState.upgrades.autoPlay == true
+}
+
 function getDrawInterval() {
 return Math.max(200, baseDrawInterval - gameState.upgrades.fasterDraw * 50) // upgrades to keep as a level so every level is -50
 }
@@ -503,8 +507,7 @@ function attachListeners() {
 
 // buttons for upgrades
   document.getElementById("upgradeAutoPlay-btn").addEventListener("click", buyAutoPlay);
-    
-
+   
 }
 
 
