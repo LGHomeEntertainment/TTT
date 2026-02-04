@@ -230,7 +230,8 @@ let generatedNumbers = [];
 // ==== UPGRADABLES ==== (those in brackets are KIV)
 let winningMultiplier = 1; // each next one is 2x
 let roundInterval = 3000; // each subsequent upgrade is -50. floor is 1000?
-let drawInterval = 1000; // each subsequent upgrade is -50. floor is 200
+//let drawInterval = 1000; // each subsequent upgrade is -50. floor is 200
+let baseDrawInterval = 1000
 let drawnNumbers = 10 // ++, max 20? increases the chance of winning
 let boardSize = 80 // -10 per upgrade, to 40? keep drawnnumbers as well? then much higher chance of winning
 
@@ -291,7 +292,7 @@ table.appendChild(tr)
   upgrades: {
     autoPlay: false,
     autoPick: false,
-     fasterDraw: 0,     // level, not ms
+    fasterDraw: 0,     // level, not ms
     fasterRounds: 0,  // level
     ballsDrawn: 10,    // starts at 10, upgrades increase
     boardSize: 80,
@@ -302,6 +303,10 @@ table.appendChild(tr)
 //    totalWins: 0,
 //  }
  };
+
+function getDrawInterval() {
+return Math.max(200, baseDrawInterval - gameState.upgrades.fasterDraw * 50) // upgrades to keep as a level so every level is -50
+}
 
 // ==== GAME LOGIC ====
 // player picking numbers. numbers are circled.
@@ -351,7 +356,7 @@ function generateWinners(onFinish) {
       }
       count++;
     }
-    setTimeout(generateNext, drawInterval);
+    setTimeout(generateNext, getDrawInterval);
   }
   generateNext(); // first one to start off the chain
 }
@@ -486,12 +491,12 @@ let payoutTable = {
     // ==== SAVE GAME ====
 function saveGame() {
 const saveData = {
-  version: 1,
+  // version: 1,
   currency: { money: playerMoney },
   upgrades: {}
 };
 
-  localStorage.setItem("KenoIncrementalSave", JSON.stringify(data));
+  localStorage.setItem("KenoIncrementalSave", JSON.stringify(saveData));
 }
 
 // Example save. add on each new global constant when added in globals. 
@@ -526,9 +531,7 @@ function loadGame() {
 
   const data = JSON.parse(raw);
 
-  if (data.money !== undefined) {
-    playerMoney = data.money;
-  }
+  gameState = data 
   generategrid(boardSize)
   updateMoneyDisplay();
 }
