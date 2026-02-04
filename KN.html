@@ -1,16 +1,16 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Keno</title>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Keno Incremental</title>
 
-  <style>
+    <style>
 /* Container for the grid */
-#grid {
+#table {
   display: grid;
   border-collapse: collapse;
   border-spacing: 0;
-  grid-template-columns: repeat(var(--grid-size), 1fr); /* dynamic columns */
+  grid-template-columns: repeat(10, 30px); 
   width: fit-content;
   margin: 20px auto;
 }
@@ -45,11 +45,11 @@
   background-color: green;
 }
 
-td.cell {
+.cell {
   position: relative; /* Needed for absolute positioning of ::before */
 }
 
-td.cell::before {
+.cell::before {
   content: "";
   position: absolute;
   top: 50%;
@@ -65,7 +65,7 @@ td.cell::before {
   box-sizing: border-box;
 }
 
-td.cell.picked::before {
+.cell.picked::before {
   opacity: 1;
 }
 
@@ -100,163 +100,162 @@ td.cell.picked::before {
   text-align: center;
 }
 
+
+#ui-panels {
+  max-width: 600px;
+  margin: 30px auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.panel {
+  background: #111;
+  border: 2px solid #333;
+  border-radius: 12px;
+  padding: 16px;
+  color: #eee;
+}
+
+.panel h2 {
+  margin-top: 0;
+  font-size: 1.2rem;
+  border-bottom: 1px solid #333;
+  padding-bottom: 6px;
+}
+
+/* Upgrade buttons - to add colour if affordable */
+.upgrade-btn,
+.prestige-btn {
+  width: 100%;
+  background: #222;
+  color: #eee;
+  border: 1px solid #444;
+  border-radius: 8px;
+  padding: 12px;
+  margin-top: 10px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.upgrade-btn:hover {
+  background: #2d2d2d;
+}
+
+/* Cost text */
+.cost {
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+
+/* Prestige visual difference */
+.prestige {
+  border-color: gold;
+  background: linear-gradient(145deg, #1a1400, #0d0a00);
+}
+
+/* Hidden panels */
+.hidden {
+  display: none;
+}
 </style>
 
-</head>
-<body>
+  </head>
+  <body>
+    <div id="game-container">
+      <h1>KN</h1>
 
-<h1>KN</h1>
+      <div id="table"> </div>
+      
 
-<table>
+      <div class="display">
+        <div id="moneyDisplay">Money: $0</div>
+        <p id="feedback"></p>
+      </div>
 
-       <tr>
-        <td class=cell id="cell1">1</td>
-        <td class=cell id="cell2">2</td>
-        <td class=cell id="cell3">3</td>
-        <td class=cell id="cell4">4</td>
-        <td class=cell id="cell5">5</td>
-        <td class=cell id="cell6">6</td>
-        <td class=cell id="cell7">7</td>
-        <td class=cell id="cell8">8</td>
-        <td class=cell id="cell9">9</td>
-        <td class=cell id="cell10">10</td>
-      </tr>
+      <div class="controls">
+        <button id="playBtn">Play!</button>
+        <button id="clearBtn">Clear All</button>
+        <button id="debugResetBtn">Debug Reset</button>
+      </div>
 
-      <tr>
-        <td class=cell id="cell11">11</td>
-        <td class=cell id="cell12">12</td>
-        <td class=cell id="cell13">13</td>
-        <td class=cell id="cell14">14</td>
-        <td class=cell id="cell15">15</td>
-        <td class=cell id="cell16">16</td>
-        <td class=cell id="cell17">17</td>
-        <td class=cell id="cell18">18</td>
-        <td class=cell id="cell19">19</td>
-        <td class=cell id="cell20">20</td>
-      </tr>
+      <div id="ui-panels">
+        <!-- UPGRADES -->
+        <section id="upgradesPanel" class="panel">
+          <h2>Upgrades</h2>
 
-      <tr>
-        <td class=cell id="cell21">21</td>
-        <td class=cell id="cell22">22</td>
-        <td class=cell id="cell23">23</td>
-        <td class=cell id="cell24">24</td>
-        <td class=cell id="cell25">25</td>
-        <td class=cell id="cell26">26</td>
-        <td class=cell id="cell27">27</td>
-        <td class=cell id="cell28">28</td>
-        <td class=cell id="cell29">29</td>
-        <td class=cell id="cell30">30</td>
-      </tr>
+          <button class="upgrade-btn" id="upgradeDrawSpeed">
+            Faster Draw Speed
+            <span class="cost">$100</span>
+          </button>
 
-      <tr>
-        <td class=cell id="cell31">31</td>
-        <td class=cell id="cell32">32</td>
-        <td class=cell id="cell33">33</td>
-        <td class=cell id="cell34">34</td>
-        <td class=cell id="cell35">35</td>
-        <td class=cell id="cell36">36</td>
-        <td class=cell id="cell37">37</td>
-        <td class=cell id="cell38">38</td>
-        <td class=cell id="cell39">39</td>
-        <td class=cell id="cell40">40</td>
-      </tr>
+          <button class="upgrade-btn" id="upgradeAutoPlay">
+            Autoplay
+            <span class="cost">$1,000</span>
+          </button>
+        </section>
 
-      <tr>
-        <td class=cell id="cell41">41</td>
-        <td class=cell id="cell42">42</td>
-        <td class=cell id="cell43">43</td>
-        <td class=cell id="cell44">44</td>
-        <td class=cell id="cell45">45</td>
-        <td class=cell id="cell46">46</td>
-        <td class=cell id="cell47">47</td>
-        <td class=cell id="cell48">48</td>
-        <td class=cell id="cell49">49</td>
-        <td class=cell id="cell50">50</td>
-      </tr>
+        <!-- AUTOMATION -->
+        <section id="automationPanel" class="panel hidden">
+          <h2>Automation</h2>
 
-      <tr>
-        <td class=cell id="cell51">51</td>
-        <td class=cell id="cell52">52</td>
-        <td class=cell id="cell53">53</td>
-        <td class=cell id="cell54">54</td>
-        <td class=cell id="cell55">55</td>
-        <td class=cell id="cell56">56</td>
-        <td class=cell id="cell57">57</td>
-        <td class=cell id="cell58">58</td>
-        <td class=cell id="cell59">59</td>
-        <td class=cell id="cell60">60</td>
-      </tr>
+          <button class="upgrade-btn">
+            Auto Pick Numbers
+            <span class="cost">$10,000</span>
+          </button>
+        </section>
 
-      <tr>
-        <td class=cell id="cell61">61</td>
-        <td class=cell id="cell62">62</td>
-        <td class=cell id="cell63">63</td>
-        <td class=cell id="cell64">64</td>
-        <td class=cell id="cell65">65</td>
-        <td class=cell id="cell66">66</td>
-        <td class=cell id="cell67">67</td>
-        <td class=cell id="cell68">68</td>
-        <td class=cell id="cell69">69</td>
-        <td class=cell id="cell70">70</td>
-      </tr>
+        <!-- PRESTIGE -->
+        <section id="prestigePanel" class="panel hidden prestige">
+          <h2>Prestige</h2>
 
-      <tr>
-        <td class=cell id="cell71">71</td>
-        <td class=cell id="cell72">72</td>
-        <td class=cell id="cell73">73</td>
-        <td class=cell id="cell74">74</td>
-        <td class=cell id="cell75">75</td>
-        <td class=cell id="cell76">76</td>
-        <td class=cell id="cell77">77</td>
-        <td class=cell id="cell78">78</td>
-        <td class=cell id="cell79">79</td>
-        <td class=cell id="cell80">80</td>
-      </tr>
+          <p>Reset everything and open a VIP casino.</p>
 
-</table>
-
-    <div>
-      <p id="feedback"></p>
+          <button class="prestige-btn">Enter VIP Room</button>
+        </section>
+      </div>
     </div>
-
-    <div>
-      <div id="moneyDisplay">Money: $10,000,000</div>
-      <p id="feedback"></p>
-    </div>
-
-    <div>
-      <button id="playBtn">Play!</button>
-      <button id="clearBtn">Clear All</button>
-    </div>
-
-    <div class="setting-row">
-      <button class="changeBet" id="lowerBet">-</button>
-      <p>Bet Amount: <span id="betDisplay"></span></p>
-      <button class="changeBet" id="increaseBet">+</button>
-    </div>
-    <div class="setting-row">
-      <button class="changeRounds" id="fewerRounds">-</button>
-      <p>Number of Rounds: <span id="roundsDisplay"></span></p>
-      <button class="changeRounds" id="moreRounds">+</button>
-    </div>
-
-<script>
     
+<script>
 // ==== GLOBALs + CONSTANTS ====
 
 let playerPicks = [];
-let playerMoney = 10000000;
+// let playerMoney = 0;
+let bet = 1;
 let gameRunning = false;
 let generatedNumbers = [];
-let currentRound = 1;
-let betOptions = [100, 1000, 10000, 100000, 1000000];
-let betIndex = 3;
-let bet = betOptions[betIndex];
-let roundOptions = [1, 5, 10, 20];
-let roundIndex = 2;
-let playRounds = roundOptions[roundIndex];
-let roundInterval = 2000;
-let drawInterval = 200;
+
+
+// ==== UPGRADABLES ==== (those in brackets are KIV)
+let winningMultiplier = 1; // each next one is 2x
+let roundInterval = 3000; // each subsequent upgrade is -50. floor is 1000?
+//let drawInterval = 1000; // each subsequent upgrade is -50. floor is 200
+let baseDrawInterval = 1000
+let drawnNumbers = 10 // ++, max 20? increases the chance of winning
+let boardSize = 80 // -10 per upgrade, to 40? keep drawnnumbers as well? then much higher chance of winning
+
+
+
+// ==== AUTOMATION ====
+let roundsUpgrade = false; // just one upgrade to continuous. then it allows for round interval upgrades
+// let autoPick = false; // player can choose own 10 numbers, or toggle on or off for auto pick 10 numbers for every round? or make it asshole-y and first upgrade is autopick but it's for every round, then next one is to keep the numbers from the previous round. 
+// let autoCollect = false; // collects the round's currencyB
+
+let upgrade_defs = {
+autoPlay: {
+type: "boolean",
+cost: 10,
+},
+};
+
+
+// ==== NOTES ====
+// currencyA = winning $, unlocks upgrades. updated as gameState.currency.money
+// currencyB = points? for automation. can be autocollected
+// currencyC = gold? for prestiging
+
 
 // ==== SOUNDS ====
 const sfxDraw = new Audio("sounds/draw.ogg");
@@ -264,105 +263,85 @@ const sfxHit  = new Audio("sounds/hit.ogg");
 const sfxWin  = new Audio("sounds/win.wav");
 const sfxLose = new Audio("sounds/lose.wav");
 
-// ==== INITIALISATION + GENERATION OF STUFF ====
 
+// ==== INITIALISATION + GENERATION OF STUFF ====
 document.addEventListener("DOMContentLoaded", initialise);
 
 function initialise() {
+  loadGame();
+  generateGrid(boardSize)
   attachListeners();
-  updateBetDisplay();
-  updateRoundDisplay();
   updateMoneyDisplay();
 }
 
-// ==== CUSTOMISATION/SETTINGS (shared function) ====
+function generateGrid(boardSize) {
+let table = document.getElementById("table")
+table.innerHTML = ""
 
-function updateBetDisplay(index = betIndex) {
-  updateSettingsDisplay(
-    index,
-    betOptions,
-    "betDisplay",
-    "lowerBet",
-    "increaseBet"
-  );
+for (let i = 1; i <= boardSize; i++) {
+const td = document.createElement("div")
+// const td = document.createElement("td")
+td.className = "cell"
+td.id = "cell" + i
+td.textContent = i
+table.appendChild(td)
+}
+enableInputs()
 }
 
-function updateRoundDisplay(index = roundIndex) {
-  updateSettingsDisplay(
-    index,
-    roundOptions,
-    "roundsDisplay",
-    "fewerRounds",
-    "moreRounds"
-  );
+
+// ==== GAME STATE ==== 
+// Keeps all status. Read and write to this, calculate based on this
+ const gameState = {
+  currency: {
+     money: 0,
+     prestige: 0,
+   },
+
+  upgrades: {
+    autoPlay: false,
+ //   autoPick: false,
+    fasterDraw: 0,     // level, not ms
+ //   fasterRounds: 0,  // level
+//    ballsDrawn: 10,    // starts at 10, upgrades increase
+    boardSize: 80,
+   },
+
+//  stats: {
+//     totalRounds: 0,
+//    totalWins: 0,
+//  }
+ };
+
+function applyUpgrades() {
+roundsUpgrade = gameState.upgrades.autoPlay == true
 }
 
-function adjustBet(e) {
-  betIndex = adjustSetting(
-    e,
-    betIndex,
-    betOptions,
-    updateBetDisplay,
-    "lowerBet",
-    "increaseBet"
-  );
-  bet = betOptions[betIndex];
+function getDrawInterval() {
+return Math.max(200, baseDrawInterval - gameState.upgrades.fasterDraw * 50) // upgrades to keep as a level so every level is -50
 }
 
-function adjustRounds(e) {
-  roundIndex = adjustSetting(
-    e,
-    roundIndex,
-    roundOptions,
-    updateRoundDisplay,
-    "fewerRounds",
-    "moreRounds"
-  );
-  playRounds = roundOptions[roundIndex];
+
+// ==== BUYING UPGRADES ====
+function buyAutoPlay() {
+let cost = upgrade_defs.autoPlay.cost
+
+if (gameState.upgrades.autoPlay) return // either hide the button or change colour and disable it later
+if (gameState.currency.money < cost) return
+
+gameState.currency.money -= cost
+gameState.upgrades.autoPlay = true
+
+roundsUpgrade = true
+applyUpgrades()
+
+updateMoneyDisplay()
+saveGame()
 }
 
-function updateSettingsDisplay(index, options, displayId, downId, upId) {
-  let value = options[index];
 
-  console.log("Updating display:", displayId, "with value:", value);
 
-  if (displayId == "betDisplay") {
-    value = "$" + value.toLocaleString();
-  }
-  document.getElementById(displayId).textContent = value;
-
-  // Disable buttons at the ends
-  let atMin = index == 0;
-  let atMax = index == options.length - 1;
-
-  let downBtn = document.getElementById(downId);
-  let upBtn = document.getElementById(upId);
-
-  downBtn.disabled = atMin;
-  downBtn.style.opacity = atMin ? 0.5 : 1;
-
-  upBtn.disabled = atMax;
-  upBtn.style.opacity = atMax ? 0.5 : 1;
-}
-
-function adjustSetting(e, index, options, updateDisplayFn, lowerId, upperId) {
-  let id = e.target.id;
-
-  if (id == lowerId && index > 0) {
-    index--;
-  } else if (id == upperId && index < options.length - 1) {
-    index++;
-  }
-
-  // ✅ Now call the display function AFTER updating index
-  if (typeof updateDisplayFn === "function") {
-    updateDisplayFn(index); // optionally pass index if needed
-  }
-  return index; // return index to be stored
-}
-
-// ==== GAME LOGIC ====
-
+// ==== GAME LOGIC (pure Keno) ====
 // player picking numbers. numbers are circled.
 function toggleCell(e) {
   if (gameRunning) return;
@@ -383,10 +362,10 @@ function toggleCell(e) {
 // comp generating winning numbers
 function generateWinners(onFinish) {
   generatedNumbers = []; // need this to reset for the round
-  let count = 0;
+  let count = 1;
 
   function generateNext() {
-    if (count >= 10) {
+    if (count >= drawnNumbers) {
       onFinish(); // trigger next round only after 10 numbers are generated
       return;
     }
@@ -410,7 +389,7 @@ function generateWinners(onFinish) {
       }
       count++;
     }
-    setTimeout(generateNext, drawInterval);
+    setTimeout(generateNext, getDrawInterval());
   }
   generateNext(); // first one to start off the chain
 }
@@ -438,41 +417,43 @@ function comparePicks() {
   }
   // Update feedback in HTML
   document.getElementById("feedback").textContent = feedbackText;
-  playerMoney += winnings;
+  gameState.currency.money += winnings;
   updateMoneyDisplay();
 }
 
-function multipleRounds() {
-  if (playerPicks.length == 0) return;
+function playGame() {
+if (playerPicks.length == 0) return;
+if (!roundsUpgrade) {
+resetBoard()
+singleRound()
+} else {
+multipleRounds()
+}}
+
+
+function singleRound() {
   gameRunning = true;
   disableInputs();
-  currentRound = 1;
+generateWinners(() => {
+      comparePicks();
+})
+return
+}
 
-  // if currentround > 1 && < play rounds run resetboard!!
-  function playNextRound() {
-    if (playerMoney < bet) {
-      document.getElementById("feedback").textContent =
-        "You are broke. Bye bye.";
-      gameRunning = false;
-      enableInputs();
-      return;
-    }
-    if (currentRound > playRounds) {
-      gameRunning = false;
-      enableInputs();
-      return;
-    }
-    playerMoney -= bet;
+function multipleRounds() {
+if (playerPicks.length == 0) return;
+gameRunning = true;
+  disableInputs();
     updateMoneyDisplay();
     resetBoard();
-    generateWinners(() => {
+generateWinners(() => {
       comparePicks();
-      currentRound++;
-      setTimeout(playNextRound, roundInterval); // pause between rounds
+      setTimeout(playGame, roundInterval); // pause between rounds
     });
-  }
-  playNextRound();
+  
+  playGame();
 }
+
 
 function resetBoard() {
   let cells = document.querySelectorAll("td");
@@ -485,7 +466,7 @@ function resetBoard() {
 function updateMoneyDisplay() {
   document.getElementById(
     "moneyDisplay"
-  ).textContent = `Money: $${playerMoney.toLocaleString()}`;
+  ).textContent = `Money: $${gameState.currency.money.toLocaleString()}`;
 }
 
 function clearPicks() {
@@ -502,13 +483,13 @@ function clearPicks() {
 function disableInputs() {
   document.getElementById("clearBtn").removeEventListener("click", clearPicks);
 
-  document.querySelectorAll("td.cell").forEach((cell) => {
+  document.querySelectorAll(".cell").forEach((cell) => {
     cell.removeEventListener("click", toggleCell);
   });
 }
 
 function enableInputs() {
-  document.querySelectorAll("td.cell").forEach((cell) => {
+  document.querySelectorAll(".cell").forEach((cell) => {
     cell.addEventListener("click", toggleCell);
   });
 }
@@ -516,21 +497,18 @@ function enableInputs() {
 function attachListeners() {
   enableInputs();
 
-  let betBtns = document.querySelectorAll(".changeBet");
-  betBtns.forEach((btn) => {
-    btn.addEventListener("click", adjustBet);
-  });
-
-  let roundBtns = document.querySelectorAll(".changeRounds");
-  roundBtns.forEach((btn) => {
-    btn.addEventListener("click", adjustRounds);
-  });
-
   // play!
-  document.getElementById("playBtn").addEventListener("click", multipleRounds);
+  document.getElementById("playBtn").addEventListener("click", playGame);
 
   document.getElementById("clearBtn").addEventListener("click", clearPicks);
+  document.getElementById("debugResetBtn").addEventListener("click", hardReset);
+
+// buttons for upgrades
+  document.getElementById("upgradeAutoPlay").addEventListener("click", buyAutoPlay);
+   
 }
+
+
 
 // ==== PAYOUT TABLE ====
 let payoutTable = {
@@ -543,11 +521,36 @@ let payoutTable = {
   7: [0, 3, 10, 25, 150, 1000, 5000],
   8: [0, 2, 7, 20, 200, 500, 1000, 10000],
   9: [0, 2, 5, 10, 70, 200, 1000, 10000, 50000],
-  10: [0, 1.5, 3, 10, 50, 500, 5000, 10000, 50000, 100000],
+  10: [1, 2, 3, 10, 50, 500, 5000, 10000, 50000, 100000],
 };
 
+    // ==== SAVE GAME ====
+function saveGame() {
+  localStorage.setItem("KenoIncrementalSave", JSON.stringify(gameState));
+}
+
+
+function loadGame() {
+  const raw = localStorage.getItem("KenoIncrementalSave");
+  if (!raw) return;
+
+  const data = JSON.parse(raw);
+
+Object.assign(gameState.currency, data.currency ?? {})
+Object.assign(gameState.upgrades, data.upgrades ?? {})
+
+  applyUpgrades()
+//  generategrid(boardSize)
+  updateMoneyDisplay();
+}
+
+
+function hardReset() { // just for debugging tests
+  localStorage.removeItem("KenoIncrementalSave");
+  location.reload();
+}
 
 </script>
-
-</body>
+    
+  </body>
 </html>
