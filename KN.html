@@ -456,7 +456,7 @@ generateWinners(() => {
 
 
 function resetBoard() {
-  let cells = document.querySelectorAll("td");
+  let cells = document.querySelectorAll(".cell");
   cells.forEach((cell) => {
     cell.classList.remove("hit", "drawn");
   });
