@@ -45,11 +45,11 @@
   background-color: green;
 }
 
-td.cell {
+.cell {
   position: relative; /* Needed for absolute positioning of ::before */
 }
 
-td.cell::before {
+.cell::before {
   content: "";
   position: absolute;
   top: 50%;
@@ -65,7 +65,7 @@ td.cell::before {
   box-sizing: border-box;
 }
 
-td.cell.picked::before {
+.cell.picked::before {
   opacity: 1;
 }
 
@@ -124,7 +124,7 @@ td.cell.picked::before {
   padding-bottom: 6px;
 }
 
-/* Upgrade buttons */
+/* Upgrade buttons - to add colour if affordable */
 .upgrade-btn,
 .prestige-btn {
   width: 100%;
@@ -456,7 +456,7 @@ generateWinners(() => {
 
 
 function resetBoard() {
-  let cells = document.querySelectorAll("td");
+  let cells = document.querySelectorAll(".cell");
   cells.forEach((cell) => {
     cell.classList.remove("hit", "drawn");
   });
