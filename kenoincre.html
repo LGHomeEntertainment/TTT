@@ -229,9 +229,9 @@ let generatedNumbers = [];
 
 // ==== UPGRADABLES ==== (those in brackets are KIV)
 let winningMultiplier = 1; // each next one is 2x
-let roundInterval = 3000; // each subsequent upgrade is -50. floor is 1000?
+let roundInterval = 3000; // for between rounds each subsequent upgrade is -50. floor is 1000?
 //let drawInterval = 1000; // each subsequent upgrade is -50. floor is 200
-let baseDrawInterval = 1000;
+let baseDrawInterval = 1000; // for number
 let drawnNumbers = 10; // ++, max 20? increases the chance of winning
 let boardSize = 80; // -10 per upgrade, to 40? keep drawnnumbers as well? then much higher chance of winning
 
@@ -294,7 +294,7 @@ function generateGrid(boardSize) {
 // Keeps all status. Read and write to this, calculate based on this
 const gameState = {
   currency: {
-    money: 0,
+    money: 10000,
     prestige: 0,
   },
 
@@ -438,7 +438,7 @@ function comparePicks() {
 function playGame() {
   if (gameRunning && !roundsUpgrade) return;
   if (playerPicks.length == 0) return;
-  if (!roundsUpgrade) {
+  if (!gameState.upgrades.autoPlay) {
     resetBoard();
     singleRound();
   } else {
@@ -518,6 +518,10 @@ function attachListeners() {
   document
     .getElementById("upgradeAutoPlay")
     .addEventListener("click", buyAutoPlay);
+   document
+    .getElementById("upgradeDrawSpeed")
+    .addEventListener("click", buyFasterDraw);
+  
 }
 
 // ==== PAYOUT TABLE ====
@@ -533,6 +537,7 @@ let payoutTable = {
   9: [0, 2, 5, 10, 70, 200, 1000, 10000, 50000],
   10: [1, 2, 3, 10, 50, 500, 5000, 10000, 50000, 100000],
 };
+
 
 
     // ==== SAVE GAME ====
