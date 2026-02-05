@@ -39,3 +39,26 @@ function buyFasterDraw() {
   updateMoneyDisplay();
   saveGame();
 }
+
+function refreshUpgradeUI() {
+  const btn = document.getElementById("upgradeAutoPlay");
+  const cost = upgrade_defs.autoPlay.cost;
+  const owned = gameState.upgrades.autoPlay;
+
+  btn.classList.remove("affordable", "locked", "maxed");
+  btn.disabled = false;
+
+  if (owned) {
+    btn.classList.add("maxed");
+    btn.querySelector(".cost").textContent = "MAX";
+    btn.disabled = true;
+    return;
+  }
+
+  if (gameState.currency.money >= cost) {
+    btn.classList.add("affordable");
+  } else {
+    btn.classList.add("locked");
+    btn.disabled = true;
+  }
+}
