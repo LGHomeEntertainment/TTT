@@ -1,0 +1,41 @@
+function applyUpgrades() {
+  roundsUpgrade = gameState.upgrades.autoPlay == true;
+}
+
+function getDrawInterval() {
+  return Math.max(200, baseDrawInterval - gameState.upgrades.fasterDraw * 50); // upgrades to keep as a level so every level is -50
+}
+
+// ==== BUYING UPGRADES ====
+function buyAutoPlay() {
+  let cost = upgrade_defs.autoPlay.cost;
+
+  if (gameState.upgrades.autoPlay) return; // either hide the button or change colour and disable it later
+  if (gameState.currency.money < cost) return;
+
+  gameState.currency.money -= cost;
+  gameState.upgrades.autoPlay = true;
+
+  roundsUpgrade = true;
+  applyUpgrades();
+
+  updateMoneyDisplay();
+  saveGame();
+}
+
+function buyFasterDraw() {
+  let def = upgrade_defs.fasterDraw;
+  let level = gameState.upgrades.fasterDraw;
+
+  if (level >= def.maxLevel) return; // instead of this, should change to check after buying. then disable if it is maxed
+
+  const cost = Math.floor(def.baseCost * Math.pow(def.costScaling, level));
+
+  if (gameState.currency.money < cost) return;
+
+  gameState.currency.money -= cost;
+  gameState.upgrades.fasterDraw++;
+
+  updateMoneyDisplay();
+  saveGame();
+}
