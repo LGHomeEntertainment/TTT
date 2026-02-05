@@ -93,20 +93,19 @@ function playGame() {
 }
 
 function singleRound() {
-//  gameRunning = true;
-//  disableInputs();
   generateWinners(() => {
     comparePicks();
+
+    gameRunning = false
+    enableInputs()
   });
   return;
 }
 
 function multipleRounds() {
-//  if (playerPicks.length == 0) return;
-//  gameRunning = true;
-//  disableInputs();
   updateMoneyDisplay();
   resetBoard();
+  
   generateWinners(() => {
     comparePicks();
     setTimeout(playGame, roundInterval); // pause between rounds
