@@ -124,6 +124,8 @@
   background: #222;
   color: #eee;
   border: 1px solid #444;
+  opacity: 1;
+  transition: opacity 0.2s
   border-radius: 8px;
   padding: 12px;
   margin-top: 10px;
@@ -133,14 +135,55 @@
   align-items: center;
 }
 
-.upgrade-btn:hover {
-  background: #2d2d2d;
+.upgrade-btn::affordable {
+  background: #2a2a2a;
+}
+
+.upgrade-btn::affordable:hover {
+  background: #3a3a3a;
+}
+
+.ugrade-btn.locked {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.upgrade-btn.maxed {
+  background: #111;
+  opacity: 0.5;
+  cursor: default;
 }
 
 /* Cost text */
 .cost {
   font-size: 0.85rem;
   opacity: 0.7;
+}
+
+#tabs{
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.tab-btn {
+  background: #222;
+  border: 1px solid #444;
+  color: #ccc;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.tab-btn.active {
+  background: #444;
+  color: #fff;
+}
+
+.tab-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 /* Prestige visual difference */
