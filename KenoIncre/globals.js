@@ -2,16 +2,19 @@
 
 let playerPicks = [];
 // let playerMoney = 0;
-let bet = 1;
+let bet = 1; // upgradeable so that win more per round
 let gameRunning = false;
 let generatedNumbers = [];
 
 // ==== UPGRADABLES ==== (those in brackets are KIV)
-let winningMultiplier = 1; // each next one is 2x
+// let winningMultiplier = 1; // each next one is 2x
 let roundInterval = 3000; // for between rounds each subsequent upgrade is -50. floor is 1000?
-//let drawInterval = 1000; // each subsequent upgrade is -50. floor is 200
+let baseRoundInterval = 3000;
+// let drawInterval = 1000; // each subsequent upgrade is -50. floor is 200
 let baseDrawInterval = 1000; // for number
 let drawnNumbers = 10; // ++, max 20? increases the chance of winning
+let baseDrawnNumbers = 10
+let baseBoardSize = 80
 let boardSize = 80; // -10 per upgrade, to 40? keep drawnnumbers as well? then much higher chance of winning
 
 // ==== AUTOMATION ====
@@ -24,11 +27,26 @@ let boardSize = 80; // -10 per upgrade, to 40? keep drawnnumbers as well? then m
 let upgrade_defs = {
   autoPlay: {
     type: "boolean", // can only be true or false
-    cost: 1,
+    cost: 1000,
+  },
+  autoCollectB: {
+    type: "boolean",
+    cost: 50000,
   },
   fasterDraw: {
     type: "level", // best to have a formula or something to scale up difficulty later
-    baseCost: 10,
+    baseCost: 100,
+    costScaling: 1.5, // optional, but nice
+    maxLevel: 20,
+  },
+  winMultiplier: {
+    type: "level",
+    baseCost: 200,
+    costScaling: 2,
+  },
+  roundInterval: {
+    type: "level", // best to have a formula or something to scale up difficulty later
+    baseCost: 1000,
     costScaling: 1.5, // optional, but nice
     maxLevel: 20,
   },
