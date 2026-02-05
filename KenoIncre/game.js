@@ -87,7 +87,6 @@ function playGame() {
   if (!gameState.upgrades.autoPlay) {
     resetBoard();
     singleRound();
-    enableInputs();
   } else {
     multipleRounds();
   }
