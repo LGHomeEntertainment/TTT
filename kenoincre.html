@@ -437,7 +437,9 @@ function comparePicks() {
 
 function playGame() {
   if (gameRunning && !roundsUpgrade) return;
-  if (playerPicks.length == 0) return;
+  if (playerPicks.length == 0 || playerPicks.length < 10) return;
+  gameRunning = true;
+  disableInputs();
   if (!gameState.upgrades.autoPlay) {
     resetBoard();
     singleRound();
@@ -447,8 +449,8 @@ function playGame() {
 }
 
 function singleRound() {
-  gameRunning = true;
-  disableInputs();
+//  gameRunning = true;
+//  disableInputs();
   generateWinners(() => {
     comparePicks();
   });
@@ -456,9 +458,9 @@ function singleRound() {
 }
 
 function multipleRounds() {
-  if (playerPicks.length == 0) return;
-  gameRunning = true;
-  disableInputs();
+//  if (playerPicks.length == 0) return;
+//  gameRunning = true;
+//  disableInputs();
   updateMoneyDisplay();
   resetBoard();
   generateWinners(() => {
