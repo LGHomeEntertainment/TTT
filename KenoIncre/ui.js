@@ -9,6 +9,8 @@ function disableInputs() {
 }
 
 function enableInputs() {
+    document.getElementById("clearBtn").addEventListener("click", clearPicks);
+
   document.querySelectorAll(".cell").forEach((cell) => {
     cell.addEventListener("click", toggleCell);
   });
