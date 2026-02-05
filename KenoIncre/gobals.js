@@ -40,7 +40,7 @@ let upgrade_defs = {
 // currencyC = gold? for prestiging
 
 // ==== SOUNDS ====
-const sfxDraw = new Audio("sounds/draw.ogg");
-const sfxHit = new Audio("sounds/hit.ogg");
-const sfxWin = new Audio("sounds/win.wav");
-const sfxLose = new Audio("sounds/lose.wav");
+const sfxDraw = new Audio("Sounds/draw.ogg");
+const sfxHit = new Audio("Sounds/hit.ogg");
+const sfxWin = new Audio("Sounds/win.wav");
+const sfxLose = new Audio("Sounds/lose.wav");
