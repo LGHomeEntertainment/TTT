@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pigeon Farm — Prototype</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 24px; background: #f5f1e8; color: #332d25; }
+  h1 { margin-bottom: 4px; }
+  .subtitle { margin-top: 0; opacity: .7; }
+  .panel { background: #fffdf8; border: 1px solid #d8d0c2; border-radius: 12px; padding: 16px; margin: 14px 0; }
+  .stats { display: flex; gap: 18px; flex-wrap: wrap; }
+  .stat { background: #eee8dc; border-radius: 8px; padding: 8px 12px; }
+  button { border: 0; border-radius: 8px; padding: 9px 13px; margin: 4px; cursor: pointer; background: #ded6c8; }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  .plot { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; width: 130px; height: 100px; margin: 5px; border: 1px solid #c9c0b2; border-radius: 10px; background: #e8dfcf; }
+  .progress { height: 12px; background: #ddd5c9; border-radius: 8px; overflow: hidden; margin-top: 8px; }
+  .progress > div { height: 100%; width: 0%; background: #8a9a6a; transition: width .2s; }
+  #log { max-height: 180px; overflow: auto; font-size: .9rem; }
+  .muted { opacity: .65; }
+</style>
+</head>
+<body>
+
+<h1>🐦 Pigeon Farm</h1>
+<p class="subtitle">Very early prototype. Monkey is currently the entire workforce.</p>
+
+<div class="panel stats">
+  <div class="stat">💰 Money: <b id="money">20</b></div>
+  <div class="stat">🌾 Grain: <b id="grain">0</b></div>
+  <div class="stat">🪵 Wood: <b id="wood">0</b></div>
+  <div class="stat">🐦 Pigeons: <b id="pigeons">1</b></div>
+  <div class="stat">🏠 Houses: <b id="houses">1</b></div>
+</div>
+
+<div class="panel">
+  <h2>🌱 Farm</h2>
+  <p class="muted">For now, pigeons eat grain/seeds. Pigeons naturally eat grains and seeds, so this is our intentionally simple starting food system.</p>
+  <div id="plots"></div>
+</div>
+
+<div class="panel">
+  <h2>🏡 Birdhouses</h2>
+  <p>Each house holds one pigeon.</p>
+  <button id="buildHouse">Build birdhouse (10 🪵)</button>
+  <button id="buyBird">Buy pigeon (15 💰)</button>
+  <div id="houseInfo"></div>
+</div>
+
+<div class="panel">
+  <h2>📦 Customer</h2>
+  <p id="customer">No customer yet.</p>
+  <button id="newJob">Get customer</button>
+  <button id="sendBird" disabled>Send pigeon</button>
+  <div class="progress"><div id="flightProgress"></div></div>
+  <p id="flightStatus" class="muted">No pigeon flying.</p>
+</div>
+
+<div class="panel">
+  <h2>📜 Log</h2>
+  <div id="log"></div>
+</div>
+
+<script>
+const state = {
+  money: 20,
+  grain: 0,
+  wood: 0,
+  pigeons: 1,
+  houses: 1,
+  plots: [
+    { stage: "empty", timer: 0 },
+    { stage: "empty", timer: 0 }
+  ],
+  job: null,
+  flying: false
+};
+
+const stages = ["empty", "planted", "watered", "ready"];
+
+function log(message) {
+  const el = document.getElementById("log");
+  el.innerHTML = `<div>${message}</div>` + el.innerHTML;
+}
+
+function render() {
+  document.getElementById("money").textContent = state.money;
+  document.getElementById("grain").textContent = state.grain;
+  document.getElementById("wood").textContent = state.wood;
+  document.getElementById("pigeons").textContent = state.pigeons;
+  document.getElementById("houses").textContent = state.houses;
+
+  const plots = document.getElementById("plots");
+  plots.innerHTML = "";
+
+  state.plots.forEach((plot, i) => {
+    const div = document.createElement("div");
+    div.className = "plot";
+
+    let action = "";
+    if (plot.stage === "empty") action = `<button onclick="plant(${i})">🌱 Plant</button>`;
+    if (plot.stage === "planted") action = `<button onclick="water(${i})">💧 Water</button>`;
+    if (plot.stage === "watered") action = `<span>Growing...</span>`;
+    if (plot.stage === "ready") action = `<button onclick="harvest(${i})">🌾 Harvest</button>`;
+
+    div.innerHTML = `<div>Plot ${i + 1}</div><div>${action}</div>`;
+    plots.appendChild(div);
+  });
+
+  document.getElementById("houseInfo").textContent =
+    `${state.pigeons}/${state.houses} houses occupied.`;
+
+  document.getElementById("sendBird").disabled =
+    !state.job || state.flying || state.pigeons < 1 || state.grain < (state.job ? state.job.food : 999);
+}
+
+function plant(i) {
+  const p = state.plots[i];
+  if (p.stage !== "empty") return;
+  p.stage = "planted";
+  log(`🌱 Plot ${i + 1}: planted basic grain.`);
+  render();
+}
+
+function water(i) {
+  const p = state.plots[i];
+  if (p.stage !== "planted") return;
+  p.stage = "watered";
+  p.timer = 8;
+  log(`💧 Plot ${i + 1}: watered. It needs a little time to grow.`);
+  render();
+}
+
+function harvest(i) {
+  const p = state.plots[i];
+  if (p.stage !== "ready") return;
+  state.grain += 2;
+  p.stage = "empty";
+  p.timer = 0;
+  log(`🌾 Harvested 2 grain.`);
+  render();
+}
+
+document.getElementById("buildHouse").onclick = () => {
+  if (state.wood < 10) {
+    log(`🪵 Not enough wood. Woodcutting isn't unlocked yet.`);
+    return;
+  }
+  state.wood -= 10;
+  state.houses++;
+  log(`🏡 Built a new birdhouse.`);
+  render();
+};
+
+document.getElementById("buyBird").onclick = () => {
+  if (state.pigeons >= state.houses) {
+    log(`🏡 No empty birdhouse. Build another house first.`);
+    return;
+  }
+  if (state.money < 15) {
+    log(`💰 Not enough money to buy a pigeon.`);
+    return;
+  }
+  state.money -= 15;
+  state.pigeons++;
+  log(`🐦 Bought a pigeon.`);
+  render();
+};
+
+document.getElementById("newJob").onclick = () => {
+  if (state.job) {
+    log(`📦 Finish the current customer first.`);
+    return;
+  }
+
+  const destinations = [
+    ["Nearby village", 10, 1],
+    ["Mill town", 16, 1],
+    ["Market town", 25, 1]
+  ];
+  const [destination, reward, food] =
+    destinations[Math.floor(Math.random() * destinations.length)];
+
+  state.job = { destination, reward, food, seconds: 12 };
+  log(`📦 Customer wants a ${food * 20}g parcel sent to ${destination}. Reward: $${reward}.`);
+  render();
+};
+
+document.getElementById("sendBird").onclick = () => {
+  if (!state.job || state.flying) return;
+  if (state.grain < state.job.food) {
+    log(`🌾 Not enough grain to feed the pigeon for this trip.`);
+    return;
+  }
+
+  state.grain -= state.job.food;
+  state.flying = true;
+  let remaining = state.job.seconds;
+  let progress = 0;
+
+  log(`🐦 Pigeon dispatched to ${state.job.destination}!`);
+  render();
+
+  const interval = setInterval(() => {
+    if (!state.flying) {
+      clearInterval(interval);
+      return;
+    }
+
+    remaining--;
+    progress = 100 * (1 - remaining / state.job.seconds);
+    document.getElementById("flightProgress").style.width = `${progress}%`;
+
+    if (remaining <= 0) {
+      clearInterval(interval);
+      state.money += state.job.reward;
+      state.flying = false;
+
+      // Simple cooldown. This is deliberately not age/biology simulation.
+      const reward = state.job.reward;
+      const destination = state.job.destination;
+      state.job = null;
+
+      document.getElementById("flightStatus").textContent =
+        `🐦 Returned from ${destination}. Resting...`;
+
+      log(`🐦 Delivery completed! +$${reward}. Pigeon is resting.`);
+      render();
+
+      setTimeout(() => {
+        document.getElementById("flightStatus").textContent =
+          "🐦 Pigeon is rested and ready.";
+        render();
+      }, 6000);
+    } else {
+      document.getElementById("flightStatus").textContent =
+        `🐦 Flying... ${remaining}s remaining`;
+    }
+  }, 1000);
+};
+
+setInterval(() => {
+  state.plots.forEach(p => {
+    if (p.stage === "watered" && p.timer > 0) {
+      p.timer--;
+      if (p.timer <= 0) {
+        p.stage = "ready";
+        log(`🌾 A plot is ready to harvest!`);
+      }
+    }
+  });
+  render();
+}, 1000);
+
+// Tiny wood source for this prototype so the house system can be tested.
+// Later this becomes an actual Chop Wood activity.
+setInterval(() => {
+  // intentionally passive for prototype only
+  state.wood += 1;
+  render();
+}, 10000);
+
+render();
+log(`🐦 Welcome, Monkey. You have one pigeon and one birdhouse.`);
+</script>
+
+</body>
+</html>
